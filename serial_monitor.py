@@ -117,7 +117,6 @@ class SerialMonitorGUI:
 		if data != '':
 			x, y = map(float, data.split(','))		
 			self.plt.plot(x, y, 'ko')
-			print(len(x_val))
 
 root = Tk()
 gui = SerialMonitorGUI(root)
