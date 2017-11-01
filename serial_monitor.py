@@ -94,9 +94,6 @@ class SerialMonitorGUI:
 	def GetInput(self, event):
 		self.SendCmd()
 
-	def PlotEvent(self, event):
-		self.LivePlot()
-
 	def SendCmd(self):
 		try:
 			command = self.inputEntry.get()
