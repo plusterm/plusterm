@@ -1,133 +1,127 @@
 from tkinter import *
 import serial
 from serial.tools import list_ports
+import matplotlib.pyplot as plt
 
-# Get available ports
-def getPorts():
-	port_list = list_ports.comports()
-	ports = [port.device for port in port_list]
-	return ports
+class SerialMonitorGUI:
+	def __init__(self, master):
+		self.master = master
+		master.title("Serial Monitor")
+	
+		self.portVar = StringVar()
+		self.baudVar = IntVar()
+		self.portVar.set(None)
+		self.baudVar.set(9600)
 
-def connectSerial():
-	try:
-		# if port is already open, close it
-		if ser.is_open:
-			ser.close()
+		self.ser = serial.Serial()
+		self.plt = plt
 
-		ser.port = portVar.get()
-		ser.baudrate = baudrateVar.get()
-		ser.timeout = 0
-		ser.writeTimeout = 0
+		self.portChoices = self.GetPorts()
+		self.baudratesList = [50, 75, 110, 134, 150, 200, 300, 600, 1200, 1800, 2400, 4800, 9600, 19200, 38400, 57600, 115200]
 
-		# Open port with settings and start reading
-		ser.open()
-		textOutputWidget.insert('end', 'Connected to {}, {}\n'.format(ser.port, ser.baudrate))
-		readSerial()
-	except Exception as e:
-		textOutputWidget.insert('end', '{}\n'.format(e))
+		# Connection settings
+		self.portLabel = Label(master, text='Device').grid(row=0, column=0)
+		self.popupMenuPort = OptionMenu(master, self.portVar, *self.portChoices).grid(row=0, column=1)
+		self.baudLabel = Label(master, text='Baudrate').grid(row=0, column=2)
+		self.popupMenuBaud = OptionMenu(master, self.baudVar, *self.baudratesList).grid(row=0, column=3)
+		self.connectBtn = Button(master, text='Connect', command=self.ConnectSerial).grid(row=0, column=69)
 
-def clearOutput():
-	textOutputWidget.delete(1.0, 'end')
+		# Output
+		self.scrollbar = Scrollbar(master)
+		self.textOutput = Text(master, height=30, width=70, takefocus=0, yscrollcommand=self.scrollbar.set)
+		self.scrollbar.config(command=self.textOutput)
+		self.textOutput.grid(row=2, column=0, columnspan=70, rowspan=30)
+		self.scrollbar.grid(row=2, rowspan=30, column=70, sticky=N+S)
 
-# Reacts to 'enter' in input entry, and sends command 
-def getInput(event):
-	sendCmd()
+		# Input
+		self.inputEntry = Entry(master, width=50, takefocus=1)
+		self.inputEntry.grid(row=33, column=0, columnspan=5)
+		self.inputEntry.bind('<Return>', self.GetInput)
 
-# Sends a command
-def sendCmd():
-	try:
-		command = inputEntry.get()
-		ser.write(command.encode())
-	except Exception as e:
-		textOutputWidget.insert('end', '{}\n'.format(e))
-	finally:
-		inputEntry.delete(0, 'end')
+		self.sendBtn = Button(master, text='Send', command=self.SendCmd)
+		self.sendBtn.grid(row=33, column=6)
+		self.clearBtn = Button(master, text='Clear', command=self.ClearOutput)
+		self.clearBtn.grid(row=33, column=7)
 
-def readSerial():
-	try:
-		serBuffer = ''
-		while ser.inWaiting() > 0:
-			c = ser.read().decode()
-			serBuffer += c		
-		textOutputWidget.insert('end', serBuffer)
-	except Exception as e:
-		textOutputWidget.insert('end', e)
+		# Check if user wants a plot of the seral data
+		self.plotVar = BooleanVar()
+		self.plotVar.set(False)
+		self.plotCheck = Checkbutton(master, text='Plot', onvalue=True, offvalue=False, variable=self.plotVar, command=self.LivePlot)
+		self.plotCheck.grid(row=33, column=9)
 
-	# Scroll down automatically
-	# ISSUE: Locks the scrollbar, since readSerial() is called repeatedly
-	textOutputWidget.see('end')
-	root.after(10, readSerial)
+	def GetPorts(self):
+		port_list = list_ports.comports()
+		ports = [port.device for port in port_list]
+		return ports
 
-# on change dropdown value
-def change_port(*args):
-    print('Port set to', portVar.get())
+	def ConnectSerial(self):
+		try:
+			# if port is open, close it
+			if self.ser.is_open:
+				self.ser.close()
 
-def change_baudrate(*args):
-	print('Baudrate set to', baudrateVar.get())
+			self.ser.port = self.portVar.get()
+			self.ser.baudrate = self.baudVar.get()
+			self.ser.timeout = 0
+			self.ser.writeTimeout = 0
+
+			# open port with settings and start reading
+			self.ser.open()
+			self.textOutput.insert('end', 'Connected to {}, {}\n'.format(self.ser.port, self.ser.baudrate))
+			self.ReadSerial()
+
+		except Exception as e:
+			self.textOutput.insert('end', '{}\n'.format(e))
+
+	def ReadSerial(self):
+		try:
+			serBuffer = ''
+			while self.ser.inWaiting() > 0:
+				c = self.ser.read().decode()
+				serBuffer += c
+			self.textOutput.insert('end', serBuffer)
+
+			# If checkbutton for plot is set, send data to plot function
+			if self.plotVar.get() == True and serBuffer != '':
+				self.LivePlot(serBuffer.strip())
+
+		except Exception as e:
+			self.textOutput.insert('end', e)
+
+		self.master.after(10, self.ReadSerial)
 
 
-# Initialize a serial connection
-ser = serial.Serial()
+	def GetInput(self, event):
+		self.SendCmd()
 
-# ==========
-#    GUI
-# ==========
+	def PlotEvent(self, event):
+		self.LivePlot()
 
-# Setup root window
+	def SendCmd(self):
+		try:
+			command = self.inputEntry.get()
+			self.ser.write(command.encode())
+
+		except Exception as e:
+			self.textOutput.insert('end', '{}\n'.format(e))
+
+		finally:
+			self.inputEntry.delete(0, 'end')
+
+	def ClearOutput(self):
+		self.textOutput.delete(1.0, 'end')
+
+	def LivePlot(self, data=''):
+		''' 
+		Currently only works with 2 numerical comma separated values
+		and with enough delay on the arduino 
+		'''
+		self.plt.ion()
+		if data != '':
+			x, y = map(float, data.split(','))		
+			self.plt.plot(x, y, 'ko')
+			print(len(x_val))
+
 root = Tk()
-root.title('Serial Monitor')
-
-# Add a grid and frame
-mainframe = Frame(root)
-mainframe.grid(column=0, row=0, sticky=W)
-mainframe.columnconfigure(0, weight = 1)
-mainframe.rowconfigure(0, weight = 1)
-
-# Tkinter variables
-portVar = StringVar(root)
-baudrateVar = IntVar(root)
-
-# Possible options
-port_choices = getPorts()
-baudrates_list = [50, 75, 110, 134, 150, 200, 300, 600, 1200, 1800, 2400, 4800, 9600, 19200, 38400, 57600, 115200]
-
-## Setup options
-# Port
-portVar.set(None)
-popupMenuPort = OptionMenu(mainframe, portVar, *port_choices)
-
-# Baudrate
-baudrateVar.set(9600)
-popupMenuBaud = OptionMenu(mainframe, baudrateVar, *baudrates_list)
-
-# Display options on frame
-Label(mainframe, text="Device:").grid(row = 0, column = 1)
-popupMenuPort.grid(row = 0, column = 2)
-Label(mainframe, text="Baudrate:").grid(row = 0, column = 3)
-popupMenuBaud.grid(row = 0, column = 4)
-connectBtn = Button(root, text='Connect', command=connectSerial)
-connectBtn.grid(row=0, sticky=E)
-
-# Text widget for serial output (with scrollbar)
-scrollbar = Scrollbar(root)
-scrollbar.grid(row=2, column=1, sticky=N+S)
-textOutputWidget = Text(root, height=30, width=70, takefocus=0, yscrollcommand=scrollbar.set)
-textOutputWidget.grid(row=2, column=0)
-scrollbar.config(command=textOutputWidget)
-
-# Entry for serial input
-inputEntry = Entry(root, width=87, takefocus=1)
-inputEntry.grid(row=3, column=0, sticky=W)
-inputEntry.bind('<Return>', getInput)
-
-# Clear button
-clearBtn = Button(root, text='Clear', command=clearOutput)
-clearBtn.grid(row=3, column=3, sticky=W)
-
-# Send button
-sendBtn = Button(root, text='Send', command=sendCmd)
-sendBtn.grid(row=3, sticky=E)
-
-portVar.trace('w', change_port)
-baudrateVar.trace('w', change_baudrate)
+gui = SerialMonitorGUI(root)
 root.mainloop()
