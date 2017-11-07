@@ -1,10 +1,14 @@
 from tkinter import *
+
 import serial
 from serial.tools import list_ports
+
 import matplotlib.pyplot as plt
+
 import threading
 import queue
 import time
+import datetime
 import re
 
 
@@ -16,6 +20,7 @@ class ComMonitorThread(threading.Thread):
 	Input: a serial connection, and a queue instance
 	Output: tuple (timestamp, data) into queue
 	'''
+	
 	def __init__(self, ser, que):
 		threading.Thread.__init__(self)
 		self.ser = ser
@@ -24,10 +29,11 @@ class ComMonitorThread(threading.Thread):
 		self.alive = threading.Event()
 		self.alive.set()
 
+	def run(self):
+
 		# reset the timer
 		startTime = time.clock()
 
-	def run(self):
 		while self.alive.isSet():
 
 			# reads data until newline (x0A/10) 
@@ -55,9 +61,9 @@ class SerialMonitorGUI:
 	'''
 	def __init__(self, master):
 		self.master = master
-		master.title("Serial Monitor")
-		master.protocol('WM_DELETE_WINDOW', self.onQuit)
-		master.resizable(0,0)
+		self.master.title("Serial Monitor")
+		self.master.protocol('WM_DELETE_WINDOW', self.onQuit)
+		self.master.resizable(0,0)
 	
 		self.portVar = StringVar()
 		self.baudVar = IntVar()
@@ -69,14 +75,17 @@ class SerialMonitorGUI:
 		self.threadq = queue.Queue()
 		self.readThread = ComMonitorThread(self.ser, self.threadq)
 
-		self.plt = plt
 		self.cmdList = list()
+		self.plt = plt
+		self.plt.ioff()
 
 		self.portChoices = self.getPorts()
 		self.baudratesList = [50, 75, 110, 134, 150, 200, 300, 600, 
 							1200, 1800, 2400, 4800, 9600, 19200, 38400, 
 							57600, 115200]
 
+
+		#### GUI elements
 		# Connection settings
 		self.portLabel = Label(master, text='Device').grid(row=0, column=0)
 		self.popupMenuPort = OptionMenu(master, self.portVar, *self.portChoices)
@@ -85,40 +94,45 @@ class SerialMonitorGUI:
 		self.popupMenuBaud = OptionMenu(master, self.baudVar, *self.baudratesList)
 		self.popupMenuBaud.grid(row=0, column=3)
 
-		self.connectBtn = Button(master, text='Connect', command=self.connectSerial).grid(row=0, column=69)
+		self.connectBtn = Button(master, text='Connect', command=self.connectSerial)
+		self.connectBtn.grid(row=0, column=69)
 
 		# Output
 		self.scrollbar = Scrollbar(master)
-		self.textOutput = Text(master, height=30, width=70, takefocus=0, yscrollcommand=self.scrollbar.set)
+		self.textOutput = Text(master, height=30, width=70, takefocus=0, 
+			yscrollcommand=self.scrollbar.set)
 		self.scrollbar.config(command=self.textOutput.yview)
 		self.textOutput.grid(row=2, column=0, columnspan=70, rowspan=30)
 		self.scrollbar.grid(row=2, rowspan=30, column=70, sticky=N+S)
 
 		# Input
 		self.inputEntry = Entry(master, width=50, takefocus=1)
-		self.inputEntry.grid(row=33, column=0, columnspan=5)
+		self.inputEntry.grid(row=32, column=0, columnspan=5)
 		self.inputEntry.bind('<Return>', self.onEnter)
 		self.inputEntry.bind('<Up>', self.onUpArrow)
 		self.inputEntry.bind('<Down>', self.onDownArrow)
 
 		self.sendBtn = Button(master, text='Send', command=self.sendCmd)
-		self.sendBtn.grid(row=33, column=6)
+		self.sendBtn.grid(row=32, column=6)
 		self.clearBtn = Button(master, text='Clear', command=self.clearOutput)
-		self.clearBtn.grid(row=33, column=7)
+		self.clearBtn.grid(row=32, column=7)
 
 		# Check if user wants a plot of the serial data
 		self.plotVar = BooleanVar()
 		self.plotVar.set(False)
 		self.plotCheck = Checkbutton(master, text='Plot', onvalue=True, offvalue=False, 
-			variable=self.plotVar, command=self.livePlot)
-		self.plotCheck.grid(row=33, column=9)
+			variable=self.plotVar, command=self.setupPlot)
+		self.plotCheck.grid(row=32, column=9)
 
 		# z-mode
 		self.zVar = BooleanVar()
 		self.zVar.set(False)
-		self.zCheck = Checkbutton(master, text='Z-mode', onvalue=True, offvalue=False, 
+		self.zCheck = Checkbutton(master, text='Repeat', onvalue=True, offvalue=False, 
 			variable=self.zVar, command=self.zMode)
-		self.zCheck.grid(row=33, column=10)
+		self.zCheck.grid(row=32, column=10)
+
+		self.repeatEntry = Entry(master, width=5)
+		self.repeatEntry.grid(row=32, column=11)
 
 	# lists all the available devices connected to the computer
 	def getPorts(self):
@@ -144,7 +158,8 @@ class SerialMonitorGUI:
 
 			# open port with settings and start reading
 			self.ser.open()
-			self.textOutput.insert('end', 'Connected to {}, {}\n'.format(self.ser.port, self.ser.baudrate))
+			self.textOutput.insert('end', 'Connected to {}, {}\n'
+				.format(self.ser.port, self.ser.baudrate))
 			
 			self.readThread = ComMonitorThread(self.ser, self.threadq)
 			self.readThread.start()
@@ -153,11 +168,6 @@ class SerialMonitorGUI:
 		except Exception as e:
 			self.textOutput.insert('end', '{}\n'.format(e))
 
-	def zMode(self):		
-		self.ser.write(b'z')
-
-		if self.zVar.get() == True:
-			self.master.after(1000, self.zMode)
 
 	def listenComThread(self):
 		try:
@@ -204,9 +214,6 @@ class SerialMonitorGUI:
 		try:
 			self.inputEntry.delete(0, 'end')
 			self.cmdPointer += 1
-
-			if self.cmdPointer == len(self.cmdList):
-				self.cmdPointer = len(self.cmdList) - 1
 	
 			self.inputEntry.insert('end', self.cmdList[self.cmdPointer])
 
@@ -239,24 +246,62 @@ class SerialMonitorGUI:
 
 			self.cmdPointer = len(self.cmdList)
 					
+	def zMode(self):
+		cmd = self.repeatEntry.get()
+		if cmd != '':		
+			self.ser.write(cmd.encode())
+
+		# Repeat after 1s
+		if self.zVar.get() == True:
+			self.master.after(1000, self.zMode)
+
+	def setupPlot(self):
+		self.plt.ion()
+		date = datetime.datetime.now().strftime('%Y-%m-%d %H:%M')
+
+		# lists to hold the collected data
+		# self.xOne = []
+		# self.xTwo = []
+		# self.yOne = []
+		# self.yTwo = []
+		self.plt.suptitle(date)
+
+		self.plt.subplot(211)
+		self.plt.grid(True)
+
+		self.plt.subplot(212)
+		self.plt.grid(True)
+
+		self.livePlot()
 
 	def livePlot(self, data=None):
 		''' 
 		Experimental. Matches the serial output string with a regex. 
 		If data read from serial is 1 numerical value, plot it on 
 		the y-axis with a timestamp on the x-axis.
-		If 2 numerical values are read, plot them (x,y) = (value1,value2)
+		If 2 numerical values are read, plot them (x,y) = (value1,value2).
+		Each alternative gets its own subplot.
 		Data from thread is a tuple (timestamp, data)
 		'''
-		self.plt.ion()
 		try:
 			numericData = re.findall("-?\d*\.\d+|-?\d+", data[1].decode())
 
-			if len(numericData) == 2:				
-				self.plt.plot(float(numericData[0]), float(numericData[1]), 'ro')
+			if len(numericData) == 1:
+				self.plt.subplot(211)
+				# self.xOne.append(data[0])
+				# self.yOne.append(float(numericData[0]))
+				# self.plt.plot(self.xOne, self.yOne, 'b-')
+				self.plt.plot(data[0], float(numericData[0]), 'b.')			
+				
+			elif len(numericData) == 2:
+				self.plt.subplot(212)
+				# self.xTwo.append(float(numericData[0]))
+				# self.yTwo.append(float(numericData[1]))
+				# self.plt.plot(self.xTwo, self.yTwo, 'r-')
+				self.plt.plot(float(numericData[0]), float(numericData[1]), 'r.')
 
-			elif len(numericData) == 1:
-				self.plt.plot(data[0], float(numericData[0]), 'bo')
+			else:
+				pass
 
 		except:
 			# If something went wrong, do nothing
