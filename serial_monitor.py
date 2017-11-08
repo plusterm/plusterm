@@ -5,139 +5,112 @@ from serial.tools import list_ports
 
 import matplotlib.pyplot as plt
 
-import threading
 import queue
-import time
-import datetime
 import re
 
-
-class ComMonitorThread(threading.Thread):
-	''' 
-	Creates a thread that continously reads from the serial connection
-	Puts the result in a queue.
-
-	Input: a serial connection, and a queue instance
-	Output: tuple (timestamp, data) into queue
-	'''
-	
-	def __init__(self, ser, que):
-		threading.Thread.__init__(self)
-		self.ser = ser
-		self.que = que
-
-		self.alive = threading.Event()
-		self.alive.set()
-
-	def run(self):
-
-		# reset the timer
-		startTime = time.clock()
-
-		while self.alive.isSet():
-
-			# reads data until newline (x0A/10) 
-			data = self.ser.read(1)
-			if len(data) > 0:
-				while data[-1] != 0x0A:
-					data += self.ser.read(1)
-
-				timestamp = time.clock()
-				self.que.put((timestamp, data))
-			
-		# close the connection when alive event is cleared
-		if self.ser:
-			self.ser.close()
-
-	def stop(self, timeout=None):
-		self.alive.clear()
-		threading.Thread.join(self, timeout)
+from com_reader import ComReaderThread
 
 
-
-class SerialMonitorGUI:
+class SerialMonitor:
 	'''
 	The GUI for the serial monitor. 
 	'''
 	def __init__(self, master):
 		self.master = master
-		self.master.title("Serial Monitor")
-		self.master.protocol('WM_DELETE_WINDOW', self.onQuit)
-		self.master.resizable(0,0)
+		master.title("Serial Monitor")
+		master.protocol('WM_DELETE_WINDOW', self.onQuit)
+		master.resizable(0,0)
 	
 		self.portVar = StringVar()
-		self.baudVar = IntVar()
-		self.portVar.set(None)
-		self.baudVar.set(9600)
+		self.baudVar = StringVar()
+		self.plotVar = BooleanVar()
+		self.zVar = BooleanVar()
 
+		self.zVar.set(False)
+		self.plotVar.set(False)
+		self.portVar.set('Custom')
+		self.baudVar.set('Custom')
+
+		self.plt = plt		
 		self.ser = serial.Serial()		
 
 		self.threadq = queue.Queue()
-		self.readThread = ComMonitorThread(self.ser, self.threadq)
+		self.readThread = ComReaderThread(self.ser, self.threadq)
 
 		self.cmdList = list()
-		self.plt = plt
-		self.plt.ioff()
 
 		self.portChoices = self.getPorts()
 		self.baudratesList = [50, 75, 110, 134, 150, 200, 300, 600, 
 							1200, 1800, 2400, 4800, 9600, 19200, 38400, 
-							57600, 115200]
+							57600, 115200, 'Custom']
 
 
 		#### GUI elements
-		# Connection settings
-		self.portLabel = Label(master, text='Device').grid(row=0, column=0)
-		self.popupMenuPort = OptionMenu(master, self.portVar, *self.portChoices)
-		self.popupMenuPort.grid(row=0, column=1)
-		self.baudLabel = Label(master, text='Baudrate').grid(row=0, column=2)
-		self.popupMenuBaud = OptionMenu(master, self.baudVar, *self.baudratesList)
-		self.popupMenuBaud.grid(row=0, column=3)
 
-		self.connectBtn = Button(master, text='Connect', command=self.connectSerial)
-		self.connectBtn.grid(row=0, column=69)
+		# Connection settings
+		settingsFrame = Frame(master)
+		self.portLabel = Label(settingsFrame, text='Device')
+		self.popupMenuPort = OptionMenu(settingsFrame, self.portVar, *self.portChoices)
+		self.customPortEntry = Entry(settingsFrame, width=10)
+		self.baudLabel = Label(settingsFrame, text='Baudrate')
+		self.popupMenuBaud = OptionMenu(settingsFrame, self.baudVar, *self.baudratesList)
+		self.customBaudEntry = Entry(settingsFrame, width=10)
+		self.connectBtn = Button(settingsFrame, text='Connect', command=self.connectSerial)
+
+		self.portLabel.pack(side='left')
+		self.popupMenuPort.pack(side='left')
+		self.customPortEntry.pack(side='left')
+		self.baudLabel.pack(side='left')
+		self.popupMenuBaud.pack(side='left')
+		self.customBaudEntry.pack(side='left')
+		self.connectBtn.pack(side='right')
+		settingsFrame.grid(row=0, column=0, sticky=NSEW)
 
 		# Output
-		self.scrollbar = Scrollbar(master)
-		self.textOutput = Text(master, height=30, width=70, takefocus=0, 
-			yscrollcommand=self.scrollbar.set)
+		outputFrame = Frame(master)
+		self.scrollbar = Scrollbar(outputFrame)
+		self.textOutput = Text(outputFrame, height=30, width=70, takefocus=0, 
+			yscrollcommand=self.scrollbar.set, relief=SUNKEN)
 		self.scrollbar.config(command=self.textOutput.yview)
-		self.textOutput.grid(row=2, column=0, columnspan=70, rowspan=30)
-		self.scrollbar.grid(row=2, rowspan=30, column=70, sticky=N+S)
+
+		self.textOutput.pack(side='left', fill=BOTH, expand=YES)
+		self.scrollbar.pack(side='right', fill=Y)
+		outputFrame.grid(row=1, column=0, sticky=NSEW)
 
 		# Input
-		self.inputEntry = Entry(master, width=50, takefocus=1)
-		self.inputEntry.grid(row=32, column=0, columnspan=5)
+		inputFrame = Frame(master)
+		self.inputEntry = Entry(inputFrame, width=40)
 		self.inputEntry.bind('<Return>', self.onEnter)
 		self.inputEntry.bind('<Up>', self.onUpArrow)
 		self.inputEntry.bind('<Down>', self.onDownArrow)
 
-		self.sendBtn = Button(master, text='Send', command=self.sendCmd)
-		self.sendBtn.grid(row=32, column=6)
-		self.clearBtn = Button(master, text='Clear', command=self.clearOutput)
-		self.clearBtn.grid(row=32, column=7)
+		self.sendBtn = Button(inputFrame, text='Send', command=self.sendCmd)
+		self.clearBtn = Button(inputFrame, text='Clear', command=self.clearOutput)
 
 		# Check if user wants a plot of the serial data
-		self.plotVar = BooleanVar()
-		self.plotVar.set(False)
-		self.plotCheck = Checkbutton(master, text='Plot', onvalue=True, offvalue=False, 
+		self.plotCheck = Checkbutton(inputFrame, text='Plot', onvalue=True, offvalue=False, 
 			variable=self.plotVar, command=self.setupPlot)
-		self.plotCheck.grid(row=32, column=9)
 
-		# z-mode
-		self.zVar = BooleanVar()
-		self.zVar.set(False)
-		self.zCheck = Checkbutton(master, text='Repeat', onvalue=True, offvalue=False, 
+		# repeat a command
+		self.zCheck = Checkbutton(inputFrame, text='Repeat:', onvalue=True, offvalue=False, 
 			variable=self.zVar, command=self.zMode)
-		self.zCheck.grid(row=32, column=10)
+		self.repeatEntry = Entry(inputFrame, width=10)
 
-		self.repeatEntry = Entry(master, width=5)
-		self.repeatEntry.grid(row=32, column=11)
+		self.inputEntry.pack(side='left')
+		self.sendBtn.pack(side='left')
+		self.clearBtn.pack(side='left')
+		self.repeatEntry.pack(side='right')
+		self.zCheck.pack(side='right')
+		self.plotCheck.pack(side='right')
+		inputFrame.grid(row=2, column=0, sticky=NSEW)
 
 	# lists all the available devices connected to the computer
 	def getPorts(self):
 		port_list = list_ports.comports()
 		ports = [port.device for port in port_list]
+
+		ports.append('Custom')
+
 		return ports
 
 	def connectSerial(self):
@@ -151,8 +124,16 @@ class SerialMonitorGUI:
 				self.readThread.stop(0.01)
 
 			# Set the serial connection options
-			self.ser.port = self.portVar.get()
-			self.ser.baudrate = self.baudVar.get()
+			if self.portVar.get() == 'Custom':
+				self.ser.port = self.customPortEntry.get()
+			else:
+				self.ser.port = self.portVar.get()
+
+			if self.baudVar.get() == 'Custom':
+				self.ser.baudrate = float(self.customBaudEntry.get())
+			else:
+				self.ser.baudrate = float(self.baudVar.get())
+
 			self.ser.timeout = 0 # Non-blocking
 			self.ser.writeTimeout = 0 # Non-blocking
 
@@ -161,7 +142,7 @@ class SerialMonitorGUI:
 			self.textOutput.insert('end', 'Connected to {}, {}\n'
 				.format(self.ser.port, self.ser.baudrate))
 			
-			self.readThread = ComMonitorThread(self.ser, self.threadq)
+			self.readThread = ComReaderThread(self.ser, self.threadq)
 			self.readThread.start()
 			self.master.after(10, self.listenComThread)
 
@@ -213,8 +194,7 @@ class SerialMonitorGUI:
 	def onDownArrow(self, event):
 		try:
 			self.inputEntry.delete(0, 'end')
-			self.cmdPointer += 1
-	
+			self.cmdPointer += 1	
 			self.inputEntry.insert('end', self.cmdList[self.cmdPointer])
 
 		except:
@@ -226,10 +206,10 @@ class SerialMonitorGUI:
 
 	def sendCmd(self):
 		try:
-			command = self.inputEntry.get()
-			self.ser.write(command.encode())
+			cmd = self.inputEntry.get()
+			self.ser.write(cmd.encode())
 
-			localEcho = '> ' + command + '\n'
+			localEcho = '> ' + cmd + '\n'
 			self.textOutput.insert('end', localEcho)
 
 		except Exception as e:
@@ -238,7 +218,7 @@ class SerialMonitorGUI:
 		finally:
 			# Clear the entry widget
 			self.inputEntry.delete(0, 'end')
-			self.cmdList.append(command)
+			self.cmdList.append(cmd)
 
 			# only save the 10 latest commands
 			if len(self.cmdList) > 10:
@@ -247,32 +227,35 @@ class SerialMonitorGUI:
 			self.cmdPointer = len(self.cmdList)
 					
 	def zMode(self):
-		cmd = self.repeatEntry.get()
-		if cmd != '':		
-			self.ser.write(cmd.encode())
+		try:
+			inp = self.repeatEntry.get().split(',')
 
-		# Repeat after 1s
-		if self.zVar.get() == True:
-			self.master.after(1000, self.zMode)
+			if len(inp) == 1:	
+				self.ser.write(inp[0].encode())
+				timer = 500
+
+			elif len(inp) == 2:
+				self.ser.write(inp[0].encode())
+				timer = int(inp[1])
+
+			# repeat
+			if self.zVar.get() == True:
+				self.master.after(timer, self.zMode)
+
+		except Exception as e:
+			self.textOutput.insert('end', '{}\n'.format(e))
+
 
 	def setupPlot(self):
-		self.plt.ion()
-		date = datetime.datetime.now().strftime('%Y-%m-%d %H:%M')
+		if self.plotVar.get() == True:
+			self.plt.ion()
+			self.fig, (self.ax1, self.ax2) = self.plt.subplots(2,1)
+			self.ax1.grid(True)	
+			self.ax2.grid(True)
 
-		# lists to hold the collected data
-		# self.xOne = []
-		# self.xTwo = []
-		# self.yOne = []
-		# self.yTwo = []
-		self.plt.suptitle(date)
-
-		self.plt.subplot(211)
-		self.plt.grid(True)
-
-		self.plt.subplot(212)
-		self.plt.grid(True)
-
-		self.livePlot()
+		else:
+			self.plt.ioff()
+			#self.plt.close()
 
 	def livePlot(self, data=None):
 		''' 
@@ -287,18 +270,10 @@ class SerialMonitorGUI:
 			numericData = re.findall("-?\d*\.\d+|-?\d+", data[1].decode())
 
 			if len(numericData) == 1:
-				self.plt.subplot(211)
-				# self.xOne.append(data[0])
-				# self.yOne.append(float(numericData[0]))
-				# self.plt.plot(self.xOne, self.yOne, 'b-')
-				self.plt.plot(data[0], float(numericData[0]), 'b.')			
-				
+				self.ax1.plot(data[0], float(numericData[0]), 'b.')		
+								
 			elif len(numericData) == 2:
-				self.plt.subplot(212)
-				# self.xTwo.append(float(numericData[0]))
-				# self.yTwo.append(float(numericData[1]))
-				# self.plt.plot(self.xTwo, self.yTwo, 'r-')
-				self.plt.plot(float(numericData[0]), float(numericData[1]), 'r.')
+				self.ax2.plot(float(numericData[0]), float(numericData[1]), 'r.')
 
 			else:
 				pass
@@ -310,7 +285,7 @@ class SerialMonitorGUI:
 
 def main():
 	root = Tk()
-	gui = SerialMonitorGUI(root)
+	app = SerialMonitor(root)
 	root.mainloop()
 
 if __name__ == '__main__':
