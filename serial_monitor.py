@@ -7,14 +7,13 @@ from serial.tools import list_ports
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2TkAgg
 from matplotlib import style
-style.use('ggplot')
+style.use('bmh')
 
 import queue
 import re
 import time
 
 from com_reader import ComReaderThread
-
 
 class SerialMonitor:
 	'''
@@ -54,20 +53,21 @@ class SerialMonitor:
 		
 		menu = Menu(master)
 		master.config(menu=menu)
-		fuzz = Menu(menu)
+		script = Menu(menu)
 
-		fuzz.add_command(label = 'Open', command=self.openFuzzFile)
-		menu.add_cascade(label = 'Run script', menu = fuzz)
+		script.add_command(label = 'Open', command=self.openScriptFile)
+		menu.add_cascade(label = 'Run script', menu = script)
 
 		# Connection settings
 		settingsFrame = Frame(master)
-		self.portLabel = Label(settingsFrame, text='Device')
+		self.portLabel = Label(settingsFrame, text='Device:')
 		self.popupMenuPort = OptionMenu(settingsFrame, self.portVar, *self.portChoices)
 		self.customPortEntry = Entry(settingsFrame, width=10)
-		self.baudLabel = Label(settingsFrame, text='Baudrate')
+		self.baudLabel = Label(settingsFrame, text='     Baudrate:')
 		self.popupMenuBaud = OptionMenu(settingsFrame, self.baudVar, *self.baudratesList)
 		self.customBaudEntry = Entry(settingsFrame, width=10)
-		self.connectBtn = Button(settingsFrame, text='Connect', command=self.connectSerial)
+		self.connectBtn = Button(settingsFrame, text='Open', command=self.connectSerial)
+		self.disconnectBtn = Button(settingsFrame, text='Close', command=self.disconnectSerial)
 
 		self.portLabel.pack(side='left')
 		self.popupMenuPort.pack(side='left')
@@ -76,13 +76,14 @@ class SerialMonitor:
 		self.popupMenuBaud.pack(side='left')
 		self.customBaudEntry.pack(side='left')
 		self.connectBtn.pack(side='right', padx=17)
+		self.disconnectBtn.pack(side='right')
 		settingsFrame.grid(row=0, column=0, sticky=NSEW)
 
 		# Output
 		outputFrame = Frame(master)
 		self.scrollbar = Scrollbar(outputFrame)
 		self.textOutput = Text(outputFrame, height=30, width=80, takefocus=0, 
-			yscrollcommand=self.scrollbar.set, relief=SUNKEN)
+			yscrollcommand=self.scrollbar.set, borderwidth=1, relief='sunken')
 		self.scrollbar.config(command=self.textOutput.yview)
 
 		self.textOutput.pack(side='left')
@@ -113,7 +114,7 @@ class SerialMonitor:
 		self.clearBtn.pack(side='left')
 		self.repeatEntry.pack(side='right', padx=17, ipadx=0)
 		self.zCheck.pack(side='right')
-		self.plotCheck.pack(side='right')
+		self.plotCheck.pack(side='left')
 		inputFrame.grid(row=2, column=0, sticky=NSEW)
 
 
@@ -162,6 +163,15 @@ class SerialMonitor:
 		except Exception as e:
 			self.textOutput.insert('end', '{}\n'.format(e))
 
+	def disconnectSerial(self):
+		try:
+			self.master.after_cancel(self.listenComThread)
+			self.readThread.stop(0.01)
+			self.ser.close()
+			self.textOutput.insert('end', 'Port closed\n')
+		except Exception as e:
+			self.textOutput.insert('end', '{}\n'.format(e))
+
 
 	def listenComThread(self):
 		try:
@@ -178,19 +188,20 @@ class SerialMonitor:
 
 		# check again (unless program is quitting)
 		try:
-			self.master.after(10, self.listenComThread)	
+			self.master.after(5, self.listenComThread)	
 		except:
 			pass
 
 	def onQuit(self):	
 		# When closing the window, close serial connection and stop thread
 		if self.readThread.isAlive():
-			self.readThread.stop(0.0001)
+			self.readThread.stop(0.01)
 
 		if self.ser.is_open:
-			self.ser.close()
 			self.master.after_cancel(self.listenComThread)
+			self.ser.close()			
 
+		self.master.quit()
 		self.master.destroy()
 
 
@@ -285,6 +296,9 @@ class SerialMonitor:
 	def setupPlot(self):
 		if self.plotVar.get() == True:
 			self.plotFrame = Frame(self.master)
+			clearPlotBtn = Button(self.plotFrame, text='Clear', command=self.clearPlot)
+			clearPlotBtn.pack(pady=3)
+
 			self.fig, (self.ax1, self.ax2) = self.plt.subplots(2,1)
 
 			self.canvas = FigureCanvasTkAgg(self.fig, self.plotFrame)
@@ -293,8 +307,7 @@ class SerialMonitor:
 			toolbar = NavigationToolbar2TkAgg(self.canvas, self.plotFrame)
 			toolbar.update()
 
-			self.canvas._tkcanvas.pack()
-			self.plotFrame.grid(column=1, row=1, rowspan=35)
+			self.plotFrame.grid(column=1, row=0, rowspan=35)
 
 			self.xValOne = []
 			self.xValTwo = []
@@ -304,6 +317,7 @@ class SerialMonitor:
 		else:
 			self.plotFrame.destroy()
 
+
 	def livePlot(self, data=None):
 		''' 
 		Matches the serial output string with a regex. 
@@ -312,41 +326,52 @@ class SerialMonitor:
 		If 2 numerical values are read, plot them (x,y) = (value1,value2).
 		Data from thread is a tuple (timestamp, data)
 		'''
-		try:
+		if data is not None:
 			numericData = re.findall("-?\d*\.\d+|-?\d+", data[1].decode())
 		
 			if len(numericData) == 1:
 				self.ax1.clear()		
-				self.xValOne.append(data[0])
-				self.yValOne.append(numericData[0])
-				self.ax1.plot(self.xValOne, self.yValOne)
-				self.canvas.draw()
+				self.xValOne.append(float(data[0]))
+				self.yValOne.append(float(numericData[0]))
+
+				if len(self.xValOne) > 51:
+					self.xValOne.pop(0)
+					self.yValOne.pop(0)
+
+				self.ax1.plot(self.xValOne, self.yValOne, '.-')
 
 			elif len(numericData) == 2:
 				self.ax2.clear()
 				self.xValTwo.append(float(numericData[0]))
 				self.yValTwo.append(float(numericData[1]))
-				self.ax2.plot(self.xValTwo, self.yValTwo)
-				self.canvas.draw()
-	
-		except:
-			# If something went wrong, do nothing
-			pass
+
+				if len(self.xValTwo) > 51:
+					self.xValTwo.pop(0)
+					self.yValTwo.pop(0)
+
+				self.ax2.plot(self.xValTwo, self.yValTwo, '.-')
+
+			self.canvas.draw()
 
 
-	def openFuzzFile(self):
+	def clearPlot(self):
+		self.ax1.clear()
+		self.ax2.clear()
+		#self.canvas.draw()
+
+	def openScriptFile(self):
 		file = askopenfile(filetypes =(("Text File", "*.txt"),("All Files","*.*")),
 							title = "Choose a file")
-		try:
+		try:			
 			with open(file.name, 'r') as f:
 				text = f.read()
-				self.fuzzer(text)
+				self.sendScript(text)
 				
 		except Exception as e:
 			self.textOutput.insert('end', '{}\n'.format(e))
 
 
-	def fuzzer(self, text):
+	def sendScript(self, text):
 		'''
 		Takes a comma separated text with commands to send to
 		the serial device, with a small delay.
@@ -355,17 +380,23 @@ class SerialMonitor:
 		
 		command[*int] - sends command int (optional) times, e.g. c, c*10
 		sleep[float] - sleeps for float seconds, e.g. sleep1
+		delay[float] - sets the delay time, float seconds, for sending
 		'''
 
+		delay = 0.05
 		split_text = text.split(',')
 		for line in split_text:
 
-			if '*' in line:
+			if 'delay' in line:
+				d = line.split('delay')
+				delay = float(d[1])
+
+			elif '*' in line:
 				mult = line.split('*')
 				for i in range(int(mult[1])):
 					self.sendCmd(mult[0])
 					self.master.update()
-					time.sleep(0.05)
+					time.sleep(delay)
 					self.master.update()
 
 			elif 'sleep' in line:
@@ -377,7 +408,7 @@ class SerialMonitor:
 			else:
 				self.sendCmd(line)
 				self.master.update()
-				time.sleep(0.05)
+				time.sleep(delay)
 				self.master.update()
 
 
