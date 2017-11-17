@@ -17,7 +17,7 @@ from com_reader import ComReaderThread
 
 class SerialMonitor:
 	'''
-	The GUI for the serial monitor. 
+	Serial monitor GUI, plots, and controls
 	'''
 	def __init__(self, master):
 		self.master = master
@@ -28,11 +28,11 @@ class SerialMonitor:
 		self.portVar = StringVar()
 		self.baudVar = StringVar()
 		self.plotVar = BooleanVar()
-		self.zVar = BooleanVar()
+		self.repeatVar = BooleanVar()
 
 		self.portVar.set('Custom')
 		self.baudVar.set('Custom')
-		self.zVar.set(False)
+		self.repeatVar.set(False)
 		self.plotVar.set(False)
 
 		self.plt = plt		
@@ -51,12 +51,17 @@ class SerialMonitor:
 
 		#### GUI elements
 		
+		# Menu bar
 		menu = Menu(master)
 		master.config(menu=menu)
-		script = Menu(menu)
 
-		script.add_command(label = 'Open', command=self.openScriptFile)
-		menu.add_cascade(label = 'Run script', menu = script)
+		file = Menu(menu, tearoff=0)
+		file.add_command(label = 'Quit', underline=0, command=self.onQuit)
+		menu.add_cascade(label = 'File', underline=0, menu=file)
+
+		script = Menu(menu, tearoff=0)
+		script.add_command(label = 'Run', underline=0, command=self.openScriptFile)
+		menu.add_cascade(label = 'Script', underline=0, menu=script)
 
 		# Connection settings
 		settingsFrame = Frame(master)
@@ -104,16 +109,16 @@ class SerialMonitor:
 		self.plotCheck = Checkbutton(inputFrame, text='Plot', onvalue=True, offvalue=False, 
 			variable=self.plotVar, command=self.setupPlot)
 
-		# repeat a command
-		self.zCheck = Checkbutton(inputFrame, text='Repeat:', onvalue=True, offvalue=False, 
-			variable=self.zVar, command=self.zMode)
+		# Repeat commanda
+		self.repeatCheck = Checkbutton(inputFrame, text='Repeat:', onvalue=True, offvalue=False, 
+			variable=self.repeatVar, command=self.repeatMode)
 		self.repeatEntry = Entry(inputFrame, width=10)
 
 		self.inputEntry.pack(side='left')
 		self.sendBtn.pack(side='left')
 		self.clearBtn.pack(side='left')
 		self.repeatEntry.pack(side='right', padx=17, ipadx=0)
-		self.zCheck.pack(side='right')
+		self.repeatCheck.pack(side='right')
 		self.plotCheck.pack(side='left')
 		inputFrame.grid(row=2, column=0, sticky=NSEW)
 
@@ -124,8 +129,7 @@ class SerialMonitor:
 		ports = [port.device for port in port_list]
 
 		ports.append('Custom')
-
-		return ports
+		return sorted(ports)
 
 
 	def connectSerial(self):
@@ -145,9 +149,9 @@ class SerialMonitor:
 				self.ser.port = self.portVar.get()
 
 			if self.baudVar.get() == 'Custom':
-				self.ser.baudrate = float(self.customBaudEntry.get())
+				self.ser.baudrate = int(self.customBaudEntry.get())
 			else:
-				self.ser.baudrate = float(self.baudVar.get())
+				self.ser.baudrate = int(self.baudVar.get())
 
 			self.ser.timeout = 0.01
 
@@ -162,6 +166,7 @@ class SerialMonitor:
 
 		except Exception as e:
 			self.textOutput.insert('end', '{}\n'.format(e))
+
 
 	def disconnectSerial(self):
 		try:
@@ -182,15 +187,17 @@ class SerialMonitor:
 			self.textOutput.insert('end', result[1].decode())
 			self.textOutput.see('end')
 
-			# If checkbutton for plot is set, send data to plot function
+			# If checkbutton for plot is set,add data to livefeed
+			# to be used with plot function
 			if self.plotVar.get() == True:
 				self.livePlot(result)
 
 		# check again (unless program is quitting)
 		try:
-			self.master.after(5, self.listenComThread)	
+			self.master.after(10, self.listenComThread)	
 		except:
 			pass
+
 
 	def onQuit(self):	
 		# When closing the window, close serial connection and stop thread
@@ -246,9 +253,9 @@ class SerialMonitor:
 		self.sendCmd(cmd)
 					
 
-	def zMode(self):
+	def repeatMode(self):
 		# Repeat sends a command, by default evey 500 ms
-		# Specify time limit with a comma, e.g. 'c, 100'
+		# Specify time limit with a comma, e.g. 'c, 100' in ms
 		try:
 			inp = self.repeatEntry.get().split(',')
 
@@ -258,12 +265,16 @@ class SerialMonitor:
 
 			elif len(inp) == 2:
 				self.sendCmd(inp[0])
-				timer = int(inp[1])
+
+				if int(inp[1]) <= 0:
+					timer = 500
+				else:
+					timer = int(inp[1])
 
 			# repeat
-			if self.zVar.get() == True:
+			if self.repeatVar.get() == True:
 				try:
-					self.master.after(timer, self.zMode)
+					self.master.after(timer, self.repeatMode)
 				except:
 					pass
 
@@ -282,7 +293,7 @@ class SerialMonitor:
 			self.textOutput.insert('end', '{}\n'.format(e))
 
 		finally:
-			# Clear the entry widget
+			# Clear the entry widget, add save the last command
 			self.inputEntry.delete(0, 'end')
 			self.cmdList.append(cmd)
 
@@ -294,9 +305,10 @@ class SerialMonitor:
 
 
 	def setupPlot(self):
+		# Sets up the plot, and frame containing the plot
 		if self.plotVar.get() == True:
 			self.plotFrame = Frame(self.master)
-			clearPlotBtn = Button(self.plotFrame, text='Clear', command=self.clearPlot)
+			clearPlotBtn = Button(self.plotFrame, text='Clear plot', command=self.clearPlot)
 			clearPlotBtn.pack(pady=3)
 
 			self.fig, (self.ax1, self.ax2) = self.plt.subplots(2,1)
@@ -314,7 +326,10 @@ class SerialMonitor:
 			self.yValOne = []
 			self.yValTwo = []
 
+			self.livePlot()
+
 		else:
+			# remove the plot
 			self.plotFrame.destroy()
 
 
@@ -326,6 +341,7 @@ class SerialMonitor:
 		If 2 numerical values are read, plot them (x,y) = (value1,value2).
 		Data from thread is a tuple (timestamp, data)
 		'''
+
 		if data is not None:
 			numericData = re.findall("-?\d*\.\d+|-?\d+", data[1].decode())
 		
@@ -334,10 +350,11 @@ class SerialMonitor:
 				self.xValOne.append(float(data[0]))
 				self.yValOne.append(float(numericData[0]))
 
-				if len(self.xValOne) > 51:
+				if len(self.xValOne) > 50:
 					self.xValOne.pop(0)
 					self.yValOne.pop(0)
 
+				self.ax1.minorticks_on()
 				self.ax1.plot(self.xValOne, self.yValOne, '.-')
 
 			elif len(numericData) == 2:
@@ -345,27 +362,35 @@ class SerialMonitor:
 				self.xValTwo.append(float(numericData[0]))
 				self.yValTwo.append(float(numericData[1]))
 
-				if len(self.xValTwo) > 51:
+				if len(self.xValTwo) > 50:
 					self.xValTwo.pop(0)
 					self.yValTwo.pop(0)
 
+				self.ax2.minorticks_on()
 				self.ax2.plot(self.xValTwo, self.yValTwo, '.-')
 
 			self.canvas.draw()
 
 
 	def clearPlot(self):
+		# Reset the plot figure
 		self.ax1.clear()
 		self.ax2.clear()
-		#self.canvas.draw()
+		self.xValOne = []
+		self.xValTwo = []
+		self.yValOne = []
+		self.yValTwo = []
+		self.canvas.draw()
+
 
 	def openScriptFile(self):
 		file = askopenfile(filetypes =(("Text File", "*.txt"),("All Files","*.*")),
 							title = "Choose a file")
-		try:			
-			with open(file.name, 'r') as f:
-				text = f.read()
-				self.sendScript(text)
+		try:
+			f = open(file.name, 'r')
+			text = f.read()
+			f.close()
+			self.sendScript(text)
 				
 		except Exception as e:
 			self.textOutput.insert('end', '{}\n'.format(e))
@@ -373,37 +398,61 @@ class SerialMonitor:
 
 	def sendScript(self, text):
 		'''
-		Takes a comma separated text with commands to send to
-		the serial device, with a small delay.
+		Takes a text with commands to send to the serial device
+		Newline separated
 
 		Syntax:
 		
-		command[*int] - sends command int (optional) times, e.g. c, c*10
-		sleep[float] - sleeps for float seconds, e.g. sleep1
-		delay[float] - sets the delay time, float seconds, for sending
+		command [*int] - sends command int (optional) times, e.g. c, c*10
+		sleep [float] - sleeps for float ms, e.g. sleep 1000
+		delay [float] - sets the delay time, float ms, between sending
 		'''
 
-		delay = 0.05
-		split_text = text.split(',')
-		for line in split_text:
+		delay = 0.05 # default delay, if none or 0 given
+		split_text = text.split('\n')
+
+		for idx, line in enumerate(split_text):
+			if not self.ser.is_open:
+				self.textOutput.insert('end', 'Port is not open\n')
+				break
 
 			if 'delay' in line:
-				d = line.split('delay')
-				delay = float(d[1])
+				d = re.search('\d*\.\d+|\d+', line)
+
+				try:
+					parsedDelay = float(d.group(0))
+					if parsedDelay == 0 or parsedDelay > 30000:
+						delay = 0.05
+					else:
+						delay = parsedDelay / 1000
+
+				except:
+					self.textOutput.insert('end', 'Invalid format \'delay\' on row {}. Quitting.\n'
+									.format(idx+1))
+					break
+
+			elif 'sleep' in line:
+				s = re.search('\d*\.\d+|\d+', line)
+
+				try:
+					self.master.update()
+					ss = float(s.group(0)) / 1000 
+					time.sleep(ss)
+					self.master.update()
+
+				except:
+					self.textOutput.insert('end', 'Invalid format \'sleep\' on row {}. Quitting.\n'
+									.format(idx+1))
+					break
 
 			elif '*' in line:
 				mult = line.split('*')
+
 				for i in range(int(mult[1])):
 					self.sendCmd(mult[0])
 					self.master.update()
 					time.sleep(delay)
 					self.master.update()
-
-			elif 'sleep' in line:
-				sleep = line.split('sleep')
-				self.master.update()
-				time.sleep(float(sleep[1]))
-				self.master.update()
 
 			else:
 				self.sendCmd(line)
@@ -415,7 +464,6 @@ class SerialMonitor:
 def main():
 	root = Tk()
 	app = SerialMonitor(root)
-
 	root.mainloop()
 
 if __name__ == '__main__':
