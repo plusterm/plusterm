@@ -3,6 +3,7 @@ from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolb
 from matplotlib import style
 style.use('bmh')
 
+from communicator import getPorts
 class plotter():
 	"""plotter"""
 	def __init__(self):

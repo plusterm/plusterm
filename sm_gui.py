@@ -1,0 +1,107 @@
+from tkinter import *
+from tkinter.filedialog import askopenfile
+
+
+from communicator import getPorts
+
+class sm_gui(object):
+	"""docstring for sm_gui"""
+	def __init__(self,master,context):
+		self.context=context
+		self.master = master
+		master.title("Serial Monitor")
+		master.protocol('WM_DELETE_WINDOW', self.context.onQuit)
+		master.resizable(0,0)
+	
+		self.portVar = StringVar()
+		self.baudVar = StringVar()
+		self.plotVar = BooleanVar()
+		self.repeatVar = BooleanVar()
+
+		self.portVar.set('Custom')
+		self.baudVar.set('Custom')
+		self.repeatVar.set(False)
+		self.plotVar.set(False)
+
+		# self.plt = plt		
+		# self.ser = serial.Serial()	#	should be handdled in comunicator
+
+		# self.threadq = queue.Queue()
+		# self.readThread = ComReaderThread(self.ser, self.threadq)	#	handled in communicator
+
+		self.cmdList = list()
+
+		self.portChoices = getPorts()
+		self.baudratesList = [50, 75, 110, 134, 150, 200, 300, 600, 
+							1200, 1800, 2400, 4800, 9600, 19200, 38400, 
+							57600, 115200, 'Custom']
+
+		self.menu = Menu(master)
+		self.master.config(menu=self.menu)
+
+		self.file = Menu(menu, tearoff=0)
+		self.file.add_command(label = 'Quit', underline=0, command=self.context.onQuit)
+		self.menu.add_cascade(label = 'File', underline=0, menu=file)
+
+		self.script = Menu(menu, tearoff=0)
+		self.script.add_command(label = 'Run', underline=0, command=self.context.openScriptFile)
+		self.menu.add_cascade(label = 'Script', underline=0, menu=script)
+
+		# Connection settings
+		settingsFrame = Frame(master)
+		self.portLabel = Label(settingsFrame, text='Device:')
+		self.popupMenuPort = OptionMenu(settingsFrame, self.portVar, *self.portChoices)
+		self.customPortEntry = Entry(settingsFrame, width=10)
+		self.baudLabel = Label(settingsFrame, text='     Baudrate:')
+		self.popupMenuBaud = OptionMenu(settingsFrame, self.baudVar, *self.baudratesList)
+		self.customBaudEntry = Entry(settingsFrame, width=10)
+		self.connectBtn = Button(settingsFrame, text='Open', command=self.context.connectSerial)
+		self.disconnectBtn = Button(settingsFrame, text='Close', command=self.context.disconnectSerial)
+
+		self.portLabel.pack(side='left')
+		self.popupMenuPort.pack(side='left')
+		self.customPortEntry.pack(side='left')
+		self.baudLabel.pack(side='left')
+		self.popupMenuBaud.pack(side='left')
+		self.customBaudEntry.pack(side='left')
+		self.connectBtn.pack(side='right', padx=17)
+		self.disconnectBtn.pack(side='right')
+		settingsFrame.grid(row=0, column=0, sticky=NSEW)
+
+		# Output
+		outputFrame = Frame(master)
+		self.scrollbar = Scrollbar(outputFrame)
+		self.textOutput = Text(outputFrame, height=30, width=80, takefocus=0, 
+			yscrollcommand=self.scrollbar.set, borderwidth=1, relief='sunken')
+		self.scrollbar.config(command=self.textOutput.yview)
+
+		self.textOutput.pack(side='left')
+		self.scrollbar.pack(side='right', fill=Y)
+		outputFrame.grid(row=1, column=0, sticky=NSEW)
+
+		# Input
+		inputFrame = Frame(master)
+		self.inputEntry = Entry(inputFrame, width=50)
+		self.inputEntry.bind('<Return>', self.onEnter)
+		self.inputEntry.bind('<Up>', self.onUpArrow)
+		self.inputEntry.bind('<Down>', self.onDownArrow)
+
+		self.sendBtn = Button(inputFrame, text='Send', command=self.onSendClick)
+		self.clearBtn = Button(inputFrame, text='Clear', command=self.clearOutput)
+
+		# Check if user wants a plot of the serial data
+		self.plotCheck = Checkbutton(inputFrame, text='Plot', onvalue=True, offvalue=False, 
+			variable=self.plotVar, command=self.setupPlot)
+
+		# Repeat commanda
+		self.repeatCheck = Checkbutton(inputFrame, text='Repeat:', onvalue=True, offvalue=False, 
+			variable=self.repeatVar, command=self.repeatMode)
+		self.repeatEntry = Entry(inputFrame, width=10)
+
+		self.inputEntry.pack(side='left')
+		self.sendBtn.pack(side='left')
+		self.clearBtn.pack(side='left')
+		self.repeatEntry.pack(side='right', padx=17, ipadx=0)
+		self.repeatCheck.pack(side='right')
+		self.plotCheck.pack(side='left')
+		inputFrame.grid(row=2, column=0, sticky=NSEW)

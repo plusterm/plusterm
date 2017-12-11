@@ -33,7 +33,7 @@ class communicator():
 					self.readerthread.stop(0.01)
 
 			#if arg.local:
-			self.comstream=serial()	#set to local com... init
+			self.comstream=serial()	#set to local com... init 
 			self.comstream.baudrate=arg.baudrate
 			self.comstream.port=arg.port
 			self.comstream.timeout=arg.timeout
@@ -55,7 +55,7 @@ class communicator():
 
 
 def getPorts():
-	# lists all the available devices connected to the computer
+	# lists all the available serial devices connected to the computer
 	port_list = list_ports.comports()
 	ports = [port.device for port in port_list]
 	ports.append('Custom')
