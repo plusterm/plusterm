@@ -253,7 +253,7 @@ class SerialMonitor:
 
 	def sendCmd(self, cmd):
 		try:
-			self.ser.write(cmd.encode())
+			self.communicator.sendCmd(cmd.encode())
 
 			localEcho = '> ' + cmd + '\n'
 			self.logoutputtogui(localEcho)
@@ -273,72 +273,72 @@ class SerialMonitor:
 			self.cmdPointer = len(self.cmdList)
 
 
-	def setupPlot(self):
-		# Sets up the plot, and frame containing the plot
-		if self.plotVar.get() == True:
-			self.plotFrame = Frame(self.master)
-			clearPlotBtn = Button(self.plotFrame, text='Clear plot', command=self.clearPlot)
-			clearPlotBtn.pack(pady=3)
+	# def setupPlot(self):
+	# 	# Sets up the plot, and frame containing the plot
+	# 	if self.plotVar.get() == True:
+	# 		self.plotFrame = Frame(self.master)
+	# 		clearPlotBtn = Button(self.plotFrame, text='Clear plot', command=self.clearPlot)
+	# 		clearPlotBtn.pack(pady=3)
 
-			self.fig, (self.ax1, self.ax2) = self.plt.subplots(2,1)
+	# 		self.fig, (self.ax1, self.ax2) = self.plt.subplots(2,1)
 
-			self.canvas = FigureCanvasTkAgg(self.fig, self.plotFrame)
-			self.canvas.get_tk_widget().pack()
+	# 		self.canvas = FigureCanvasTkAgg(self.fig, self.plotFrame)
+	# 		self.canvas.get_tk_widget().pack()
 
-			toolbar = NavigationToolbar2TkAgg(self.canvas, self.plotFrame)
-			toolbar.update()
+	# 		toolbar = NavigationToolbar2TkAgg(self.canvas, self.plotFrame)
+	# 		toolbar.update()
 
-			self.plotFrame.grid(column=1, row=0, rowspan=35)
+	# 		self.plotFrame.grid(column=1, row=0, rowspan=35)
 
-			self.xValOne = []
-			self.xValTwo = []
-			self.yValOne = []
-			self.yValTwo = []
+	# 		self.xValOne = []
+	# 		self.xValTwo = []
+	# 		self.yValOne = []
+	# 		self.yValTwo = []
 
-			self.livePlot()
+	# 		self.livePlot()
 
-		else:
-			# remove the plot
-			self.plotFrame.destroy()
+	# 	else:
+	# 		# remove the plot
+	# 		self.plotFrame.destroy()
 
 
-	def livePlot(self, data=None):
-		''' 
-		Matches the serial output string with a regex. 
-		If data read from serial is 1 numerical	value, plot it on the 
-		y-axis with timestamp on the x-axis.
-		If 2 numerical values are read, plot them (x,y) = (value1,value2).
-		Data from thread is a tuple (timestamp, data)
-		'''
+	# def livePlot(self, data=None):
+	# 	''' 
+	# 	Matches the serial output string with a regex. 
+	# 	If data read from serial is 1 numerical	value, plot it on the 
+	# 	y-axis with timestamp on the x-axis.
+	# 	If 2 numerical values are read, plot them (x,y) = (value1,value2).
+	# 	Data from thread is a tuple (timestamp, data)
+	# 	'''
 
-		if data is not None:
-			numericData = re.findall("-?\d*\.\d+|-?\d+", data[1].decode())
+	# 	if data is not None:
+	# 		numericData = re.findall("-?\d*\.\d+|-?\d+", data[1].decode())
 		
-			if len(numericData) == 1:
-				self.ax1.clear()		
-				self.xValOne.append(float(data[0]))
-				self.yValOne.append(float(numericData[0]))
+	# 		if len(numericData) == 1:
+	# 			self.ax1.clear()		
+	# 			self.xValOne.append(float(data[0]))
+	# 			self.yValOne.append(float(numericData[0]))
 
-				if len(self.xValOne) > 50:
-					self.xValOne.pop(0)
-					self.yValOne.pop(0)
+	# 			if len(self.xValOne) > 50:
+	# 				self.xValOne.pop(0)
+	# 				self.yValOne.pop(0)
 
-				self.ax1.minorticks_on()
-				self.ax1.plot(self.xValOne, self.yValOne, '.-')
+	# 			self.ax1.minorticks_on()
+	# 			self.ax1.plot(self.xValOne, self.yValOne, '.-')
 
-			elif len(numericData) == 2:
-				self.ax2.clear()
-				self.xValTwo.append(float(numericData[0]))
-				self.yValTwo.append(float(numericData[1]))
+	# 		elif len(numericData) == 2:
+	# 			self.ax2.clear()
+	# 			self.xValTwo.append(float(numericData[0]))
+	# 			self.yValTwo.append(float(numericData[1]))
 
-				if len(self.xValTwo) > 50:
-					self.xValTwo.pop(0)
-					self.yValTwo.pop(0)
+	# 			if len(self.xValTwo) > 50:
+	# 				self.xValTwo.pop(0)
+	# 				self.yValTwo.pop(0)
 
-				self.ax2.minorticks_on()
-				self.ax2.plot(self.xValTwo, self.yValTwo, '.-')
+	# 			self.ax2.minorticks_on()
+	# 			self.ax2.plot(self.xValTwo, self.yValTwo, '.-')
 
-			self.canvas.draw()
+	# 		self.canvas.draw()
 
 
 	def clearPlot(self):

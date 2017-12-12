@@ -62,6 +62,9 @@ class communicator():
 		except Exception as e:
 			self.context.logoutputtogui('{}\n'.format(e))
 
+	def sendCmd(self,cmd):
+		self.comstream.write(cmd.encode())
+
 
 def getPorts():
 	# lists all the available serial devices connected to the computer
