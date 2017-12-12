@@ -3,43 +3,44 @@ from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolb
 from matplotlib import style
 style.use('bmh')
 
-from communicator import getPorts
 class plotter():
 	"""plotter"""
-	def __init__(self):
+	def __init__(self,master):
 		# super(plotter, self).__init__()
-		# self.arg = arg
+		self.master = master
+		self.context=context
+		self.plt = plt		
+		
 		
 
 	def setupPlot(self):
 		# Sets up the plot, and frame containing the plot
-		if self.plotVar.get() == True:
-			self.plotFrame = Frame(self.master)
-			# clearPlotBtn = Button(self.plotFrame, text='Clear plot', command=self.clearPlot)
-			# clearPlotBtn.pack(pady=3)
+		self.plotFrame = Frame(self.master)
 
-			self.fig, (self.ax1, self.ax2) = self.plt.subplots(2,1)
+		clearPlotBtn = Button(self.plotFrame, text='Clear plot', command=self.clearPlot)
+		clearPlotBtn.pack(pady=3)
 
-			self.canvas = FigureCanvasTkAgg(self.fig, self.plotFrame)
-			self.canvas.get_tk_widget().pack()
+		self.fig, (self.ax1, self.ax2) = self.plt.subplots(2,1)
+		self.canvas = FigureCanvasTkAgg(self.fig, self.plotFrame)
+		self.canvas.get_tk_widget().pack()
 
-			toolbar = NavigationToolbar2TkAgg(self.canvas, self.plotFrame)
-			toolbar.update()
+		toolbar = NavigationToolbar2TkAgg(self.canvas, self.plotFrame)
+		toolbar.update()
 
-			self.plotFrame.grid(column=1, row=0, rowspan=35)
+		self.plotFrame.grid(column=1, row=0, rowspan=35)
 
-			self.xValOne = []
-			self.xValTwo = []
-			self.yValOne = []
-			self.yValTwo = []
+		self.xValOne = []
+		self.xValTwo = []
+		self.yValOne = []
+		self.yValTwo = []
 
-			self.livePlot()
+		# self.livePlot()
 
-		else:
-			# remove the plot
-			self.plotFrame.destroy()
+	def destroyplot():
+		# remove the plot
+		self.plotFrame.destroy()
 
-	def livePlot(self, data=None):
+	def Plot(self, data=None):
 		''' 
 		Matches the serial output string with a regex. 
 		If data read from serial is 1 numerical	value, plot it on the 

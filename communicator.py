@@ -10,8 +10,9 @@ class communicator():
 		.
 		.
 	"""
-	def __init__(self, arg):
+	def __init__(self,arg):
 		#super(communicator, self).__init__()
+		
 		self.arg = arg
 		self.threadq=queue.Queue()
 		self.comstream=None
@@ -49,9 +50,17 @@ class communicator():
 			self.master.after(10,self,listenComThread)
 			return True
 		except Exception as e:
-			#textoutput...
+			self.context.logoutputtogui('{}\n'.format(e))
 			return False
 
+	def disconnect(self):
+		try:
+			self.master.after_cancel(self.listenComThread)
+			self.readerthread.stop(0.01)
+			self.comstream.close()
+			self.context. # textOutput.insert('end', 'Port closed\n')
+		except Exception as e:
+			self.context.logoutputtogui('{}\n'.format(e))
 
 
 def getPorts():

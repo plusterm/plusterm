@@ -23,7 +23,6 @@ class sm_gui(object):
 		self.repeatVar.set(False)
 		self.plotVar.set(False)
 
-		# self.plt = plt		
 		# self.ser = serial.Serial()	#	should be handdled in comunicator
 
 		# self.threadq = queue.Queue()
@@ -86,7 +85,7 @@ class sm_gui(object):
 		self.inputEntry.bind('<Up>', self.onUpArrow)
 		self.inputEntry.bind('<Down>', self.onDownArrow)
 
-		self.sendBtn = Button(inputFrame, text='Send', command=self.onSendClick)
+		self.sendBtn = Button(inputFrame, text='Send', command=self.context.onSendClick)
 		self.clearBtn = Button(inputFrame, text='Clear', command=self.clearOutput)
 
 		# Check if user wants a plot of the serial data
@@ -105,3 +104,14 @@ class sm_gui(object):
 		self.repeatCheck.pack(side='right')
 		self.plotCheck.pack(side='left')
 		inputFrame.grid(row=2, column=0, sticky=NSEW)
+
+	def logoutput(self,data):
+		self.textOutput.insert('end', data)
+		self.textOutput.see('end')	#	scroll down to last entry
+
+	def clearOutput(self):
+		# clears the output text widget
+		self.textOutput.delete(1.0, 'end')
+
+
+
