@@ -23,11 +23,6 @@ class sm_gui(object):
 		self.repeatVar.set(False)
 		self.plotVar.set(False)
 
-		# self.ser = serial.Serial()	#	should be handdled in comunicator
-
-		# self.threadq = queue.Queue()
-		# self.readThread = ComReaderThread(self.ser, self.threadq)	#	handled in communicator
-
 		self.cmdList = list()
 
 		self.portChoices = getPorts()
@@ -113,5 +108,87 @@ class sm_gui(object):
 		# clears the output text widget
 		self.textOutput.delete(1.0, 'end')
 
+	def clearinputentry():
+		# Clear the entry widget, add save the last command
+		self.inputEntry.delete(0, 'end')
 
+	def savecommand(self,cmd):
+		self.cmdList.append(cmd)
+
+		# only save the 10 latest commands
+		if len(self.cmdList) > 10:
+			self.cmdList.pop(0)
+
+		self.cmdPointer = len(self.cmdList)
+	def onUpArrow(self, event):
+		# cycles previously entered commands
+		try:
+			self.inputEntry.delete(0, 'end')
+			self.cmdPointer -= 1
+
+			if self.cmdPointer < 0:
+				self.cmdPointer = 0
+
+			self.inputEntry.insert('end', self.cmdList[self.cmdPointer])
+
+		except:
+			pass
+
+
+	def onDownArrow(self, event):
+		try:
+			self.inputEntry.delete(0, 'end')
+			self.cmdPointer += 1	
+			self.inputEntry.insert('end', self.cmdList[self.cmdPointer])
+
+		except:
+			pass
+
+
+	def onEnter(self, event):
+		# sends command when enter is pressed
+		cmd = self.inputEntry.get()
+		self.context.sendCmd(cmd)
+
+
+	def onSendClick(self):
+		cmd = self.inputEntry.get()
+		self.context.sendCmd(cmd)
+					
+
+	def repeatMode(self):
+		# Repeat sends a command, by default evey 500 ms
+		# Specify time limit with a comma, e.g. 'c, 100' in ms
+		try:
+			inp = self.repeatEntry.get().split(',')
+
+			if len(inp) == 1:
+				self.context.sendCmd(inp[0])
+				timer = 500
+
+			elif len(inp) == 2:
+				self.context.sendCmd(inp[0])
+
+				if int(inp[1]) <= 0:
+					timer = 500
+				else:
+					timer = int(inp[1])
+
+			# repeat
+			if self.repeatVar.get() == True:
+				try:
+					self.master.after(timer, self.repeatMode)
+				except:
+					pass
+
+		except Exception as e:
+			self.logoutput('{}\n'.format(e))
+
+	def listenComThread(self):
+		self.context.getdata()
+		# check again (unless program is quitting)
+		try:
+			self.master.after(10, self.listenComThread)	
+		except:
+			pass
 

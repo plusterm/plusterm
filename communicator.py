@@ -54,18 +54,18 @@ class communicator():
 			return False
 
 	def disconnect(self):
-		try:
-			self.master.after_cancel(self.listenComThread)
-			self.readerthread.stop(0.01)
-			self.comstream.close()
-			self.context. # textOutput.insert('end', 'Port closed\n')
-		except Exception as e:
-			self.context.logoutputtogui('{}\n'.format(e))
+		self.master.after_cancel(self.listenComThread)
+		self.readerthread.stop(0.01)
+		self.comstream.close()
+			
 
 	def sendCmd(self,cmd):
 		self.comstream.write(cmd.encode())
 
 
+	def getdata(self):
+		return self.threadq.get(False)
+		
 def getPorts():
 	# lists all the available serial devices connected to the computer
 	port_list = list_ports.comports()
