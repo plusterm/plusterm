@@ -10,11 +10,10 @@ class communicator():
 		.
 		.
 	"""
-	def __init__(self,arg):
+	def __init__(self,context,q):
 		#super(communicator, self).__init__()
 		
-		self.arg = arg
-		self.threadq=queue.Queue()
+		self.threadq=q
 		self.comstream=None
 		self.readerthread=None
 
@@ -65,7 +64,72 @@ class communicator():
 
 	def getdata(self):
 		return self.threadq.get(False)
+	
+	def sendScript(self, text):
+		'''
+		Takes a text with commands to send to the serial device
+		Newline separated
+
+		Syntax:
 		
+		command [*int] - sends command int (optional) times, e.g. c, c*10
+		sleep [float] - sleeps for float ms, e.g. sleep 1000
+		delay [float] - sets the delay time, float ms, between sending
+		'''
+
+		delay = 0.05 # default delay, if none or 0 given
+		split_text = text.split('\n')
+
+		for idx, line in enumerate(split_text):
+			if not self.ser.is_open:
+				self.context.logoutputtogui('Port is not open\n')
+				break
+
+			if 'delay' in line:
+				d = re.search('\d*\.\d+|\d+', line)
+
+				try:
+					parsedDelay = float(d.group(0))
+					if parsedDelay == 0 or parsedDelay > 30000:
+						delay = 0.05
+					else:
+						delay = parsedDelay / 1000
+
+				except:
+					self.context.logoutputtogui('Invalid format \'delay\' on row {}. Quitting.\n'
+									.format(idx+1))
+					break
+
+			elif 'sleep' in line:
+				s = re.search('\d*\.\d+|\d+', line)
+
+				try:
+					self.master.update()
+					ss = float(s.group(0)) / 1000 
+					time.sleep(ss)
+					self.master.update()
+
+				except:
+					self.context.logoutputtogui('Invalid format \'sleep\' on row {}. Quitting.\n'
+									.format(idx+1))
+					break
+
+			elif '*' in line:
+				mult = line.split('*')
+
+				for i in range(int(mult[1])):
+					self.sendCmd(mult[0])
+					self.master.update()
+					time.sleep(delay)
+					self.master.update()
+
+			else:
+				self.sendCmd(line)
+				self.master.update()
+				time.sleep(delay)
+				self.master.update()
+
+	
 def getPorts():
 	# lists all the available serial devices connected to the computer
 	port_list = list_ports.comports()

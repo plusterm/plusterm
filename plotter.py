@@ -8,7 +8,7 @@ class plotter():
 	def __init__(self,master):
 		# super(plotter, self).__init__()
 		self.master = master
-		self.context=context
+		# self.context=context
 		self.plt = plt		
 		
 		

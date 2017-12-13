@@ -192,3 +192,14 @@ class sm_gui(object):
 		except:
 			pass
 
+	def openScriptFile(self):
+		file = askopenfile(filetypes =(("Text File", "*.txt"),("All Files","*.*")),
+							title = "Choose a file")
+		try:
+			f = open(file.name, 'r')
+			text = f.read()
+			f.close()
+			self.context.sendScript(text)
+				
+		except Exception as e:
+			self.logoutput('{}\n'.format(e))
