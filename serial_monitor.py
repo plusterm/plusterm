@@ -33,7 +33,12 @@ class SerialMonitor:
 
 	def connectSerial(self):
 		arg=SimpleNamespace()
-		self.communicator.connect()
+		setattr(arg,"local",True)
+		setattr(arg,"baudrate",self.gui.baudVar)
+		setattr(arg,"port",self.gui.portVar)
+		setattr(arg,"timeout",self.gui.)
+
+		self.communicator.connect(arg)
 
 
 	def disconnectSerial(self):
