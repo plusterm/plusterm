@@ -14,6 +14,7 @@ import re
 import time
 
 from com_reader import ComReaderThread
+from types import SimpleNamespace
 
 import communicator
 import sm_gui
@@ -31,6 +32,7 @@ class SerialMonitor:
 		self.communicator=communicator.communicator()
 
 	def connectSerial(self):
+		arg=SimpleNamespace()
 		self.communicator.connect()
 
 

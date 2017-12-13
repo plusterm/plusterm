@@ -20,7 +20,7 @@ class communicator():
 	def startcommunication(self):
 		self.readerthread.run()
 
-	def connect(self,,arg):
+	def connect(self,arg):
 		try:
 			# if port is open, close it
 			if self.comstream != None:
