@@ -16,6 +16,7 @@ class communicator():
 		self.threadq=q
 		self.comstream=None
 		self.readerthread=None
+		self.context=context
 
 	def startcommunication(self):
 		self.readerthread.run()
@@ -23,17 +24,17 @@ class communicator():
 	def connect(self,arg):
 		try:
 			# if port is open, close it
-			if self.comstream not None:
+			if self.comstream is not None:
 				if self.comstream.is_open:
 					self.comstream.close()
 
 			# kill thread if it's alive 
-			if self.readerthread not None:
+			if self.readerthread is not None:
 				if self.readerthread.isAlive():
 					self.readerthread.stop(0.01)
 
 			if arg.local:
-				self.comstream=serial()	#set to local com... init 
+				self.comstream=serial.Serial()	#set to local com... init 
 				self.comstream.baudrate=arg.baudrate
 				self.comstream.port=arg.port
 				self.comstream.timeout=arg.timeout
@@ -45,16 +46,15 @@ class communicator():
 					#self.comstream=	#server init...
 				#else:
 					#self.comstream=	#p2p??? init...
-			self.readerthread=com_reader.ComReaderThread(self.comstream,self.threadq)
+			self.readerthread=ComReaderThread(self.comstream,self.threadq)
 			self.readerthread.start()
-			self.master.after(10,self,listenComThread)
+			
 			return True
 		except Exception as e:
 			self.context.logoutputtogui('{}\n'.format(e))
 			return False
 
 	def disconnect(self):
-		self.master.after_cancel(self.listenComThread)
 		self.readerthread.stop(0.01)
 		self.comstream.close()
 			

@@ -33,13 +33,13 @@ class sm_gui(object):
 		self.menu = Menu(master)
 		self.master.config(menu=self.menu)
 
-		self.file = Menu(menu, tearoff=0)
+		self.file = Menu(self.menu, tearoff=0)
 		self.file.add_command(label = 'Quit', underline=0, command=self.context.onQuit)
-		self.menu.add_cascade(label = 'File', underline=0, menu=file)
+		self.menu.add_cascade(label = 'File', underline=0, menu=self.file)
 
-		self.script = Menu(menu, tearoff=0)
+		self.script = Menu(self.menu, tearoff=0)
 		self.script.add_command(label = 'Run', underline=0, command=self.openScriptFile)
-		self.menu.add_cascade(label = 'Script', underline=0, menu=script)
+		self.menu.add_cascade(label = 'Script', underline=0, menu=self.script)
 
 		# Connection settings
 		settingsFrame = Frame(master)
@@ -49,8 +49,8 @@ class sm_gui(object):
 		self.baudLabel = Label(settingsFrame, text='     Baudrate:')
 		self.popupMenuBaud = OptionMenu(settingsFrame, self.baudVar, *self.baudratesList)
 		self.customBaudEntry = Entry(settingsFrame, width=10)
-		self.connectBtn = Button(settingsFrame, text='Open', command=self.context.connectSerial)
-		self.disconnectBtn = Button(settingsFrame, text='Close', command=self.context.disconnectSerial)
+		self.connectBtn = Button(settingsFrame, text='Open', command=self.connect)
+		self.disconnectBtn = Button(settingsFrame, text='Close', command=self.disconnect)
 
 		self.portLabel.pack(side='left')
 		self.popupMenuPort.pack(side='left')
@@ -85,7 +85,7 @@ class sm_gui(object):
 
 		# Check if user wants a plot of the serial data
 		self.plotCheck = Checkbutton(inputFrame, text='Plot', onvalue=True, offvalue=False, 
-			variable=self.plotVar, command=self.setupPlot)
+			variable=self.plotVar, command=self.context.setupPlot)
 
 		# Repeat commanda
 		self.repeatCheck = Checkbutton(inputFrame, text='Repeat:', onvalue=True, offvalue=False, 
@@ -108,7 +108,7 @@ class sm_gui(object):
 		# clears the output text widget
 		self.textOutput.delete(1.0, 'end')
 
-	def clearinputentry():
+	def clearinputentry(self):
 		# Clear the entry widget, add save the last command
 		self.inputEntry.delete(0, 'end')
 
@@ -191,6 +191,13 @@ class sm_gui(object):
 			self.master.after(10, self.listenComThread)	
 		except:
 			pass
+
+	def connect(self):
+		self.context.connectSerial()
+		self.master.after(100,self.listenComThread)
+
+	def disconnect(self):
+		self.context.disconnectSerial()
 
 	def openScriptFile(self):
 		file = askopenfile(filetypes =(("Text File", "*.txt"),("All Files","*.*")),

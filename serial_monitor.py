@@ -34,11 +34,23 @@ class SerialMonitor:
 	def connectSerial(self):
 		arg=SimpleNamespace()
 		setattr(arg,"local",True)
-		setattr(arg,"baudrate",self.gui.baudVar)
-		setattr(arg,"port",self.gui.portVar)
+		
+		if self.gui.baudVar.get()=='Custom':
+			setattr(arg,"baudrate",int(self.gui.customBaudEntry.get()))
+		else:
+			setattr(arg,"baudrate",int(self.gui.baudVar.get()))
+
+		if self.gui.portVar.get()=='Custom':
+			setattr(arg,"port",self.gui.customPortEntry.get())
+		else:
+			setattr(arg,"port",self.gui.portVar.get())
+		
 		setattr(arg,"timeout",0.01)
 
-		self.communicator.connect(arg)
+		if self.communicator.connect(arg):
+			self.logoutputtogui("communication open\n")
+		else:
+			pass
 
 
 	def disconnectSerial(self):
@@ -57,7 +69,7 @@ class SerialMonitor:
 
 	def sendCmd(self, cmd):
 		try:
-			self.communicator.sendCmd(cmd.encode())
+			self.communicator.sendCmd(cmd)
 
 			localEcho = '> ' + cmd + '\n'
 			self.logoutputtogui(localEcho)
@@ -70,7 +82,8 @@ class SerialMonitor:
 			self.gui.clearinputentry()
 			self.gui.savecommand(cmd)
 
-	
+	def setupPlot(self):
+		self.plotter.setupPlot()
 
 	
 	def logoutputtogui(self,data):
@@ -87,7 +100,7 @@ class SerialMonitor:
 
 			# If checkbutton for plot is set,add data to livefeed
 			# to be used with plot function
-			if self.plotVar.get() == True:
+			if self.gui.plotVar.get() == True:
 				self.plotter.Plot(result)
 	def sendscript(text):
 		self.communicator.sendscript(text)
