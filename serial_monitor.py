@@ -84,7 +84,8 @@ class SerialMonitor:
 
 	def setupPlot(self):
 		self.plotter.setupPlot()
-
+	def destroyplot(self):
+		self.plotter.destroyplot()
 	
 	def logoutputtogui(self,data):
 		self.gui.logoutput(data)

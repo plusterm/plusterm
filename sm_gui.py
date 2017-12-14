@@ -41,6 +41,10 @@ class sm_gui(object):
 		self.script.add_command(label = 'Run', underline=0, command=self.openScriptFile)
 		self.menu.add_cascade(label = 'Script', underline=0, menu=self.script)
 
+		self.plot = Menu(self.menu, tearoff=0)
+		self.plot.add_command(label = 'Show/Hide plot', underline=0, command=self.changePlotVariable)
+		self.menu.add_cascade(label = 'Plot', underline=0, menu=self.plot)
+
 		# Connection settings
 		settingsFrame = Frame(master)
 		self.portLabel = Label(settingsFrame, text='Device:')
@@ -83,9 +87,9 @@ class sm_gui(object):
 		self.sendBtn = Button(inputFrame, text='Send', command=self.onSendClick)
 		self.clearBtn = Button(inputFrame, text='Clear', command=self.clearOutput)
 
-		# Check if user wants a plot of the serial data
-		self.plotCheck = Checkbutton(inputFrame, text='Plot', onvalue=True, offvalue=False, 
-			variable=self.plotVar, command=self.context.setupPlot)
+		# # Check if user wants a plot of the serial data
+		# self.plotCheck = Checkbutton(inputFrame, text='Plot', onvalue=True, offvalue=False, 
+		# 	variable=self.plotVar, command=self.context.setupPlot)
 
 		# Repeat commanda
 		self.repeatCheck = Checkbutton(inputFrame, text='Repeat:', onvalue=True, offvalue=False, 
@@ -97,7 +101,7 @@ class sm_gui(object):
 		self.clearBtn.pack(side='left')
 		self.repeatEntry.pack(side='right', padx=17, ipadx=0)
 		self.repeatCheck.pack(side='right')
-		self.plotCheck.pack(side='left')
+		# self.plotCheck.pack(side='left')
 		inputFrame.grid(row=2, column=0, sticky=NSEW)
 
 	def logoutput(self,data):
@@ -198,6 +202,13 @@ class sm_gui(object):
 
 	def disconnect(self):
 		self.context.disconnectSerial()
+
+	def changePlotVariable(self):
+		self.plotVar.set(not self.plotVar.get())
+		if self.plotVar:
+			self.context.setupPlot()
+		else:
+			self.context.destroyplot()
 
 	def openScriptFile(self):
 		file = askopenfile(filetypes =(("Text File", "*.txt"),("All Files","*.*")),

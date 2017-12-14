@@ -11,7 +11,7 @@ class plotter():
 		self.master = master
 		# self.context=context
 		self.plt = plt		
-		
+		self.plotFrame = Frame(self.master)
 		
 
 	def setupPlot(self):
@@ -37,7 +37,7 @@ class plotter():
 
 		# self.livePlot()
 
-	def destroyplot():
+	def destroyplot(self):
 		# remove the plot
 		self.plotFrame.destroy()
 
