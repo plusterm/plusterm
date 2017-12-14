@@ -38,7 +38,7 @@ class sm_gui(object):
 		self.menu.add_cascade(label = 'File', underline=0, menu=file)
 
 		self.script = Menu(menu, tearoff=0)
-		self.script.add_command(label = 'Run', underline=0, command=self.context.openScriptFile)
+		self.script.add_command(label = 'Run', underline=0, command=self.openScriptFile)
 		self.menu.add_cascade(label = 'Script', underline=0, menu=script)
 
 		# Connection settings
@@ -80,7 +80,7 @@ class sm_gui(object):
 		self.inputEntry.bind('<Up>', self.onUpArrow)
 		self.inputEntry.bind('<Down>', self.onDownArrow)
 
-		self.sendBtn = Button(inputFrame, text='Send', command=self.context.onSendClick)
+		self.sendBtn = Button(inputFrame, text='Send', command=self.onSendClick)
 		self.clearBtn = Button(inputFrame, text='Clear', command=self.clearOutput)
 
 		# Check if user wants a plot of the serial data

@@ -23,23 +23,24 @@ class communicator():
 	def connect(self,arg):
 		try:
 			# if port is open, close it
-			if self.comstream != None:
+			if self.comstream not None:
 				if self.comstream.is_open:
 					self.comstream.close()
 
 			# kill thread if it's alive 
-			if self.readerthread !=None:
+			if self.readerthread not None:
 				if self.readerthread.isAlive():
 					self.readerthread.stop(0.01)
 
-			#if arg.local:
-			self.comstream=serial()	#set to local com... init 
-			self.comstream.baudrate=arg.baudrate
-			self.comstream.port=arg.port
-			self.comstream.timeout=arg.timeout
-			self.comstream.open()
+			if arg.local:
+				self.comstream=serial()	#set to local com... init 
+				self.comstream.baudrate=arg.baudrate
+				self.comstream.port=arg.port
+				self.comstream.timeout=arg.timeout
+				self.comstream.open()
 
-			#else:
+			else:
+				pass
 				#if arg.server
 					#self.comstream=	#server init...
 				#else:
@@ -81,7 +82,7 @@ class communicator():
 		split_text = text.split('\n')
 
 		for idx, line in enumerate(split_text):
-			if not self.ser.is_open:
+			if not self.comstream.is_open:
 				self.context.logoutputtogui('Port is not open\n')
 				break
 
