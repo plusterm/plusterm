@@ -103,6 +103,7 @@ class SerialMonitor:
 			# to be used with plot function
 			if self.gui.plotVar.get() == True:
 				self.plotter.Plot(result)
+		
 	def sendscript(text):
 		self.communicator.sendscript(text)
 

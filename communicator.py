@@ -2,6 +2,7 @@
 import serial
 from serial.tools import list_ports
 from com_reader import ComReaderThread
+from reconnector import ReconnectorThread
 
 class communicator():
 	"""	communicator handles all external comunication with comports, server/s or p2p....
@@ -17,45 +18,70 @@ class communicator():
 		self.comstream=None
 		self.readerthread=None
 		self.context=context
+		self.storedcomsetup=None
+		self.reconnectorthread=None
 
 	def startcommunication(self):
 		self.readerthread.run()
 
 	def connect(self,arg):
 		try:
-			# if port is open, close it
-			if self.comstream is not None:
-				if self.comstream.is_open:
-					self.comstream.close()
+			doit=True
+			if self.storedcomsetup is not None:
+				if self.storedcomsetup.local!=arg.local or self.storedcomsetup.port!=arg.port or self.storedcomsetup.baudrate!=arg.baudrate:
+					doit=True
+				else:
+					doit=False
 
-			# kill thread if it's alive 
-			if self.readerthread is not None:
-				if self.readerthread.isAlive():
-					self.readerthread.stop(0.01)
+			if doit:
+				#	if reconector thread is open close it
+				if self.reconnectorthread is not None:
+					if self.reconnectorthread.isAlive():
+						self.reconnectorthread.stop(0.01)
 
-			if arg.local:
-				self.comstream=serial.Serial()	#set to local com... init 
-				self.comstream.baudrate=arg.baudrate
-				self.comstream.port=arg.port
-				self.comstream.timeout=arg.timeout
-				self.comstream.open()
+				# if port is open, close it
+				if self.comstream is not None:
+					if self.comstream.is_open:
+						self.comstream.close()
 
+				# kill thread if it's alive 
+				if self.readerthread is not None:
+					if self.readerthread.isAlive():
+						self.readerthread.stop(0.01)
+
+				if arg.local:
+					self.comstream=serial.Serial()	#set to local com... init 
+					self.comstream.baudrate=arg.baudrate
+					self.comstream.port=arg.port
+					self.comstream.timeout=arg.timeout
+					self.comstream.open()
+
+				else:
+					pass
+					#if arg.server
+						#self.comstream=	#server init...
+					#else:
+						#self.comstream=	#p2p??? init...
+				self.readerthread=ComReaderThread(self.comstream,self.threadq)
+				self.readerthread.start()
+				self.storedcomsetup=arg
+				self.reconnect(self.storedcomsetup,self.comstream)
+				
 			else:
-				pass
-				#if arg.server
-					#self.comstream=	#server init...
-				#else:
-					#self.comstream=	#p2p??? init...
-			self.readerthread=ComReaderThread(self.comstream,self.threadq)
-			self.readerthread.start()
-			
+				self.context.logoutputtogui('port already open!')
+
 			return True
 		except Exception as e:
 			self.context.logoutputtogui('{}\n'.format(e))
 			return False
 
+	def reconnect(self,args,com):
+		self.reconnectorthread=ReconnectorThread(args,com)
+		self.reconnectorthread.start()
+
 	def disconnect(self):
 		self.readerthread.stop(0.01)
+		self.reconnectorthread.stop(0.01)
 		self.comstream.close()
 			
 
