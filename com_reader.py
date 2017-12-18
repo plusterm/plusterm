@@ -22,7 +22,7 @@ class ComReaderThread(threading.Thread):
 
 		# start the timer
 		startTime = time.time()
-
+		checkonce=True
 		while self.alive.isSet():
 			try:
 				# reads data until newline (x0A/10) 
@@ -35,9 +35,12 @@ class ComReaderThread(threading.Thread):
 						data += self.ser.read()
 
 					self.que.put((timestamp, data))
+					checkonce=True
 			except serial.SerialException as e:
 				print("reader:no connection!\n{}".format(e))
-				self.ser.close()
+				if self.ser.is_open and checkonce:
+						self.ser.close()
+						checkonce=False
 				time.sleep(0.5)
 				# pass
 

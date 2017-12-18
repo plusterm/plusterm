@@ -30,7 +30,7 @@ class ReconnectorThread(threading.Thread):
 			# finally:
 			# 	pass
 			# 	pass
-			sleep(0.5)
+			sleep(0.3)
 
 	def stop(self,timeout=None):
 		self.alive.clear()
