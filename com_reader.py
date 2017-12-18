@@ -40,8 +40,8 @@ class ComReaderThread(threading.Thread):
 				print("reader:no connection!\n{}".format(e))
 				if self.ser.is_open and checkonce:
 						self.ser.close()
-						checkonce=False
-				time.sleep(0.5)
+						checkonce=False 
+				time.sleep(1)
 				# pass
 
 

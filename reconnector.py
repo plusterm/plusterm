@@ -24,13 +24,16 @@ class ReconnectorThread(threading.Thread):
 						pass
 				else:	#	remote eg server or p2p etc
 					pass
+				
 			except Exception as e:
 				print('reconnector:{}\n'.format(e))
-			# else:
+				sleep(0.1)
+			else:
+				sleep(0.5)
 			# finally:
 			# 	pass
 			# 	pass
-			sleep(0.3)
+				
 
 	def stop(self,timeout=None):
 		self.alive.clear()
