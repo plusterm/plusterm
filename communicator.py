@@ -65,7 +65,7 @@ class communicator():
 					#else:
 						#self.comstream=	#p2p??? init...
 			
-			self.storedcomsetup=arg
+			
 					
 			if not self.comstream.is_open:
 				self.comstream.open()
@@ -73,6 +73,8 @@ class communicator():
 			else:
 				# self.context.logoutputtogui('port already open!')
 				pass
+			
+			self.storedcomsetup=arg
 
 			if self.readerthread is not None:
 				if not self.readerthread.isAlive():
