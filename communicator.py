@@ -12,7 +12,10 @@ class communicator():
 		.
 	"""
 	def __init__(self,context,q):
-		#super(communicator, self).__init__()
+		"""	takes context, which is intended to be the SerialMonitor instance 
+			and q which is the queue given (and instantiated in the SerialMonitor instance,
+			leftover from before 'classification')
+		"""
 		
 		self.threadq=q
 		self.comstream=None
@@ -26,14 +29,14 @@ class communicator():
 
 	def connect(self,arg):
 		try:
-			doit=True
-			if self.storedcomsetup is not None:
+			doit=True	#	determine if its necessary to set communication or if its enough to reopen communication
+			if self.storedcomsetup is not None:	#	based on stored vs given argument structures. e.g. arg.local is meant for serialcommunication 
 				if self.storedcomsetup.local!=arg.local or self.storedcomsetup.port!=arg.port or self.storedcomsetup.baudrate!=arg.baudrate:
 					doit=True
 				else:
 					doit=False
 
-			if doit:
+			if doit:	#	if necessary to set communication e.g. new comport or baudrate
 				#	if reconector thread is open close it
 				if self.reconnectorthread is not None:
 					if self.reconnectorthread.isAlive():
@@ -50,7 +53,7 @@ class communicator():
 						self.comstream.close()
 
 				
-
+				#	check which communication type to use
 				if arg.local:
 					self.comstream=serial.Serial()	#set to local com... init 
 					self.comstream.baudrate=arg.baudrate
@@ -66,7 +69,7 @@ class communicator():
 						#self.comstream=	#p2p??? init...
 			
 			
-					
+			#	if communicationstream is not open for some reason, open it
 			if not self.comstream.is_open:
 				self.comstream.open()
 				self.context.logoutputtogui('port opened!')
@@ -74,16 +77,18 @@ class communicator():
 				# self.context.logoutputtogui('port already open!')
 				pass
 			
-			self.storedcomsetup=arg
+			self.storedcomsetup=args	#	store the given argument structure
 
+			#	if readerthread is not alive set it with the potentially changed comstream/queue and start it
 			if self.readerthread is not None:
 				if not self.readerthread.isAlive():
 					self.readerthread=ComReaderThread(self.comstream,self.threadq)
 					self.readerthread.start()
-			else:
+			else:	#	if not even instantiated
 				self.readerthread=ComReaderThread(self.comstream,self.threadq)
 				self.readerthread.start()
 
+			#	same here but with the reconnectorthread
 			if self.reconnectorthread is not None:
 				if not self.reconnectorthread.isAlive():
 					self.reconnect(self.storedcomsetup,self.comstream)
@@ -92,24 +97,34 @@ class communicator():
 			
 			return True
 		except Exception as e:
+			#	"logs" error to the textoutput int the gui via the "context" 
 			self.context.logoutputtogui('{}\n'.format(e))
 			return False
 
 	def reconnect(self,args,com):
+		"""	takes the argument structure and the comstream as arguments
+			creates the reconnectionthread with the same arguments and starts it
+		"""
 		self.reconnectorthread=ReconnectorThread(args,com)
 		self.reconnectorthread.start()
 
 	def disconnect(self):
+		"""	stops/close all threads and streams
+		"""
 		self.readerthread.stop(0.01)
 		self.reconnectorthread.stop(0.01)
 		self.comstream.close()
 			
 
 	def sendCmd(self,cmd):
+		"""	send a command to the comstream assuming it is a string
+		"""
 		self.comstream.write(cmd.encode())
 
 
 	def getdata(self):
+		"""	get the data from the readerthreadqueue, one element at a time
+		"""
 		return self.threadq.get(False)
 	
 	def sendScript(self, text):

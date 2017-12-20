@@ -32,6 +32,8 @@ class SerialMonitor:
 		self.communicator=communicator.communicator(self,self.queue)
 
 	def connectSerial(self):
+		"""	creates an arg structure with relevant info for a serialport connection
+		"""
 		arg=SimpleNamespace()
 		setattr(arg,"local",True)
 		
@@ -54,6 +56,8 @@ class SerialMonitor:
 
 
 	def disconnectSerial(self):
+		"""	attempt to disconnect communications and log the result/error to the gui
+		"""
 		try:
 			self.communicator.disconnect()
 			self.logoutputtogui('Port closed\n')
