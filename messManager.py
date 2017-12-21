@@ -1,4 +1,4 @@
-
+import threading
 import queue
 
 class messManager:
@@ -21,7 +21,8 @@ class messManager:
 	def startdelivery():
 		if not self.messThread.isSet():
 			self.messThread.start()
-	
+	def stopdelivery():
+		self.messThread.stop()
 
 
 class messengerThread(threading.Thread):

@@ -9,6 +9,8 @@ from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolb
 from matplotlib import style
 style.use('bmh')
 
+import importlib
+
 import queue
 import re
 import time
@@ -19,6 +21,7 @@ from types import SimpleNamespace
 import communicator
 import sm_gui
 import plotter
+import messmanager
 
 class SerialMonitor:
 	'''
@@ -26,6 +29,7 @@ class SerialMonitor:
 	'''
 	def __init__(self, master):
 		self.master = master
+		self.messman=messmanager.messmanager()
 		self.queue=queue.Queue()
 		self.gui=sm_gui.sm_gui(master,self)
 		self.plotter=plotter.plotter(master)
@@ -110,6 +114,14 @@ class SerialMonitor:
 		
 	def sendscript(text):
 		self.communicator.sendscript(text)
+
+	def addmodule(self,modulename,topic):
+		importlib.import_module((modulename))
+		mod=importlib.import_module((modulename))
+		self.messman.subscribe(mod,topic)
+
+
+
 
 def main():
 	root = Tk()
