@@ -21,7 +21,7 @@ from types import SimpleNamespace
 import communicator
 import sm_gui
 import plotter
-import messmanager
+import messManager
 
 class SerialMonitor:
 	'''
@@ -29,7 +29,7 @@ class SerialMonitor:
 	'''
 	def __init__(self, master):
 		self.master = master
-		self.messman=messmanager.messmanager()
+		self.messman=messManager.messManager()
 		self.queue=queue.Queue()
 		self.gui=sm_gui.sm_gui(master,self)
 		self.plotter=plotter.plotter(master)
@@ -71,7 +71,7 @@ class SerialMonitor:
 	def onQuit(self):	
 		# When closing the window, close serial connection and stop thread
 		self.disconnectSerial()
-
+		self.messman.stopdelivery()
 		self.master.quit()
 		self.master.destroy()
 
@@ -111,14 +111,19 @@ class SerialMonitor:
 			# to be used with plot function
 			if self.gui.plotVar.get() == True:
 				self.plotter.Plot(result)
+			#	test-messmanager stuff
+			self.messman.send(result,"data")
 		
 	def sendscript(text):
 		self.communicator.sendscript(text)
 
 	def addmodule(self,modulename,topic):
-		importlib.import_module((modulename))
-		mod=importlib.import_module((modulename))
-		self.messman.subscribe(mod,topic)
+		mod=importlib.import_module("modules."+modulename)
+		tmod=mod.testmod(self,self.master)
+		self.messman.subscribe(tmod,topic)
+		if not self.messman.threadrunning():
+			self.messman.startdelivery()
+		
 
 
 
@@ -126,6 +131,7 @@ class SerialMonitor:
 def main():
 	root = Tk()
 	app = SerialMonitor(root)
+	app.addmodule("testmod","data")
 	root.mainloop()
 
 if __name__ == '__main__':

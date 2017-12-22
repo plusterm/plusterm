@@ -1,5 +1,6 @@
 import threading
 import queue
+from time import sleep
 
 class messManager:
 	"""docstring for ClassName"""
@@ -9,19 +10,20 @@ class messManager:
 		self.messThread=messengerThread(self.subscribers,self.messqueue)
 
 	def subscribe(self,subscriber,topic):
-		if topic in subscribers:
-			subscribers[topic].append(subscriber)
+		if topic in self.subscribers:
+			self.subscribers[topic].append(subscriber)
 		else:
-			subscribers[topic]=[subscriber]
-		
+			self.subscribers[topic]=[subscriber]
+	def threadrunning(self):
+		return self.messThread.isAlive()
 		
 	def send(self,message,topic):
 		self.messqueue.put((topic,message))
 
-	def startdelivery():
-		if not self.messThread.isSet():
-			self.messThread.start()
-	def stopdelivery():
+	def startdelivery(self):
+		self.messThread.start()
+
+	def stopdelivery(self):
 		self.messThread.stop()
 
 
@@ -35,20 +37,27 @@ class messengerThread(threading.Thread):
 		self.alive.set()
 		
 	def run(self):
+		temp=tuple()
 		while self.alive.isSet():
 			try:
-				if not self.messqueue.empty():
-					temp=self.messqueue.pop()
-					for key, subs in subscribers:
-						if key==temp[0]:
-							for x in subs:
-								x.recivedata(temp)
+				temp=self.messque.get(False)
+				
+				for key in self.subscribers:
+					
+					if key==temp[0]:
+						for x in self.subscribers[key]:
+							x.recivedata(temp)
+							
+			except queue.Empty as e:
+				sleep(0.01)
+				# print(e)
 			except Exception as e:
-				raise
+				print("differnt erroe:\n"+e)
 			else:
 				pass
-			finally:
-				pass
+				# print(temp[0]+": "+str(temp[1][0])+", "+str(temp[1][1]))	#	.__repr__()
+			# finally:
+			# 	pass
 
 	def stop(self,timeout=None):
 		self.alive.clear()

@@ -77,7 +77,7 @@ class communicator():
 				# self.context.logoutputtogui('port already open!')
 				pass
 			
-			self.storedcomsetup=args	#	store the given argument structure
+			self.storedcomsetup=arg	#	store the given argument structure
 
 			#	if readerthread is not alive set it with the potentially changed comstream/queue and start it
 			if self.readerthread is not None:
