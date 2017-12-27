@@ -2,7 +2,6 @@
 import serial
 from serial.tools import list_ports
 from com_reader import ComReaderThread
-from reconnector import ReconnectorThread
 
 class communicator():
 	"""	communicator handles all external comunication with comports, server/s or p2p....
@@ -22,8 +21,7 @@ class communicator():
 		self.readerthread=None
 		self.context=context
 		self.storedcomsetup=None
-		self.reconnectorthread=None
-
+		
 	def startcommunication(self):
 		self.readerthread.run()
 
@@ -37,11 +35,7 @@ class communicator():
 					doit=False
 
 			if doit:	#	if necessary to set communication e.g. new comport or baudrate
-				#	if reconector thread is open close it
-				if self.reconnectorthread is not None:
-					if self.reconnectorthread.isAlive():
-						self.reconnectorthread.stop(0.01)
-
+				
 				# kill thread if it's alive 
 				if self.readerthread is not None:
 					if self.readerthread.isAlive():
@@ -88,12 +82,6 @@ class communicator():
 				self.readerthread=ComReaderThread(self.comstream,self.threadq)
 				self.readerthread.start()
 
-			#	same here but with the reconnectorthread
-			if self.reconnectorthread is not None:
-				if not self.reconnectorthread.isAlive():
-					self.reconnect(self.storedcomsetup,self.comstream)
-			else:
-				self.reconnect(self.storedcomsetup,self.comstream)
 			
 			return True
 		except Exception as e:
@@ -101,18 +89,12 @@ class communicator():
 			self.context.logoutputtogui('{}\n'.format(e))
 			return False
 
-	def reconnect(self,args,com):
-		"""	takes the argument structure and the comstream as arguments
-			creates the reconnectionthread with the same arguments and starts it
-		"""
-		self.reconnectorthread=ReconnectorThread(args,com)
-		self.reconnectorthread.start()
-
+	
 	def disconnect(self):
 		"""	stops/close all threads and streams
 		"""
 		self.readerthread.stop(0.01)
-		self.reconnectorthread.stop(0.01)
+		# self.reconnectorthread.stop(0.01)
 		self.comstream.close()
 			
 

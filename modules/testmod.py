@@ -1,7 +1,17 @@
 
 class testmod:
-	"""docstring for testmod"""
+	"""	testmod: a very simple example module showing the structure and
+		requirements of any module intended to subscribe on data in the
+		serialmonitor application
+	"""
 	def __init__(self,context,master):
+		"""	the constructor of all modules must take 2 variables: context
+			and master (since it's python actual name can differ...).
+			context is intended for if some functionallity need acces to
+			for example, log something to the textarea in the gui.
+			master is intended for extending the gui and is suposed to be
+			a tkinter.tk() instance
+		"""
 		pass
 		
 	def recivedata(self,data):
