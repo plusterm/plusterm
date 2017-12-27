@@ -13,7 +13,11 @@ class testmod:
 			a tkinter.tk() instance
 		"""
 		pass
-		
+	def gettopics():
+		"""	returns the topics that this module is interested in
+		"""
+		topics=["data"]
+		return topics	
 	def recivedata(self,data):
 		"""	takes data as a tuple of topic and the actual data, which
 			currently consist of 2 values (timestamp and the data read

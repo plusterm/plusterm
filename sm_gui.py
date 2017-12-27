@@ -1,6 +1,6 @@
 from tkinter import *
 from tkinter.filedialog import askopenfile
-
+import os
 
 from communicator import getPorts
 
@@ -41,9 +41,15 @@ class sm_gui(object):
 		self.script.add_command(label = 'Run', underline=0, command=self.openScriptFile)
 		self.menu.add_cascade(label = 'Script', underline=0, menu=self.script)
 
-		self.plot = Menu(self.menu, tearoff=0)
-		self.plot.add_command(label = 'Show/Hide plot', underline=0, command=self.changePlotVariable)
-		self.menu.add_cascade(label = 'Plot', underline=0, menu=self.plot)
+		self.modules = Menu(self.menu, tearoff=0)
+		files = [f.name for f in os.listdir("./modules") if f.is_file()]
+		self.modvars=[]
+		for x in files:
+			self.modvars.append([x.name,BooleanVar(),False])
+			self.modvars[-1].set(False)
+			self.modules.add_checkbutton(label=x.name, onvalue=True, offvalue=False, variable=self.modvars[-1][1],command=self.addmodule)
+		# self.modules.add_command(label = 'Show/Hide plot', underline=0, command=self.changePlotVariable)
+		self.menu.add_cascade(label = 'modules', underline=0, menu=self.modules)
 
 		# Connection settings
 		settingsFrame = Frame(master)
@@ -87,10 +93,7 @@ class sm_gui(object):
 		self.sendBtn = Button(inputFrame, text='Send', command=self.onSendClick)
 		self.clearBtn = Button(inputFrame, text='Clear', command=self.clearOutput)
 
-		# # Check if user wants a plot of the serial data
-		# self.plotCheck = Checkbutton(inputFrame, text='Plot', onvalue=True, offvalue=False, 
-		# 	variable=self.plotVar, command=self.context.setupPlot)
-
+		
 		# Repeat commanda
 		self.repeatCheck = Checkbutton(inputFrame, text='Repeat:', onvalue=True, offvalue=False, 
 			variable=self.repeatVar, command=self.repeatMode)
@@ -159,6 +162,12 @@ class sm_gui(object):
 		cmd = self.inputEntry.get()
 		self.context.sendCmd(cmd)
 					
+
+	def addmodule():
+		for mod in self.modvars:
+			if mod[1]:
+				if not mod[2]:
+					self.context.addmodule(mod[0])
 
 	def repeatMode(self):
 		# Repeat sends a command, by default evey 500 ms

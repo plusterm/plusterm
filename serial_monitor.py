@@ -109,18 +109,19 @@ class SerialMonitor:
 
 			# If checkbutton for plot is set,add data to livefeed
 			# to be used with plot function
-			if self.gui.plotVar.get() == True:
-				self.plotter.Plot(result)
+			# if self.gui.plotVar.get() == True:
+			# 	self.plotter.Plot(result)
 			#	test-messmanager stuff
 			self.messman.send(result,"data")
 		
 	def sendscript(text):
 		self.communicator.sendscript(text)
 
-	def addmodule(self,modulename,topic):
+	def addmodule(self,modulename):
 		mod=importlib.import_module("modules."+modulename)
 		tmod=mod.testmod(self,self.master)
-		self.messman.subscribe(tmod,topic)
+		for topic in tmod.gettopics():
+		 	self.messman.subscribe(tmod,topic)
 		if not self.messman.threadrunning():
 			self.messman.startdelivery()
 		
