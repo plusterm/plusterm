@@ -42,12 +42,15 @@ class sm_gui(object):
 		self.menu.add_cascade(label = 'Script', underline=0, menu=self.script)
 
 		self.modules = Menu(self.menu, tearoff=0)
-		files = [f.name for f in os.listdir("./modules") if f.is_file()]
+		files = [f for f in os.listdir("./modules") if f not in ["__pycache__","__init__.py"]]# if f.is_file()
 		self.modvars=[]
 		for x in files:
-			self.modvars.append([x.name,BooleanVar(),False])
-			self.modvars[-1].set(False)
-			self.modules.add_checkbutton(label=x.name, onvalue=True, offvalue=False, variable=self.modvars[-1][1],command=self.addmodule)
+			listvar=BooleanVar()
+			listvar.set(False)
+			self.modvars.append([x.rstrip('.py'),listvar,False])
+			# self.modvars[-1][1].set(False)
+			
+			self.modules.add_checkbutton(label=x, onvalue=True, offvalue=False, variable=listvar,command=self.addmodule)
 		# self.modules.add_command(label = 'Show/Hide plot', underline=0, command=self.changePlotVariable)
 		self.menu.add_cascade(label = 'modules', underline=0, menu=self.modules)
 
@@ -163,11 +166,17 @@ class sm_gui(object):
 		self.context.sendCmd(cmd)
 					
 
-	def addmodule():
+	def addmodule(self):
 		for mod in self.modvars:
-			if mod[1]:
-				if not mod[2]:
+			print("before")
+			print(mod)
+			if not mod[2]:
+				if mod[1].get():
 					self.context.addmodule(mod[0])
+					mod[2]=True
+			print("after")
+			print(mod)
+
 
 	def repeatMode(self):
 		# Repeat sends a command, by default evey 500 ms

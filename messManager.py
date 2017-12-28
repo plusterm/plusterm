@@ -21,10 +21,12 @@ class messManager:
 		self.messqueue.put((topic,message))
 
 	def startdelivery(self):
-		self.messThread.start()
+		if not self.messThread.isAlive():
+			self.messThread.start()
 
 	def stopdelivery(self):
-		self.messThread.stop()
+		if self.messThread.isAlive():
+			self.messThread.stop()
 
 
 class messengerThread(threading.Thread):

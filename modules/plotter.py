@@ -13,8 +13,11 @@ class plotter():
 		# self.context=context
 		self.plt = plt		
 		self.plotFrame = Frame(self.master)
+		self.setupPlot()
 		
-
+	def gettopics(self):
+		topics=["data"]
+		return topics	
 	def setupPlot(self):
 		# Sets up the plot, and frame containing the plot
 		self.plotFrame = Frame(self.master)
@@ -50,13 +53,13 @@ class plotter():
 		If 2 numerical values are read, plot them (x,y) = (value1,value2).
 		Data from thread is a tuple (timestamp, data)
 		'''
-
-		if data is not None:
-			numericData = re.findall("-?\d*\.\d+|-?\d+", data[1].decode())
+		
+		if data is not None and data[0]=="data":
+			numericData = re.findall("-?\d*\.\d+|-?\d+", data[1][1].decode())
 		
 			if len(numericData) == 1:
 				self.ax1.clear()		
-				self.xValOne.append(float(data[0]))
+				self.xValOne.append(float(data[1][0]))
 				self.yValOne.append(float(numericData[0]))
 
 				if len(self.xValOne) > 50:

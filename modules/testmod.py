@@ -13,7 +13,7 @@ class testmod:
 			a tkinter.tk() instance
 		"""
 		pass
-	def gettopics():
+	def gettopics(self):
 		"""	returns the topics that this module is interested in
 		"""
 		topics=["data"]

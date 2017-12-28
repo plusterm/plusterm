@@ -119,9 +119,13 @@ class SerialMonitor:
 
 	def addmodule(self,modulename):
 		mod=importlib.import_module("modules."+modulename)
-		tmod=mod.testmod(self,self.master)
-		for topic in tmod.gettopics():
-		 	self.messman.subscribe(tmod,topic)
+		print(mod.__repr__())
+		tmod=getattr(mod,modulename)
+		print(tmod)
+		imod=tmod(self, self.master)
+		print(imod)
+		for topic in imod.gettopics():
+		 	self.messman.subscribe(imod,topic)
 		if not self.messman.threadrunning():
 			self.messman.startdelivery()
 		
@@ -132,7 +136,6 @@ class SerialMonitor:
 def main():
 	root = Tk()
 	app = SerialMonitor(root)
-	app.addmodule("testmod","data")
 	root.mainloop()
 
 if __name__ == '__main__':
