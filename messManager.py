@@ -54,7 +54,7 @@ class messengerThread(threading.Thread):
 				sleep(0.01)
 				# print(e)
 			except Exception as e:
-				print("differnt erroe:\n"+e)
+				print("non queue related error:\n"+e)
 			else:
 				pass
 				# print(temp[0]+": "+str(temp[1][0])+", "+str(temp[1][1]))	#	.__repr__()

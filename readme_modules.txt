@@ -1,8 +1,27 @@
+this document is meant to clearify how to implement a new module
+intended for the PlusTerm program.
 
-class testmod:
-	"""	testmod: a very simple example module showing the structure and
-		requirements of any module intended to subscribe on data in the
-		serialmonitor application
+1:	the new module must be a class and its constructor must take 2
+	additional parameters. one of which	is the context aka the instance
+	of serial_monitor (in its current naming state).
+	the other parameter is the master, an instance of the tkinter (gui tool),
+	which is inteded for when the new module needs to add to the gui.
+
+2:	the new modules must have the functions gettopics(self): and
+	recivedata(self,data):.
+	"gettopics" must return a list of topics that the modules are interested
+	in.
+	"recivedata" must take the parameter 'data', what it actually does with
+	the data is irrelevant.
+
+3:	all module sourcefiles must be located in the subdirectory 'modules'.
+
+
+
+Module Template:
+
+class template:
+	"""	
 	"""
 	def __init__(self,context,master):
 		"""	the constructor of all modules must take 2 variables: context
@@ -22,12 +41,11 @@ class testmod:
 		"""
 		topics=["data"]
 		return topics	
+
 	def recivedata(self,data):
 		"""	takes data as a tuple of topic and the actual data, which
 			currently consist of 2 values (timestamp and the data read
 			from the serialport) delivered from the readerthread.
 
 		"""
-		print("oh... i got some data: ")
-		print(data)
-		# print("\n")
+		#do whatever you want with the data

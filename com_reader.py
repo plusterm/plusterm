@@ -38,6 +38,7 @@ class ComReaderThread(threading.Thread):
 					checkonce=True
 			except serial.SerialException as e:
 				reconnected=False
+				#log to gui?
 				while not reconnected:
 					try:
 						print("trying to reconnect")
@@ -58,18 +59,14 @@ class ComReaderThread(threading.Thread):
 						# 		pass
 						# else:	#	remote eg server or p2p etc
 						# 	pass
-						reconnected=True
+						
 					except Exception as e:
 						print('reconnector:{}\n'.format(e))
 						time.sleep(0.1)
 					else:
-						time.sleep(0.5)
-				# print("reader:no connection!\n{}".format(e))
-				# if self.ser.is_open and checkonce:
-				# 		self.ser.close()
-				# 		checkonce=False 
-				# time.sleep(1)
-				# pass
+						reconnected=True
+						#log to gui?
+				
 
 
 	def stop(self, timeout=None):		

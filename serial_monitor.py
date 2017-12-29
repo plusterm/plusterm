@@ -38,7 +38,7 @@ class SerialMonitor:
 	def connectSerial(self):
 		"""	creates an arg structure with relevant info for a serialport connection
 		"""
-		arg=SimpleNamespace()
+		arg=SimpleNamespace()	#	
 		setattr(arg,"local",True)
 		
 		if self.gui.baudVar.get()=='Custom':
@@ -74,6 +74,8 @@ class SerialMonitor:
 		self.messman.stopdelivery()
 		self.master.quit()
 		self.master.destroy()
+		# for x in self.messman.:
+		# 	pass
 
 	def sendCmd(self, cmd):
 		try:
@@ -119,11 +121,8 @@ class SerialMonitor:
 
 	def addmodule(self,modulename):
 		mod=importlib.import_module("modules."+modulename)
-		print(mod.__repr__())
 		tmod=getattr(mod,modulename)
-		print(tmod)
 		imod=tmod(self, self.master)
-		print(imod)
 		for topic in imod.gettopics():
 		 	self.messman.subscribe(imod,topic)
 		if not self.messman.threadrunning():

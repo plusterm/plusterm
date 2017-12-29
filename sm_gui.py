@@ -168,15 +168,11 @@ class sm_gui(object):
 
 	def addmodule(self):
 		for mod in self.modvars:
-			print("before")
-			print(mod)
 			if not mod[2]:
 				if mod[1].get():
 					self.context.addmodule(mod[0])
 					mod[2]=True
-			print("after")
-			print(mod)
-
+			
 
 	def repeatMode(self):
 		# Repeat sends a command, by default evey 500 ms
