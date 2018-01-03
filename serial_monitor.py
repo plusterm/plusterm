@@ -107,13 +107,7 @@ class SerialMonitor:
 			pass
 		else:
 			self.logoutputtogui(result[1].decode())
-			
-
-			# If checkbutton for plot is set,add data to livefeed
-			# to be used with plot function
-			# if self.gui.plotVar.get() == True:
-			# 	self.plotter.Plot(result)
-			#	test-messmanager stuff
+			#	send data to messmanager
 			self.messman.send(result,"data")
 		
 	def sendscript(text):

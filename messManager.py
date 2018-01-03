@@ -18,7 +18,8 @@ class messManager:
 		return self.messThread.isAlive()
 		
 	def send(self,message,topic):
-		self.messqueue.put((topic,message))
+		if len(self.subscribers) >0:
+			self.messqueue.put((topic,message))
 
 	def startdelivery(self):
 		if not self.messThread.isAlive():
