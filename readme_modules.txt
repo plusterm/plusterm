@@ -8,10 +8,10 @@ intended for the PlusTerm program.
 	which is inteded for when the new module needs to add to the gui.
 
 2:	the new modules must have the functions gettopics(self): and
-	recivedata(self,data):.
+	receivedata(self,data):.
 	"gettopics" must return a list of topics that the modules are interested
 	in.
-	"recivedata" must take the parameter 'data', what it actually does with
+	"receivedata" must take the parameter 'data', what it actually does with
 	the data is irrelevant.
 
 3:	all module sourcefiles must be located in the subdirectory 'modules'.
