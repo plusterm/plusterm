@@ -45,7 +45,7 @@ class plotter():
 		# remove the plot
 		self.plotFrame.destroy()
 
-	def recivedata(self, data=None):
+	def receivedata(self, data=None):
 		''' 
 		Matches the serial output string with a regex. 
 		If data read from serial is 1 numerical	value, plot it on the 

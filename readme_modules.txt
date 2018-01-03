@@ -19,7 +19,7 @@ intended for the PlusTerm program.
 
 
 Module Template:
-
+-------------------------------------------------------------
 class template:
 	"""	
 	"""
@@ -42,10 +42,11 @@ class template:
 		topics=["data"]
 		return topics	
 
-	def recivedata(self,data):
+	def receivedata(self,data):
 		"""	takes data as a tuple of topic and the actual data, which
 			currently consist of 2 values (timestamp and the data read
 			from the serialport) delivered from the readerthread.
 
 		"""
 		#do whatever you want with the data
+-----------------------------------------------------------------

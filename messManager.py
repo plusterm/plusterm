@@ -48,7 +48,7 @@ class messengerThread(threading.Thread):
 					
 					if key==temp[0]:
 						for x in self.subscribers[key]:
-							x.recivedata(temp)
+							x.receivedata(temp)
 							
 			except queue.Empty as e:
 				sleep(0.01)
