@@ -9,9 +9,9 @@ intended for the PlusTerm program.
 
 2:	the new modules must have the functions gettopics(self): and
 	receivedata(self,data):.
-	"gettopics" must return a list of topics that the modules are interested
-	in.
-	"receivedata" must take the parameter 'data', what it actually does with
+	"gettopics" must return a list of topics (strings) that the modules are
+	interested in.
+	"receivedata" must take one parameter, 'data', what it actually does with
 	the data is irrelevant.
 
 3:	all module sourcefiles must be located in the subdirectory 'modules'.
@@ -39,7 +39,7 @@ class template:
 	def gettopics(self):
 		"""	returns the topics that this module is interested in
 		"""
-		topics=["data"]
+		topics=["data","error"]
 		return topics	
 
 	def receivedata(self,data):

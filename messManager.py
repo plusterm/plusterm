@@ -25,7 +25,7 @@ class messManager:
 		
 	def send(self,message,topic):
 		"""	checks if there are any subscribers and if there are, accepts the
-			message and the topic puting it in the messagequeue as a tuple
+			message and the topic putting it in the messagequeue as a tuple
 			(topic, message)
 		"""
 		if len(self.subscribers) >0:

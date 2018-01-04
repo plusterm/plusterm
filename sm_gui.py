@@ -217,13 +217,7 @@ class sm_gui(object):
 	def disconnect(self):
 		self.context.disconnectSerial()
 
-	# def changePlotVariable(self):
-	# 	self.plotVar.set(not self.plotVar.get())
-	# 	if self.plotVar:
-	# 		self.context.setupPlot()
-	# 	else:
-	# 		self.context.destroyplot()
-
+	
 	def openScriptFile(self):
 		file = askopenfile(filetypes =(("Text File", "*.txt"),("All Files","*.*")),
 							title = "Choose a file")

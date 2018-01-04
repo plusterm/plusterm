@@ -37,6 +37,7 @@ class SerialMonitor:
 
 	def connectSerial(self):
 		"""	creates an arg structure with relevant info for a serialport connection
+			and try to connect with that arg structure
 		"""
 		arg=SimpleNamespace()	#	
 		setattr(arg,"local",True)
@@ -92,12 +93,7 @@ class SerialMonitor:
 			self.gui.clearinputentry()
 			self.gui.savecommand(cmd)
 
-	# def setupPlot(self):
-	# 	self.plotter.setupPlot()
-
-	# def destroyplot(self):
-	# 	self.plotter.destroyplot()
-	
+		
 	def logoutputtogui(self,data):
 		"""	relays data to be "printed" to the gui's logoutput function
 		"""
@@ -124,12 +120,12 @@ class SerialMonitor:
 
 	def addmodule(self,modulename):
 		"""	Dynamically imports a module located in the modules folder and
-			instanciates it, adds it to the messManager subscriber dictionary,
+			instantiates it, adds it to the messManager subscriber dictionary,
 			once for each topic the module is interested in.
 			if the messManager deliverythread is not started (if it's the first
 			module to be loaded), start it.
 		"""
-		#	import the module, more or less equivalent to:
+		#	importing of the module, more or less equivalent to:
 		#	import 'modulename' as tmod
 		mod=importlib.import_module("modules."+modulename)	#	load the code for the module
 		tmod=getattr(mod,modulename)	#	create a python module of the code
