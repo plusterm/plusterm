@@ -1,3 +1,0 @@
-1:	split SerialMonitor into a few more classes, like Gui,plotter,communicator ...
-	not sure exactly what and how things areconnected so its just suggestions so far.
-2:
