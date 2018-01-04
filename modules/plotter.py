@@ -51,7 +51,7 @@ class plotter():
 		If data read from serial is 1 numerical	value, plot it on the 
 		y-axis with timestamp on the x-axis.
 		If 2 numerical values are read, plot them (x,y) = (value1,value2).
-		Data from thread is a tuple (timestamp, data)
+		Data is a tuple of a tuple ("topic",(timestamp, data))
 		'''
 		
 		if data is not None and data[0]=="data":

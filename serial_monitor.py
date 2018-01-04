@@ -69,7 +69,7 @@ class SerialMonitor:
 			self.logoutputtogui('{}\n'.format(e))
 
 	def onQuit(self):	
-		# When closing the window, close serial connection and stop thread
+		# When closing the window, close serial connection and stop threads
 		self.disconnectSerial()
 		self.messman.stopdelivery()
 		self.master.quit()
@@ -92,33 +92,54 @@ class SerialMonitor:
 			self.gui.clearinputentry()
 			self.gui.savecommand(cmd)
 
-	def setupPlot(self):
-		self.plotter.setupPlot()
-	def destroyplot(self):
-		self.plotter.destroyplot()
+	# def setupPlot(self):
+	# 	self.plotter.setupPlot()
+
+	# def destroyplot(self):
+	# 	self.plotter.destroyplot()
 	
 	def logoutputtogui(self,data):
+		"""	relays data to be "printed" to the gui's logoutput function
+		"""
 		self.gui.logoutput(data)
 
 	def getdata(self):
+		"""	gets data from the readerthread and sends the data with the topic "data"
+			to the messManager 
+		"""
 		try:
 			result = self.communicator.getdata()
-		except queue.Empty:
-			pass
+		except queue.Empty:	#	if fetching the data fails due to an empty queue
+			pass			#	do nothing
 		else:
+			#	"print" data to gui (without the timestamp)
 			self.logoutputtogui(result[1].decode())
 			#	send data to messmanager
 			self.messman.send(result,"data")
 		
 	def sendscript(text):
+		"""	relays text to the communicator's sendscript function
+		"""
 		self.communicator.sendscript(text)
 
 	def addmodule(self,modulename):
-		mod=importlib.import_module("modules."+modulename)
-		tmod=getattr(mod,modulename)
-		imod=tmod(self, self.master)
+		"""	Dynamically imports a module located in the modules folder and
+			instanciates it, adds it to the messManager subscriber dictionary,
+			once for each topic the module is interested in.
+			if the messManager deliverythread is not started (if it's the first
+			module to be loaded), start it.
+		"""
+		#	import the module, more or less equivalent to:
+		#	import 'modulename' as tmod
+		mod=importlib.import_module("modules."+modulename)	#	load the code for the module
+		tmod=getattr(mod,modulename)	#	create a python module of the code
+		imod=tmod(self, self.master)	#	make an instance of the module
+
+		#	for each topic returned from the gettopics function
 		for topic in imod.gettopics():
+			#	subscribe imod with the current topic
 		 	self.messman.subscribe(imod,topic)
+		 #	make sure that the messagedelivery is/gets started
 		if not self.messman.threadrunning():
 			self.messman.startdelivery()
 		

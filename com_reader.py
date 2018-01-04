@@ -21,8 +21,8 @@ class ComReaderThread(threading.Thread):
 	def run(self):
 
 		# start the timer
-		startTime = time.time()
-		checkonce=True
+		startTime = time.time()	#	start "timer"
+
 		while self.alive.isSet():
 			try:
 				# reads data until newline (x0A/10) 
@@ -35,20 +35,17 @@ class ComReaderThread(threading.Thread):
 						data += self.comstream.read()
 
 					self.que.put((timestamp, data))
-					checkonce=True
+					
 			except serial.SerialException as e:
 				reconnected=False
 				#log to gui?
 				while not reconnected:
 					try:
-						print("trying to reconnect")
+						#	if comstream still thinks it's open close it
 						if self.comstream.is_open:
-							print("trying to close")
 							self.comstream.close()
-							print("closed")
-						print("trying to open")
-						self.comstream.open()
-						print("opened")
+							
+						#	do checks and setup connection again (will require acces to arg-structure)
 						# if self.arg.local:
 						# 	if not self.comstream.is_open:
 						# 		self.comstream.baudrate=self.arg.baudrate
@@ -60,7 +57,9 @@ class ComReaderThread(threading.Thread):
 						# else:	#	remote eg server or p2p etc
 						# 	pass
 						
-					except Exception as e:
+						self.comstream.open()
+						
+					except Exception as e:	#	if reconnection failed let some time pass
 						print('reconnector:{}\n'.format(e))
 						time.sleep(0.1)
 					else:
