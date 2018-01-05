@@ -14,9 +14,9 @@ intended for the PlusTerm program.
 	"receivedata" must take one parameter, 'data', what it actually does with
 	the data is irrelevant.
 
-3:	all module sourcefiles must be located in the subdirectory 'modules'.
+3:	all setting up of the module must be done when the constructor is done
 
-
+4:	all module sourcefiles must be located in the subdirectory 'modules'.
 
 Module Template:
 -------------------------------------------------------------

@@ -6,7 +6,10 @@ from matplotlib import style
 style.use('bmh')
 
 class plotter():
-	"""plotter"""
+	"""	plotter fulfill all requirement of a plusterm-module.
+		it may be ignoring the 'context' but it uses 'master' to extend the window,
+		in which it produce its results.
+	"""
 	def __init__(self,context,master):
 		# super(plotter, self).__init__()
 		self.master = master
@@ -16,8 +19,11 @@ class plotter():
 		self.setupPlot()
 		
 	def gettopics(self):
+		"""	the plotter is only interested in data
+		"""
 		topics=["data"]
-		return topics	
+		return topics
+		
 	def setupPlot(self):
 		# Sets up the plot, and frame containing the plot
 		self.plotFrame = Frame(self.master)

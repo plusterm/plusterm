@@ -2,7 +2,8 @@
 class testmod2:
 	"""	testmod: a very simple example module showing the structure and
 		requirements of any module intended to subscribe on data in the
-		serialmonitor application
+		serialmonitor application. a more complex, but also more complete
+		example is the plotter-module found in plotter.py
 	"""
 	def __init__(self,context,master):
 		"""	the constructor of all modules must take 2 variables: context
