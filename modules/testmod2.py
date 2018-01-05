@@ -33,3 +33,4 @@ class testmod2:
 		self.context.logoutputtogui(datastr)
 		# print(data)
 		# print("\n")
+

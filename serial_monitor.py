@@ -41,19 +41,20 @@ class SerialMonitor:
 		"""
 		arg=SimpleNamespace()	#	
 		setattr(arg,"local",True)
-		
+		#	get the baudrate from the textbox or the the chosen
 		if self.gui.baudVar.get()=='Custom':
 			setattr(arg,"baudrate",int(self.gui.customBaudEntry.get()))
 		else:
 			setattr(arg,"baudrate",int(self.gui.baudVar.get()))
 
+		#	get the port from the textbox or the the chosen
 		if self.gui.portVar.get()=='Custom':
 			setattr(arg,"port",self.gui.customPortEntry.get())
 		else:
 			setattr(arg,"port",self.gui.portVar.get())
-		
+		#	set timeout 
 		setattr(arg,"timeout",0.01)
-
+		#	attempt connection
 		if self.communicator.connect(arg):
 			self.logoutputtogui("communication open\n")
 		else:

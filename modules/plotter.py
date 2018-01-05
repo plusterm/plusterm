@@ -95,6 +95,3 @@ class plotter():
 		self.yValTwo = []
 		self.canvas.draw()
 
-
-	def function():
-		pass

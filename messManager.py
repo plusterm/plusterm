@@ -86,4 +86,3 @@ class messengerThread(threading.Thread):
 		threading.Thread.join(self,timeout)
 
 
-	

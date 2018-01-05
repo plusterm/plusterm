@@ -42,16 +42,15 @@ class sm_gui(object):
 		self.menu.add_cascade(label = 'Script', underline=0, menu=self.script)
 
 		self.modules = Menu(self.menu, tearoff=0)
+		#	read the names of all modules filename, skip pycache and init
 		files = [f for f in os.listdir("./modules") if f not in ["__pycache__","__init__.py"]]# if f.is_file()
 		self.modvars=[]
 		for x in files:
 			listvar=BooleanVar()
 			listvar.set(False)
-			self.modvars.append([x.rstrip('.py'),listvar,False])
-			# self.modvars[-1][1].set(False)
-			
+			#	strip away .py and "save" modulename, the checkbox's variable, and a boolean (that keeps track on
+			self.modvars.append([x.rstrip('.py'),listvar,False])	#	if that module has been loaded) as a list, in a list
 			self.modules.add_checkbutton(label=x, onvalue=True, offvalue=False, variable=listvar,command=self.addmodule)
-		# self.modules.add_command(label = 'Show/Hide plot', underline=0, command=self.changePlotVariable)
 		self.menu.add_cascade(label = 'modules', underline=0, menu=self.modules)
 
 		# Connection settings

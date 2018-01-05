@@ -182,4 +182,3 @@ def getPorts():
 	return sorted(ports)
 
 
-	
