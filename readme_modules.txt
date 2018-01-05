@@ -1,9 +1,9 @@
 this document is meant to clearify how to implement a new module
 intended for the PlusTerm program.
 
-1:	the new module must be a class and its constructor must take 2
-	additional parameters. one of which	is the context aka the instance
-	of serial_monitor (in its current naming state).
+1:	the new module must be a class in its own file with the same name and its
+	constructor must take 2	additional parameters. one of which	is the context
+	aka the instance of serial_monitor (in its current naming state).
 	the other parameter is the master, an instance of the tkinter (gui tool),
 	which is inteded for when the new module needs to add to the gui.
 
@@ -25,12 +25,12 @@ class template:
 	"""
 	def __init__(self,context,master):
 		"""	the constructor of all modules must take 2 variables: context
-			and master (since it's python actual name can differ...).
+			and master.
 			context is intended for if some functionallity need acces to
 			for example, log something to the textarea in the gui, then it
 			does so through the "context" which should be the instance
 			of serial_monitor.
-			master is intended for extending the gui and is suposed to be
+			similarly, master is intended for extending the gui and is suposed to be
 			a tkinter.tk() instance
 		"""
 		self.context=context
@@ -39,7 +39,7 @@ class template:
 	def gettopics(self):
 		"""	returns the topics that this module is interested in
 		"""
-		topics=["data","error"]
+		topics=["data"]	#	or ["data","error"] etc
 		return topics	
 
 	def receivedata(self,data):
