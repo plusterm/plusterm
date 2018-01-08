@@ -29,9 +29,8 @@ class SerialMonitor:
 	def __init__(self, master):
 		self.master = master
 		self.messman=messManager.messManager()
-		self.queue=queue.Queue()
 		self.gui=sm_gui.sm_gui(master,self)
-		self.communicator=communicator.communicator(self,self.queue)
+		self.communicator=communicator.communicator(self)
 
 	def connectSerial(self):
 		"""	creates an arg structure with relevant info for a serialport connection
@@ -138,7 +137,8 @@ class SerialMonitor:
 		if not self.messman.threadrunning():
 			self.messman.startdelivery()
 		
-
+	def removemodule(self, modulename):
+		self.messman.removemodule(modulename)		
 
 
 

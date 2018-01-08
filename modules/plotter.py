@@ -101,3 +101,8 @@ class plotter():
 		self.yValTwo = []
 		self.canvas.draw()
 
+	def name(self):
+		return "plotter"
+
+	def remove(self):
+		self.destroyplot()

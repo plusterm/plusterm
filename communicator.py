@@ -1,4 +1,4 @@
-
+import queue
 import serial
 from serial.tools import list_ports
 from com_reader import ComReaderThread
@@ -10,10 +10,9 @@ class communicator():
 		.
 		.
 	"""
-	def __init__(self,context,q):
+	def __init__(self,context,q=queue.Queue()):
 		"""	takes context, which is intended to be the SerialMonitor instance 
-			and q which is the queue given (and instantiated in the SerialMonitor instance,
-			leftover from before 'classification' branch)
+			and q which is the queue given (or defaulted new queue)
 		"""
 		
 		self.threadq=q

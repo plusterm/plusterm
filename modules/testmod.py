@@ -33,3 +33,8 @@ class testmod:
 		print(data)
 		# print("\n")
 
+	def name(self):
+		return "testmod"
+
+	def remove(self):
+		pass

@@ -43,6 +43,12 @@ class messManager:
 		if self.messThread.isAlive():
 			self.messThread.stop()
 
+	def removemodule(self,modulename):
+		for key in self.subscribers:
+			for subscriber in self.subscribers[key]:
+				if subscriber.name() == modulename:
+					subscriber.remove()
+					self.subscribers[key].remove(subscriber)
 
 class messengerThread(threading.Thread):
 	"""	messengerThread handles the delivery of messages with it's running thread

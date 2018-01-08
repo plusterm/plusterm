@@ -35,3 +35,9 @@ class testmod2:
 		# print(data)
 		# print("\n")
 
+	def name(self):
+		return "testmod2"
+
+	def remove(self):
+		pass
+		

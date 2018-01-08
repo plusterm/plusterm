@@ -14,9 +14,13 @@ intended for the PlusTerm program.
 	"receivedata" must take one parameter, 'data', what it actually does with
 	the data is irrelevant.
 
-3:	all setting up of the module must be done when the constructor is done
+3:	for removal of a module they also need to have a function name(self):
+	which returns the name of the module, and remove(self,modulename):
+	which handles any destruction needed.
 
-4:	all module sourcefiles must be located in the subdirectory 'modules'.
+4:	all setting up of the module must be done when the constructor is done
+
+5:	all module sourcefiles must be located in the subdirectory 'modules'.
 
 Module Template:
 -------------------------------------------------------------
@@ -49,4 +53,10 @@ class template:
 
 		"""
 		#do whatever you want with the data
+
+	def name(self):
+		return "template"
+
+	def remove():
+		pass
 -----------------------------------------------------------------

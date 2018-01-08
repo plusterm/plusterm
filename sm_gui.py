@@ -167,11 +167,16 @@ class sm_gui(object):
 
 	def addmodule(self):
 		for mod in self.modvars:
-			if not mod[2]:
-				if mod[1].get():
+			if mod[1].get():
+				if not mod[2]:
 					self.context.addmodule(mod[0])
 					mod[2]=True
-			
+			else:
+				self.context.removemodule(mod[0])
+				mod[2]=False
+
+	def function():
+		pass
 
 	def repeatMode(self):
 		# Repeat sends a command, by default evey 500 ms
