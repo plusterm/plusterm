@@ -20,7 +20,6 @@ from types import SimpleNamespace
 
 import communicator
 import sm_gui
-import plotter
 import messManager
 
 class SerialMonitor:
@@ -32,7 +31,6 @@ class SerialMonitor:
 		self.messman=messManager.messManager()
 		self.queue=queue.Queue()
 		self.gui=sm_gui.sm_gui(master,self)
-		self.plotter=plotter.plotter(master)
 		self.communicator=communicator.communicator(self,self.queue)
 
 	def connectSerial(self):
