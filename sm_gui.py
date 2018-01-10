@@ -166,18 +166,19 @@ class sm_gui(object):
 					
 
 	def addmodule(self):
-		for mod in self.modvars:
-			if mod[1].get():
-				if not mod[2]:
-					self.context.addmodule(mod[0])
-					mod[2]=True
+		"""	checks which modules should be loaded and which are loaded
+			and acts accordingly. (may not be the best name....)
+		"""
+		for mod in self.modvars:#	for each module
+			if mod[1].get():	#	check checkbox status
+				if not mod[2]:	#	check module loaded status
+					self.context.addmodule(mod[0])	#	add module by sending the modulename (=== mod[0])
+					mod[2]=True						#	update module loaded status 
 			else:
-				self.context.removemodule(mod[0])
-				mod[2]=False
+				self.context.removemodule(mod[0])	#	remove module by sending the modulename (=== mod[0])
+				mod[2]=False						#	update module loaded status 
 
-	def function():
-		pass
-
+	
 	def repeatMode(self):
 		# Repeat sends a command, by default evey 500 ms
 		# Specify time limit with a comma, e.g. 'c, 100' in ms

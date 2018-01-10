@@ -130,10 +130,12 @@ class SerialMonitor:
 		imod=tmod(self, self.master)	#	make an instance of the module
 
 		#	for each topic returned from the gettopics function
+		# self.messman.pausedelivery()
 		for topic in imod.gettopics():
 			#	subscribe imod with the current topic
 		 	self.messman.subscribe(imod,topic)
-		 #	make sure that the messagedelivery is/gets started
+		# self.messman.resumedelivery()
+		#	make sure that the messagedelivery is/gets started
 		if not self.messman.threadrunning():
 			self.messman.startdelivery()
 		

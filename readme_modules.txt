@@ -58,5 +58,9 @@ class template:
 		return "template"
 
 	def remove():
+		"""	depending on what the module does and particularly how many topics
+			it's intersted in, checking a "destroyed"-variable may be necessary.
+			compare testmod(2) vs plotter.
+		"""
 		pass
 -----------------------------------------------------------------

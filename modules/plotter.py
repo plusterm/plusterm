@@ -88,9 +88,7 @@ class plotter():
 				self.ax2.plot(self.xValTwo, self.yValTwo, '.-')
 
 			self.canvas.draw()
-
-
-
+			
 	def clearPlot(self):
 		# Reset the plot figure
 		self.ax1.clear()
