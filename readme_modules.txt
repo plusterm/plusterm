@@ -15,8 +15,8 @@ intended for the PlusTerm program.
 	the data is irrelevant.
 
 3:	for removal of a module they also need to have a function name(self):
-	which returns the name of the module, and remove(self,modulename):
-	which handles any destruction needed.
+	which returns the name of the module, and remove(self):
+	which handles any destruction needed before removing the module from the active modulelist.
 
 4:	all setting up of the module must be done when the constructor is done
 
@@ -57,7 +57,7 @@ class template:
 	def name(self):
 		return "template"
 
-	def remove():
+	def remove(self):
 		"""	depending on what the module does and particularly how many topics
 			it's intersted in, checking a "destroyed"-variable may be necessary.
 			compare testmod(2) vs plotter.
