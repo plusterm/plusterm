@@ -64,8 +64,7 @@ class ComReaderThread(threading.Thread):
 						time.sleep(0.1)
 					else:
 						reconnected=True
-						#log to gui?
-				
+						#log to gui?				
 
 
 	def stop(self, timeout=None):		

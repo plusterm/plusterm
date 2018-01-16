@@ -23,6 +23,8 @@ class testmod:
 		"""
 		topics=["data"]
 		return topics	
+
+
 	def receivedata(self,data):
 		"""	takes data as a tuple of topic and the actual data, which
 			currently consist of 2 values (timestamp and the data read
@@ -33,8 +35,10 @@ class testmod:
 		print(data)
 		# print("\n")
 
+
 	def name(self):
 		return "testmod"
+		
 
 	def remove(self):
 		pass

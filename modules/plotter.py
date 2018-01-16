@@ -8,14 +8,13 @@ style.use('bmh')
 class plotter():
 	"""	plotter fulfill all requirement of a plusterm-module.
 		it may be ignoring the 'context' but it uses 'master' to extend the window,
-		in which it produce its results.
+		into which it desplays its results.
 	"""
 	def __init__(self,context,master):
 		# super(plotter, self).__init__()
 		self.master = master
 		# self.context=context
-		self.plt = plt		
-		self.plotFrame = Frame(self.master)
+		self.plt = plt
 		self.setupPlot()
 		
 	def gettopics(self):
@@ -33,7 +32,7 @@ class plotter():
 
 		self.fig, (self.ax1, self.ax2) = self.plt.subplots(2,1)
 		self.canvas = FigureCanvasTkAgg(self.fig, self.plotFrame)
-		self.canvas.get_tk_widget().pack()
+		self.canvas.get_tk_widget().pack(fill=BOTH, expand=True)
 
 		toolbar = NavigationToolbar2TkAgg(self.canvas, self.plotFrame)
 		toolbar.update()
@@ -61,7 +60,7 @@ class plotter():
 		'''
 		
 		if data is not None and data[0]=="data":
-			numericData = re.findall("-?\d*\.\d+|-?\d+", data[1][1].decode())
+			numericData = re.findall("-?\d*\.\d+|-?\d+", data[1][1].decode(errors='ignore'))
 		
 			if len(numericData) == 1:
 				self.ax1.clear()		

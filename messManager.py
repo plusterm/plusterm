@@ -2,10 +2,8 @@ import threading
 import queue
 from time import sleep
 
-
-
 class messManager:
-	"""docstring for ClassName"""
+	"""Class that manages the loaded modules as subscribers according to a pubsub system """
 	def __init__(self):
 		self.subscribers={}
 		self.messqueue=queue.Queue()
@@ -24,10 +22,12 @@ class messManager:
 			self.subscribers[topic]=[subscriber]
 		self.resumedelivery()
 
+
 	def threadrunning(self):
 		"""	returns the alive-status of the thread delivering messages
 		"""
 		return self.messThread.isAlive()
+
 		
 	def send(self,message,topic):
 		"""	checks if there are any subscribers and if there are, accepts the
@@ -37,6 +37,7 @@ class messManager:
 		if len(self.subscribers) >0:
 			self.messqueue.put((topic,message))
 
+
 	def startdelivery(self):
 		"""	if the message delivery thread is not "alive", start it
 		"""
@@ -44,11 +45,13 @@ class messManager:
 			self.messThread.start()
 			# self.pause=False
 
+
 	def stopdelivery(self):
 		"""	if the message delivery thread is "alive", stop it
 		"""
 		if self.messThread.isAlive():
 			self.messThread.stop()
+
 
 	def removemodule(self,modulename):
 		"""	checks every subscribers name and compares it to the given modulename
@@ -62,12 +65,15 @@ class messManager:
 					self.subscribers[key].remove(subscriber)	#	remove from list
 		self.resumedelivery()
 
+
 	def pausedelivery(self):
 		self.pause=True
 		sleep(0.2)
 
+
 	def resumedelivery(self):
 		self.pause=False
+
 	
 	def ispaused(self):
 		return self.pause
@@ -84,13 +90,15 @@ class messengerThread(threading.Thread):
 		self.alive=threading.Event()
 		self.alive.set()
 		
+
 	def run(self):
 		temp=tuple()
 		while self.alive.isSet():
-			# print("is alive")
+
 			while self.manager.ispaused():
 				print("pausing for a bit........")
 				sleep(0.1)
+
 			try:	#	fetch the next item on the queue, a tuple (topic,message)
 				# print("atempting to get data")
 				temp=self.messque.get(False)
@@ -98,8 +106,10 @@ class messengerThread(threading.Thread):
 				#	for every topic found in subscribers
 				
 				for key in self.subscribers:
+
 					for y in self.subscribers[key]:
 						print(y.name())
+
 					#	check if the key matches the topic of the message
 					if key==temp[0]:
 						# for every subscriber interested in the topic
@@ -115,14 +125,17 @@ class messengerThread(threading.Thread):
 				#	pass before trying again
 				sleep(0.01)
 				# print(e)
+
 			except Exception as e:
 				print("non queue related error:\n{}".format(e))
 				print (e)
+
 			else:
 				pass
 				# print(temp[0]+": "+str(temp[1][0])+", "+str(temp[1][1]))	#	.__repr__()
 			# finally:
 			# 	pass
+
 
 	def stop(self,timeout=None):
 		self.alive.clear()

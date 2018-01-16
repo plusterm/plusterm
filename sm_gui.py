@@ -5,13 +5,19 @@ import os
 from communicator import getPorts
 
 class sm_gui(object):
-	"""docstring for sm_gui"""
+	""" Serial monitor GUI, plots, and controls """
+	
 	def __init__(self,master,context):
-		self.context=context
+		self.context = context
 		self.master = master
 		master.title("Serial Monitor")
 		master.protocol('WM_DELETE_WINDOW', self.context.onQuit)
-		master.resizable(0,0)
+
+		master.columnconfigure(0, weight=1)
+		master.columnconfigure(1, weight=1)
+		master.rowconfigure(0, weight=0)
+		master.rowconfigure(1, weight=1)
+		master.rowconfigure(2, weight=0)
 	
 		self.portVar = StringVar()
 		self.baudVar = StringVar()
@@ -43,15 +49,16 @@ class sm_gui(object):
 
 		self.modules = Menu(self.menu, tearoff=0)
 		#	read the names of all modules filename, skip pycache and init
-		files = [f for f in os.listdir("./modules") if f not in ["__pycache__","__init__.py"]]# if f.is_file()
+		files = [f for f in os.listdir("./modules") if f not in ["__pycache__","__init__.py"]]
 		self.modvars=[]
 		for x in files:
 			listvar=BooleanVar()
 			listvar.set(False)
-			#	strip away .py and "save" modulename, the checkbox's variable, and a boolean (that keeps track on
-			self.modvars.append([x.rstrip('.py'),listvar,False])	#	if that module has been loaded) as a list, in a list
+			# strip away .py and "save" modulename, the checkbox's variable, 
+			# and a boolean (that keeps track on wether that module has been loaded)
+			self.modvars.append([x.rstrip('.py'),listvar,False])	
 			self.modules.add_checkbutton(label=x, onvalue=True, offvalue=False, variable=listvar,command=self.addmodule)
-		self.menu.add_cascade(label = 'modules', underline=0, menu=self.modules)
+		self.menu.add_cascade(label = 'Modules', underline=0, menu=self.modules)
 
 		# Connection settings
 		settingsFrame = Frame(master)
@@ -70,7 +77,7 @@ class sm_gui(object):
 		self.baudLabel.pack(side='left')
 		self.popupMenuBaud.pack(side='left')
 		self.customBaudEntry.pack(side='left')
-		self.connectBtn.pack(side='right', padx=17)
+		self.connectBtn.pack(side='right')
 		self.disconnectBtn.pack(side='right')
 		settingsFrame.grid(row=0, column=0, sticky=NSEW)
 
@@ -81,7 +88,7 @@ class sm_gui(object):
 			yscrollcommand=self.scrollbar.set, borderwidth=1, relief='sunken')
 		self.scrollbar.config(command=self.textOutput.yview)
 
-		self.textOutput.pack(side='left')
+		self.textOutput.pack(side='left', fill=BOTH, expand=True)
 		self.scrollbar.pack(side='right', fill=Y)
 		outputFrame.grid(row=1, column=0, sticky=NSEW)
 
@@ -109,17 +116,21 @@ class sm_gui(object):
 		# self.plotCheck.pack(side='left')
 		inputFrame.grid(row=2, column=0, sticky=NSEW)
 
-	def logoutput(self,data):
-		self.textOutput.insert('end', data)
+
+	def logoutput(self,msg):
+		self.textOutput.insert('end', msg)
 		self.textOutput.see('end')	#	scroll down to last entry
+
 
 	def clearOutput(self):
 		# clears the output text widget
 		self.textOutput.delete(1.0, 'end')
 
+
 	def clearinputentry(self):
 		# Clear the entry widget, add save the last command
 		self.inputEntry.delete(0, 'end')
+
 
 	def savecommand(self,cmd):
 		self.cmdList.append(cmd)
@@ -129,6 +140,8 @@ class sm_gui(object):
 			self.cmdList.pop(0)
 
 		self.cmdPointer = len(self.cmdList)
+
+
 	def onUpArrow(self, event):
 		# cycles previously entered commands
 		try:
@@ -215,9 +228,11 @@ class sm_gui(object):
 		except:
 			pass
 
+
 	def connect(self):
 		self.context.connectSerial()
 		self.master.after(100,self.listenComThread)
+
 
 	def disconnect(self):
 		self.context.disconnectSerial()
@@ -226,11 +241,9 @@ class sm_gui(object):
 	def openScriptFile(self):
 		file = askopenfile(filetypes =(("Text File", "*.txt"),("All Files","*.*")),
 							title = "Choose a file")
-		try:
+
+		if file is not None:
 			f = open(file.name, 'r')
 			text = f.read()
 			f.close()
 			self.context.sendScript(text)
-				
-		except Exception as e:
-			self.logoutput('{}\n'.format(e))
