@@ -107,7 +107,7 @@ class SerialMonitor:
 			pass			#	do nothing
 		else:
 			#	"print" data to gui (without the timestamp)
-			self.logoutputtogui(result[1].decode())
+			self.logoutputtogui(result[1].decode(errors='replace'))
 			#	send data to messmanager
 			self.messman.send(result,"data")
 		
