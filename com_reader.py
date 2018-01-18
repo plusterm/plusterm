@@ -18,6 +18,7 @@ class ComReaderThread(threading.Thread):
 		self.alive = threading.Event()
 		self.alive.set()
 
+
 	def run(self):
 
 		# start the timer
@@ -36,8 +37,9 @@ class ComReaderThread(threading.Thread):
 
 					self.que.put((timestamp, data))
 					
-			except serial.SerialException as e:
+			except serial.SerialException:
 				reconnected=False
+				print('Serial connection lost, trying to reconnect.')
 				#log to gui?
 				while not reconnected:
 					try:
@@ -59,11 +61,13 @@ class ComReaderThread(threading.Thread):
 						
 						self.comstream.open()
 						
-					except Exception as e:	#	if reconnection failed let some time pass
-						print('reconnector:{}\n'.format(e))
+					except Exception as e:	
+						# if reconnection failed let some time pass					
 						time.sleep(0.1)
+
 					else:
 						reconnected=True
+						print('Reconnected')
 						#log to gui?				
 
 

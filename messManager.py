@@ -34,7 +34,7 @@ class messManager:
 			message and the topic putting it in the messagequeue as a tuple
 			(topic, message)
 		"""
-		if len(self.subscribers) >0:
+		if len(self.subscribers) > 0:
 			self.messqueue.put((topic,message))
 
 
@@ -96,29 +96,28 @@ class messengerThread(threading.Thread):
 		while self.alive.isSet():
 
 			while self.manager.ispaused():
-				print("pausing for a bit........")
+				print("pausing for a bit...")
 				sleep(0.1)
 
-			try:	#	fetch the next item on the queue, a tuple (topic,message)
+			try:	# fetch the next item on the queue, a tuple (topic,message)
 				# print("atempting to get data")
-				temp=self.messque.get(False)
-				print("success\ntrying to deliver data")
+				msg = self.messque.get(False)
+				#print("success\ntrying to deliver data")
 				#	for every topic found in subscribers
 				
-				for key in self.subscribers:
-
-					for y in self.subscribers[key]:
-						print(y.name())
+				for topic in self.subscribers:
+					#for sub in self.subscribers[topic]:
+					#	print(sub.name())
 
 					#	check if the key matches the topic of the message
-					if key==temp[0]:
+					if topic == msg[0]:
 						# for every subscriber interested in the topic
-						for x in self.subscribers[key]:
-							print("delivery attempt")
+						for sub in self.subscribers[topic]:
+							#print("delivery attempt")
 							#deliver the message tuple
-							x.receivedata(temp)
-							print("delivered")
-				print("delivery done")
+							sub.receivedata(msg)
+							#print("delivered")
+				#print("delivery done")
 							
 			except queue.Empty as e:
 				#	if error occured becuase of an empty queue let some time
@@ -129,12 +128,6 @@ class messengerThread(threading.Thread):
 			except Exception as e:
 				print("non queue related error:\n{}".format(e))
 				print (e)
-
-			else:
-				pass
-				# print(temp[0]+": "+str(temp[1][0])+", "+str(temp[1][1]))	#	.__repr__()
-			# finally:
-			# 	pass
 
 
 	def stop(self,timeout=None):

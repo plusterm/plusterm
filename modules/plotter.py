@@ -1,9 +1,10 @@
 import os
 from tkinter import *
-import matplotlib.pyplot as plt
+import matplotlib
+from matplotlib.figure import Figure
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2TkAgg
 from matplotlib import style
-style.use('bmh')
+style.use('ggplot')
 
 class plotter():
 	"""	plotter fulfill all requirement of a plusterm-module.
@@ -14,15 +15,16 @@ class plotter():
 		# super(plotter, self).__init__()
 		self.master = master
 		# self.context=context
-		self.plt = plt
 		self.setupPlot()
+		
 		
 	def gettopics(self):
 		"""	the plotter is only interested in data
 		"""
-		topics=["data"]
+		topics = ["data"]
 		return topics
 		
+
 	def setupPlot(self):
 		# Sets up the plot, and frame containing the plot
 		self.plotFrame = Frame(self.master)
@@ -30,7 +32,8 @@ class plotter():
 		clearPlotBtn = Button(self.plotFrame, text='Clear plot', command=self.clearPlot)
 		clearPlotBtn.pack(pady=3)
 
-		self.fig, (self.ax1, self.ax2) = self.plt.subplots(2,1)
+		self.fig = Figure()
+		self.ax1, self.ax2 = self.fig.subplots(2, 1)
 		self.canvas = FigureCanvasTkAgg(self.fig, self.plotFrame)
 		self.canvas.get_tk_widget().pack(fill=BOTH, expand=True)
 
@@ -42,13 +45,13 @@ class plotter():
 		self.xValOne = []
 		self.xValTwo = []
 		self.yValOne = []
-		self.yValTwo = []
+		self.yValTwo = []		
 
-		# self.livePlot()
 
 	def destroyplot(self):
 		# remove the plot
 		self.plotFrame.destroy()
+
 
 	def receivedata(self, data=None):
 		''' 
@@ -59,7 +62,7 @@ class plotter():
 		Data is a tuple of a tuple ("topic",(timestamp, data))
 		'''
 		
-		if data is not None and data[0]=="data":
+		if data is not None and data[0] == "data":
 			numericData = re.findall("-?\d*\.\d+|-?\d+", data[1][1].decode(errors='ignore'))
 		
 			if len(numericData) == 1:
@@ -71,7 +74,7 @@ class plotter():
 					self.xValOne.pop(0)
 					self.yValOne.pop(0)
 
-				self.ax1.minorticks_on()
+				#self.ax1.minorticks_on()
 				self.ax1.plot(self.xValOne, self.yValOne, '.-')
 
 			elif len(numericData) == 2:
@@ -83,11 +86,12 @@ class plotter():
 					self.xValTwo.pop(0)
 					self.yValTwo.pop(0)
 
-				self.ax2.minorticks_on()
+				#self.ax2.minorticks_on()
 				self.ax2.plot(self.xValTwo, self.yValTwo, '.-')
 
 			self.canvas.draw()
 			
+
 	def clearPlot(self):
 		# Reset the plot figure
 		self.ax1.clear()
@@ -98,8 +102,10 @@ class plotter():
 		self.yValTwo = []
 		self.canvas.draw()
 
+
 	def name(self):
 		return "plotter"
+
 
 	def remove(self):
 		self.destroyplot()

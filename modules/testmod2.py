@@ -22,7 +22,8 @@ class testmod2:
 		"""	returns the topics that this module is interested in
 		"""
 		topics=["data"]
-		return topics	
+		return topics
+		
 	def receivedata(self,data):
 		"""	takes data as a tuple of topic and the actual data, which
 			currently consist of 2 values (timestamp and the data read

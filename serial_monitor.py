@@ -158,10 +158,10 @@ class SerialMonitor:
 					s = re.search('\d*\.\d+|\d+', line)
 	
 					try:
-						self.master.update()
+						self.gui.master.update()
 						ss = float(s.group(0)) / 1000 
 						time.sleep(ss)
-						self.master.update()
+						self.gui.master.update()
 	
 					except:
 						self.logoutputtogui('Invalid format \'sleep\' on row {}. Quitting.\n'
@@ -173,15 +173,15 @@ class SerialMonitor:
 	
 					for i in range(int(mult[1])):
 						self.sendCmd(mult[0])
-						self.master.update()
+						self.gui.master.update()
 						time.sleep(delay)
-						self.master.update()
+						self.gui.master.update()
 	
 				else:
 					self.communicator.sendCmd(line)
-					self.master.update()
+					self.gui.master.update()
 					time.sleep(delay)
-					self.master.update()
+					self.gui.master.update()
 	
 
 	def addmodule(self,modulename):

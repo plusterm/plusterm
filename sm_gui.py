@@ -6,7 +6,7 @@ from communicator import getPorts
 
 class sm_gui(object):
 	""" Serial monitor GUI, plots, and controls """
-	
+
 	def __init__(self,master,context):
 		self.context = context
 		self.master = master
@@ -21,13 +21,11 @@ class sm_gui(object):
 	
 		self.portVar = StringVar()
 		self.baudVar = StringVar()
-		self.plotVar = BooleanVar()
 		self.repeatVar = BooleanVar()
 
 		self.portVar.set('Custom')
 		self.baudVar.set('Custom')
 		self.repeatVar.set(False)
-		self.plotVar.set(False)
 
 		self.cmdList = list()
 
@@ -36,6 +34,7 @@ class sm_gui(object):
 							1200, 1800, 2400, 4800, 9600, 19200, 38400, 
 							57600, 115200, 'Custom']
 
+		### Menu bar
 		self.menu = Menu(master)
 		self.master.config(menu=self.menu)
 
@@ -43,9 +42,9 @@ class sm_gui(object):
 		self.file.add_command(label = 'Quit', underline=0, command=self.context.onQuit)
 		self.menu.add_cascade(label = 'File', underline=0, menu=self.file)
 
-		self.script = Menu(self.menu, tearoff=0)
-		self.script.add_command(label = 'Run', underline=0, command=self.openScriptFile)
-		self.menu.add_cascade(label = 'Script', underline=0, menu=self.script)
+		self.script_menu = Menu(self.menu, tearoff=0)
+		self.script_menu.add_command(label = 'Run', underline=0, command=self.openScriptFile)
+		self.menu.add_cascade(label = 'Script', underline=0, menu=self.script_menu)
 
 		self.modules = Menu(self.menu, tearoff=0)
 		#	read the names of all modules filename, skip pycache and init
@@ -60,7 +59,7 @@ class sm_gui(object):
 			self.modules.add_checkbutton(label=x, onvalue=True, offvalue=False, variable=listvar,command=self.addmodule)
 		self.menu.add_cascade(label = 'Modules', underline=0, menu=self.modules)
 
-		# Connection settings
+		#### Connection settings
 		settingsFrame = Frame(master)
 		self.portLabel = Label(settingsFrame, text='Device:')
 		self.popupMenuPort = OptionMenu(settingsFrame, self.portVar, *self.portChoices)
@@ -113,7 +112,6 @@ class sm_gui(object):
 		self.clearBtn.pack(side='left')
 		self.repeatEntry.pack(side='right', padx=17, ipadx=0)
 		self.repeatCheck.pack(side='right')
-		# self.plotCheck.pack(side='left')
 		inputFrame.grid(row=2, column=0, sticky=NSEW)
 
 
@@ -197,34 +195,36 @@ class sm_gui(object):
 		# Specify time limit with a comma, e.g. 'c, 100' in ms
 		try:
 			inp = self.repeatEntry.get().split(',')
-
-			if len(inp) == 1:
-				self.context.sendCmd(inp[0])
-				timer = 500
-
-			elif len(inp) == 2:
-				self.context.sendCmd(inp[0])
-
-				if int(inp[1]) <= 0:
+			if inp != ['']:
+				if len(inp) == 1:
+					self.context.sendCmd(inp[0])
 					timer = 500
-				else:
-					timer = int(inp[1])
-
-			# repeat
-			if self.repeatVar.get() == True:
-				try:
-					self.master.after(timer, self.repeatMode)
-				except:
-					pass
+	
+				elif len(inp) == 2:
+					self.context.sendCmd(inp[0])
+	
+					if int(inp[1]) <= 0:
+						timer = 500
+					else:
+						timer = int(inp[1])
+	
+				# repeat
+				if self.repeatVar.get() == True:
+					try:
+						self.master.after(timer, self.repeatMode)
+					except:
+						pass
 
 		except Exception as e:
 			self.logoutput('{}\n'.format(e))
+
 
 	def listenComThread(self):
 		self.context.getdata()
 		# check again (unless program is quitting)
 		try:
 			self.master.after(10, self.listenComThread)	
+
 		except:
 			pass
 
@@ -240,10 +240,13 @@ class sm_gui(object):
 	
 	def openScriptFile(self):
 		file = askopenfile(filetypes =(("Text File", "*.txt"),("All Files","*.*")),
-							title = "Choose a file")
+							title = "Open script")
 
 		if file is not None:
 			f = open(file.name, 'r')
 			text = f.read()
 			f.close()
 			self.context.sendScript(text)
+
+	def togglePlot(self):
+		print('hello plot')
