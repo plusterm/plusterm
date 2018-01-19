@@ -2,6 +2,7 @@ import serial
 import threading
 import queue
 import time
+import datetime
 
 
 class ComReaderThread(threading.Thread):
@@ -22,7 +23,7 @@ class ComReaderThread(threading.Thread):
 	def run(self):
 
 		# start the timer
-		startTime = time.time()	#	start "timer"
+		#startTime = time.time()	#	start "timer"
 
 		while self.alive.isSet():
 			try:
@@ -30,7 +31,8 @@ class ComReaderThread(threading.Thread):
 				data = self.comstream.read()
 				if len(data) > 0:
 
-					timestamp = time.time() - startTime
+					#timestamp = time.time() - startTime
+					timestamp = datetime.datetime.now()
 
 					while data[-1] != 0x0A:
 						data += self.comstream.read()

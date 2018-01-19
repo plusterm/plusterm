@@ -47,6 +47,7 @@ class sm_gui(object):
 		self.menu.add_cascade(label = 'Script', underline=0, menu=self.script_menu)
 
 		self.modules = Menu(self.menu, tearoff=0)
+
 		#	read the names of all modules filename, skip pycache and init
 		files = [f for f in os.listdir("./modules") if f not in ["__pycache__","__init__.py"]]
 		self.modvars=[]
@@ -247,6 +248,3 @@ class sm_gui(object):
 			text = f.read()
 			f.close()
 			self.context.sendScript(text)
-
-	def togglePlot(self):
-		print('hello plot')

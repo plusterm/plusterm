@@ -50,8 +50,8 @@ class SerialMonitor:
 
 		#	set timeout 
 		setattr(arg,"timeout",0.01)
-		#	attempt connection
 
+		#	attempt connection
 		if self.communicator.connect(arg):
 			self.logoutputtogui("communication open\n")
 
@@ -193,8 +193,8 @@ class SerialMonitor:
 		"""
 		#	importing of the module, more or less equivalent to:
 		#	import 'modulename' as tmod
-		mod = importlib.import_module("modules."+modulename)	#	load the code for the module
-		tmod = getattr(mod,modulename)	#	create a python module of the code
+		mod = importlib.import_module("modules." + modulename)	#	load the code for the module
+		tmod = getattr(mod, modulename)	#	create a python module of the code
 		imod = tmod(self, self.master)	#	make an instance of the module
 
 		#	for each topic returned from the gettopics function

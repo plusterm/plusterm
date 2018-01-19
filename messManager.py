@@ -3,13 +3,12 @@ import queue
 from time import sleep
 
 class messManager:
-	"""Class that manages the loaded modules as subscribers according to a pubsub system """
+	""" Class that manages the loaded modules as subscribers in a pubsub system """
 	def __init__(self):
 		self.subscribers={}
 		self.messqueue=queue.Queue()
-		# global pause
-		self.pause=True
-		self.messThread=messengerThread(self.subscribers,self.messqueue,self)
+		self.messThread=messengerThread(self.subscribers,self.messqueue)
+
 
 	def subscribe(self,subscriber,topic):
 		"""	if the topic already exists in the dictionary append the subscriber
@@ -43,7 +42,6 @@ class messManager:
 		"""
 		if not self.messThread.isAlive():
 			self.messThread.start()
-			# self.pause=False
 
 
 	def stopdelivery(self):
@@ -53,7 +51,7 @@ class messManager:
 			self.messThread.stop()
 
 
-	def removemodule(self,modulename):
+	def removemodule(self, modulename):
 		"""	checks every subscribers name and compares it to the given modulename
 
 		"""
@@ -67,67 +65,61 @@ class messManager:
 
 
 	def pausedelivery(self):
-		self.pause=True
-		sleep(0.2)
+		self.messThread.pause()
 
 
 	def resumedelivery(self):
-		self.pause=False
-
-	
-	def ispaused(self):
-		return self.pause
+		self.messThread.resume()
 
 
 class messengerThread(threading.Thread):
 	"""	messengerThread handles the delivery of messages with it's running thread
 	"""
-	def __init__(self, subscribers,messqueue,pausevarholder):
+	def __init__(self, subscribers,messqueue):
 		threading.Thread.__init__(self)
-		self.manager=pausevarholder
 		self.subscribers = subscribers	# dictionary containing interested moduleinstances by topic
-		self.messque=messqueue	#	contains incomming data paired with topic
-		self.alive=threading.Event()
+		self.messque = messqueue	#	contains incomming data paired with topic
+		self.alive = threading.Event()
+		self.paused = False
+		self.pause_cond = threading.Condition(threading.Lock())
 		self.alive.set()
-		
+
 
 	def run(self):
-		temp=tuple()
 		while self.alive.isSet():
 
-			while self.manager.ispaused():
-				print("pausing for a bit...")
-				sleep(0.1)
+			with self.pause_cond:
+				while self.paused:
+					self.pause_cond.wait()
 
-			try:	# fetch the next item on the queue, a tuple (topic,message)
-				# print("atempting to get data")
-				msg = self.messque.get(False)
-				#print("success\ntrying to deliver data")
-				#	for every topic found in subscribers
-				
-				for topic in self.subscribers:
-					#for sub in self.subscribers[topic]:
-					#	print(sub.name())
+				try:	# fetch the next item on the queue, a tuple (topic,message)
+					msg = self.messque.get(False)
+					
+					for topic in self.subscribers:					
+						if topic == msg[0]:
+							# for every subscriber interested in the topic
+							for sub in self.subscribers[topic]:
+								#deliver the message tuple
+								sub.receivedata(msg)
+								
+				except queue.Empty:
+					#	if error occured because of an empty queue let some time
+					#	pass before trying again
+					sleep(0.01)
+	
+				except Exception as e:
+					print("non queue related error: {}\n".format(e))
 
-					#	check if the key matches the topic of the message
-					if topic == msg[0]:
-						# for every subscriber interested in the topic
-						for sub in self.subscribers[topic]:
-							#print("delivery attempt")
-							#deliver the message tuple
-							sub.receivedata(msg)
-							#print("delivered")
-				#print("delivery done")
-							
-			except queue.Empty as e:
-				#	if error occured becuase of an empty queue let some time
-				#	pass before trying again
-				sleep(0.01)
-				# print(e)
 
-			except Exception as e:
-				print("non queue related error:\n{}".format(e))
-				print (e)
+	def pause(self):
+		self.paused = True
+		self.pause_cond.acquire()
+
+
+	def resume(self):
+		self.paused = False
+		self.pause_cond.notify()
+		self.pause_cond.release()
 
 
 	def stop(self,timeout=None):
