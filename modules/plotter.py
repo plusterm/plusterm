@@ -32,6 +32,7 @@ class plotter():
 		topics = ["data"]
 		return topics
 
+
 	def receivedata(self, data):
 		''' 
 		Data sent from the serial monitor.
@@ -57,7 +58,7 @@ class plotter():
 				#self.ax1.minorticks_on()
 				self.ax1.plot(self.xValOne, self.yValOne, '.-')	
 				# Rotate the x-ticks, to not overlap
-				self.ax1.tick_params(axis='x', rotation=30)			
+				# self.ax1.tick_params(axis='x', rotation=30)			
 
 			elif len(numericData) == 2:
 				self.ax2.clear()
@@ -71,7 +72,7 @@ class plotter():
 				#self.ax2.minorticks_on()
 				self.ax2.plot(self.xValTwo, self.yValTwo, '.-')
 			
-			self.fig.tight_layout()	
+			#self.fig.tight_layout()	
 			self.canvas.draw_idle()
 		
 

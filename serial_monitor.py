@@ -21,11 +21,12 @@ class SerialMonitor:
 	'''
 	Central class ("context") for the Serial Monitor and modules
 	'''
-	def __init__(self, master):
-		self.master = master
-		self.messman=messManager.messManager()
-		self.gui=sm_gui.sm_gui(master,self)
+	def __init__(self):
+		self.master = Tk()
+		self.messman=messManager.messManager()		
+		self.gui=sm_gui.SerialMonitor_GUI(self.master, self)		
 		self.communicator=communicator.communicator(self)
+		self.master.mainloop()
 
 	def connectSerial(self):
 		"""	creates an arg structure with relevant info for a serialport connection
@@ -213,10 +214,8 @@ class SerialMonitor:
 		self.messman.removemodule(modulename)		
 
 
-def main():
-	root = Tk()
-	app = SerialMonitor(root)
-	root.mainloop()
+def main():	
+	app = SerialMonitor()
 
 if __name__ == '__main__':
 	main()

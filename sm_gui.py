@@ -4,12 +4,13 @@ import os
 
 from communicator import getPorts
 
-class sm_gui(object):
+class SerialMonitor_GUI:
 	""" Serial monitor GUI, plots, and controls """
 
 	def __init__(self,master,context):
 		self.context = context
 		self.master = master
+		
 		master.title("Serial Monitor")
 		master.protocol('WM_DELETE_WINDOW', self.context.onQuit)
 
