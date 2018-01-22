@@ -1,3 +1,4 @@
+from wx.lib.pubsub import pub
 import serial
 import threading
 import queue
@@ -11,10 +12,10 @@ class ComReaderThread(threading.Thread):
 	Puts result as a tuple (timestamp, data) in a queue
 	'''
 	
-	def __init__(self, ser, que):
+	def __init__(self, ser, data_que):
 		threading.Thread.__init__(self)
 		self.comstream = ser
-		self.que = que
+		self.data_que = data_que
 
 		self.alive = threading.Event()
 		self.alive.set()
@@ -23,7 +24,7 @@ class ComReaderThread(threading.Thread):
 	def run(self):
 
 		# start the timer
-		#startTime = time.time()	#	start "timer"
+		startTime = time.time()	#	start "timer"
 
 		while self.alive.isSet():
 			try:
@@ -31,35 +32,22 @@ class ComReaderThread(threading.Thread):
 				data = self.comstream.read()
 				if len(data) > 0:
 
-					#timestamp = time.time() - startTime
-					timestamp = datetime.datetime.now()
+					timestamp = time.time() - startTime
+					#timestamp = datetime.datetime.now()
 
 					while data[-1] != 0x0A:
 						data += self.comstream.read()
 
-					self.que.put((timestamp, data))
+					self.data_que.put((timestamp, data))
 					
 			except serial.SerialException:
 				reconnected=False
 				print('Serial connection lost, trying to reconnect.')
-				#log to gui?
 				while not reconnected:
 					try:
 						#	if comstream still thinks it's open close it
 						if self.comstream.is_open:
 							self.comstream.close()
-							
-						#	do checks and setup connection again (will require acces to arg-structure)
-						# if self.arg.local:
-						# 	if not self.comstream.is_open:
-						# 		self.comstream.baudrate=self.arg.baudrate
-						# 		self.comstream.port=self.arg.port
-						# 		self.comstream.timeout=self.arg.timeout
-								# self.comstream.open()
-						# 	else:
-						# 		pass
-						# else:	#	remote eg server or p2p etc
-						# 	pass
 						
 						self.comstream.open()
 						
@@ -69,8 +57,7 @@ class ComReaderThread(threading.Thread):
 
 					else:
 						reconnected=True
-						print('Reconnected')
-						#log to gui?				
+						print('Reconnected')				
 
 
 	def stop(self, timeout=None):		

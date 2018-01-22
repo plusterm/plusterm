@@ -2,6 +2,7 @@ import queue
 import serial
 import time
 import re
+from wx.lib.pubsub import pub
 from serial.tools import list_ports
 from com_reader import ComReaderThread
 
@@ -10,102 +11,61 @@ class communicator():
 		etc...
 	"""
 	def __init__(self,context,q=queue.Queue()):
-		"""	takes context, which is intended to be the SerialMonitor instance 
-			and q which is the queue given (or defaulted new queue)
-		"""		
 		self.threadq=q
 		self.comstream=None
 		self.readerthread=None
 		self.context=context
-		self.storedcomsetup=None
 		
-	def startcommunication(self):
+
+	def start_communication(self):
 		self.readerthread.run()
 
 
-	def connect(self,arg):
+	def connect(self, **kwargs):
 		try:
-			doit=True	#	determine if its necessary to set communication or if its enough to reopen communication
-			if self.storedcomsetup is not None:	#	based on stored vs given argument structures. e.g. arg.local is meant for serialcommunication 
-				if self.storedcomsetup.local!=arg.local or self.storedcomsetup.port!=arg.port or self.storedcomsetup.baudrate!=arg.baudrate:
-					doit=True
-				else:
-					doit=False
-
-			if doit:	#	if necessary to set communication e.g. new comport or baudrate
-				
-				# kill thread if it's alive 
-				if self.readerthread is not None:
-					if self.readerthread.isAlive():
-						self.readerthread.stop(0.01)
-
-				# if port is open, close it
-				if self.comstream is not None:
-					if self.comstream.is_open:
-						self.comstream.close()
-
-				
-				#	check which communication type to use
-				if arg.local:
-					self.comstream=serial.Serial()	#set to local com... init 
-					self.comstream.baudrate=arg.baudrate
-					self.comstream.port=arg.port
-					self.comstream.timeout=arg.timeout
-					self.comstream.open()
-
-				else:
-					pass
-					#if arg.server
-						#self.comstream=	#server init...
-					#else:
-						#self.comstream=	#p2p??? init...
+			self.comstream = serial.Serial()
+			self.comstream.port = kwargs['port']
+			self.comstream.baudrate = kwargs['baudrate']
+			self.comstream.timeout = 0.1
 			
-			
-			#	if communicationstream is not open for some reason, open it
-			if not self.comstream.is_open:
-				self.comstream.open()
-				self.context.logoutputtogui('port opened!\n')
-
-			else:
-				# self.context.logoutputtogui('port already open!')
-				pass
-			
-			self.storedcomsetup = arg	#	store the given argument structure
-
-			#	if readerthread is not alive set it with the potentially changed comstream/queue and start it
+			self.comstream.open()
+	
 			if self.readerthread is not None:
 				if not self.readerthread.isAlive():
-					self.readerthread=ComReaderThread(self.comstream,self.threadq)
+					self.readerthread = ComReaderThread(self.comstream, self.threadq)
 					self.readerthread.start()
-
-			else:	#	if not even instantiated
-				self.readerthread=ComReaderThread(self.comstream,self.threadq)
+	
+			else:
+				self.readerthread = ComReaderThread(self.comstream, self.threadq)
 				self.readerthread.start()
 
-			
 			return True
 
 		except Exception as e:
-			#	"logs" error to the textoutput int the gui via the "context" 
-			self.context.logoutputtogui('{}\n'.format(e))
+			print(e)
 			return False
 
 	
 	def disconnect(self):
 		"""	stops/close all threads and streams
 		"""
-		self.readerthread.stop(0.01)
-		self.comstream.close()
+		try:
+			self.readerthread.stop(0.01)
+			self.comstream.close()
+			return True
+
+		except:
+			return False
 			
 
-	def sendCmd(self,cmd):
+	def send_cmd(self,cmd):
 		"""	send a command to the comstream assuming it is a string
 		"""
 		if self.comstream is not None:
 			self.comstream.write(cmd.encode())
 
 
-	def getdata(self):
+	def get_data(self):
 		"""	get the data from the readerthreadqueue, one element at a time
 		"""
 		return self.threadq.get(False)
@@ -115,7 +75,6 @@ def getPorts():
 	# lists all the available serial devices connected to the computer
 	port_list = list_ports.comports()
 	ports = [port.device for port in port_list]
-	ports.append('Custom')
 	return sorted(ports)
 
 
