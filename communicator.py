@@ -6,10 +6,11 @@ from wx.lib.pubsub import pub
 from serial.tools import list_ports
 from com_reader import ComReaderThread
 
-class communicator():
+class Communicator():
 	"""	communicator handles all external comunication with comports, server/s or p2p....
 		etc...
 	"""
+
 	def __init__(self,context,q=queue.Queue()):
 		self.threadq=q
 		self.comstream=None

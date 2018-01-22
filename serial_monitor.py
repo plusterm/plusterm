@@ -11,20 +11,25 @@ class SerialMonitor:
 
 	def __init__(self):
 		# Start the GUI
-		app = wx.App()
 		self.sm_gui = gui.SerialMonitorGUI(None, title='Plusterm', context=self)	
-		self.communicator = communicator.communicator(self)
-		app.MainLoop()		
+		self.communicator = communicator.Communicator(self)	
+
+
+	def on_quit(self):
+		if self.communicator.comstream is not None:
+			self.disconnect_serial()
 
 
 	def connect_serial(self, port, baudrate):
 		if self.communicator.connect(port=port, baudrate=baudrate):
 			self.log_to_gui('Port opened\n')
+			return True
 
 
 	def disconnect_serial(self):
 		if self.communicator.disconnect():
 			self.log_to_gui('Port closed\n')
+			return True
 
 
 	def send_serial(self, cmd):
@@ -49,7 +54,9 @@ class SerialMonitor:
 
 
 def main():
+	app = wx.App()
 	SM = SerialMonitor()
+	app.MainLoop()
 
 if __name__ == '__main__':
 	main()
