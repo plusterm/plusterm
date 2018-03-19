@@ -11,8 +11,8 @@ class Communicator():
 		etc...
 	"""
 
-	def __init__(self,context,q=queue.Queue()):
-		self.threadq=q
+	def __init__(self,context):
+		self.threadq=queue.Queue()
 		self.comstream=None
 		self.readerthread=None
 		self.context=context
@@ -22,11 +22,11 @@ class Communicator():
 		self.readerthread.run()
 
 
-	def connect(self, **kwargs):
+	def connect(self, **options):
 		try:
 			self.comstream = serial.Serial()
-			self.comstream.port = kwargs['port']
-			self.comstream.baudrate = kwargs['baudrate']
+			self.comstream.port = options['port']
+			self.comstream.baudrate = options['baudrate']
 			self.comstream.timeout = 0.1
 			
 			self.comstream.open()
@@ -67,7 +67,7 @@ class Communicator():
 
 
 	def get_data(self):
-		"""	get the data from the readerthreadqueue, one element at a time
+		"""	get the data from the readerthreadqueue
 		"""
 		return self.threadq.get(False)
 	

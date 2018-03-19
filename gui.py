@@ -28,8 +28,8 @@ class SerialMonitorGUI(wx.Frame):
 		connect_button = wx.Button(settingsPanel, label='Open')
 		disconnect_button = wx.Button(settingsPanel, label='Close')
 
-		outputPanel = wx.Panel(self)
-		self.output_text = wx.TextCtrl(outputPanel, size=(300,500), style=wx.TE_MULTILINE)
+		self.outputPanel = wx.Panel(self)
+		self.output_text = wx.TextCtrl(self.outputPanel, size=(400,300), style=wx.TE_MULTILINE)
 
 		inputPanel = wx.Panel(self)
 		self.input_text = wx.TextCtrl(inputPanel)
@@ -49,7 +49,7 @@ class SerialMonitorGUI(wx.Frame):
 		settings_sizer.Add(connect_button, pos=(0,9))
 		settings_sizer.Add(disconnect_button, pos=(0,10))
 
-		output_sizer.Add(self.output_text, 1, wx.EXPAND)
+		output_sizer.Add(self.output_text, 1, wx.ALL | wx.EXPAND)
 
 		input_sizer.Add(self.input_text, pos=(0,0))
 		input_sizer.Add(send_button, pos=(0,1))
@@ -57,14 +57,9 @@ class SerialMonitorGUI(wx.Frame):
 
 		main_sizer.Add(settings_sizer, pos=(0,0))
 		main_sizer.Add(output_sizer, pos=(1,0), flag= wx.ALL | wx.EXPAND)
-		main_sizer.AddGrowableCol(0)
 		main_sizer.AddGrowableRow(1)
+		main_sizer.AddGrowableCol(0)		
 		main_sizer.Add(inputPanel, pos=(2,0))
-
-		### Set sizers
-		settingsPanel.SetSizerAndFit(settings_sizer)
-		outputPanel.SetSizerAndFit(output_sizer)
-		inputPanel.SetSizerAndFit(input_sizer)
 
 		### Menubar
 		menubar = wx.MenuBar()
@@ -82,21 +77,25 @@ class SerialMonitorGUI(wx.Frame):
 		connect_button.Bind(wx.EVT_BUTTON, self.connect_serial)
 		disconnect_button.Bind(wx.EVT_BUTTON, self.disconnect_serial)
 		send_button.Bind(wx.EVT_BUTTON, self.on_send)
-		clear_button.Bind(wx.EVT_BUTTON, self.clear_output)
+		clear_button.Bind(wx.EVT_BUTTON, self.clear_output)		
 		self.modules_menu.Bind(wx.EVT_MENU, self.on_checked_module)
 
 		# Subscribe to data
 		pub.subscribe(self.received_data, 'serial.data')
 
-		# Size and show		
 		self.timer = wx.Timer(self)
+
+		# Size	
+		### Set sizers
+		settingsPanel.SetSizerAndFit(settings_sizer)
+		self.outputPanel.SetSizerAndFit(output_sizer)
+		inputPanel.SetSizerAndFit(input_sizer)
 		self.SetSizerAndFit(main_sizer)
-		self.Show()
 
 
-	def on_quit(self, event):	
-		self.context.on_quit()
+	def on_quit(self, event):
 		del self.timer
+		pub.unsubscribe(self.received_data, 'serial.data')
 		event.Skip()
 
 
@@ -106,7 +105,7 @@ class SerialMonitorGUI(wx.Frame):
 		# If connection is successful, start timer that checks for data
 		if self.context.connect_serial(port=port, baudrate=baudrate):				
 			self.Bind(wx.EVT_TIMER, self.check_for_serialdata)
-			self.timer.Start()	
+			self.timer.Start()
 
 
 	def disconnect_serial(self, event):
@@ -115,6 +114,7 @@ class SerialMonitorGUI(wx.Frame):
 
 	def on_send(self, event):
 		cmd = self.input_text.GetValue()
+		self.output(cmd + '\n')
 		self.context.send_serial(cmd)
 		self.input_text.Clear()
 
