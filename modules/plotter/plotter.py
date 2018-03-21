@@ -7,7 +7,7 @@ from matplotlib.backends.backend_wxagg import FigureCanvasWxAgg as FigureCanvas
 
 class Plotter(wx.Frame):
 	def __init__(self, parent, title):
-		super(Plotter, self).__init__(parent, title=title)
+		super(Plotter, self).__init__(parent, title=title, size=(640,480))
 		pub.subscribe(self.new_data, 'serial.data')
 
 		self.figure = Figure(dpi=90)
