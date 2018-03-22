@@ -3,8 +3,8 @@ import sys
 
 
 def handle_data(data):
-	print(data)
-
+	m = 'r'
+	pub.sendMessage('module.send', data=m)
 
 def on_untick():
 	pub.unsubscribe(handle_data, 'serial.data')
