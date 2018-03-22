@@ -83,7 +83,6 @@ class SerialMonitorGUI(wx.Frame):
         self.timer = wx.Timer(self)
 
 
-
     def on_quit(self, event):
         del self.timer
         self.context.disconnect_serial()

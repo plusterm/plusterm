@@ -48,7 +48,10 @@ class SerialMonitor(wx.App):
 
 
     def add_module(self, module):
-        mod = importlib.import_module('modules.' + module)
+        if 'modules.' + module in sys.modules:
+            importlib.reload(sys.modules['modules.' + module])
+        else:
+            mod = importlib.import_module('modules.' + module)
 
 
     def get_data(self):
