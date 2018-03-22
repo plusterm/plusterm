@@ -34,40 +34,43 @@ class SerialMonitorGUI(wx.Frame):
 
         ### Widgets and Panels
         panel = wx.Panel(self)
-        port_label = wx.StaticText(panel, label='Device:')
-        baud_label = wx.StaticText(panel, label='Baudrate')
+        port_label = wx.StaticText(panel, label=' Device:    ')
+        baud_label = wx.StaticText(panel, label=' Baudrate:    ')
         self.port_combobox = wx.ComboBox(panel, choices=device_choices)
         self.baud_combobox = wx.ComboBox(panel, choices=baudrates_choices)
         connect_button = wx.Button(panel, label='Open')
         disconnect_button = wx.Button(panel, label='Close')
         
-        self.output_text = wx.TextCtrl(panel, size=(500,400), style=wx.TE_READONLY | wx.TE_MULTILINE)
-        
+        self.output_text = wx.TextCtrl(panel, size=[500,300], style=wx.TE_READONLY | wx.TE_MULTILINE)
         self.input_text = wx.TextCtrl(panel, style=wx.TE_PROCESS_ENTER)
+
         send_button = wx.Button(panel, label='Send')
         clear_button = wx.Button(panel, label='Clear')
 
-        sizer = wx.GridBagSizer(vgap=5, hgap=5)
-        box = wx.BoxSizer()
+        topSizer = wx.BoxSizer(wx.VERTICAL)
+        connectionSizer = wx.BoxSizer(wx.HORIZONTAL)
+        outputSizer = wx.BoxSizer(wx.HORIZONTAL)
+        inputSizer = wx.BoxSizer(wx.HORIZONTAL)
 
-        sizer.Add(port_label, pos=(0,0))
-        sizer.Add(self.port_combobox, pos=(0,1))
-        sizer.Add(baud_label, pos=(0,2))
-        sizer.Add(self.baud_combobox, pos=(0,3))
-        sizer.Add(connect_button, pos=(0,9))
-        sizer.Add(disconnect_button, pos=(0,10))
+        connectionSizer.Add(port_label, 0, 0, 0)
+        connectionSizer.Add(self.port_combobox, 0, 0, 0)
+        connectionSizer.Add(baud_label, 0, 0, 0)
+        connectionSizer.Add(self.baud_combobox, 0, 0, 0)
+        connectionSizer.Add(connect_button, 0, 0, 0)
+        connectionSizer.Add(disconnect_button, 0, 0, 0)
 
-        sizer.Add(self.output_text, pos=(1,0), span=(1,20))
+        outputSizer.Add(self.output_text, 1, wx.EXPAND, 0)
 
-        sizer.Add(self.input_text, pos=(2,0))
-        sizer.Add(send_button, pos=(2,1))
-        sizer.Add(clear_button, pos=(2,2))
+        inputSizer.Add(self.input_text, 0, 0, 0)
+        inputSizer.Add(send_button, 0, 0, 0)
+        inputSizer.Add(clear_button, 0, 0, 0)
 
-        box.Add(panel)
+        topSizer.Add(connectionSizer)
+        topSizer.Add(outputSizer, 1, wx.EXPAND)
+        topSizer.Add(inputSizer)
 
-        panel.SetSizerAndFit(sizer)
-        self.SetSizerAndFit(box)
-
+        panel.SetSizer(topSizer)
+        topSizer.Fit(self)
 
         ### Bindings
         self.Bind(wx.EVT_CLOSE, self.on_quit)
