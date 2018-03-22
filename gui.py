@@ -80,6 +80,7 @@ class SerialMonitorGUI(wx.Frame):
 
         # Subscribe to data
         pub.subscribe(self.received_data, 'serial.data')
+        pub.subscribe(self.recieved_error, 'serial.error')
         self.timer = wx.Timer(self)
 
 
@@ -116,11 +117,17 @@ class SerialMonitorGUI(wx.Frame):
 
     def check_for_serialdata(self, event):
         self.context.get_data()
+        self.context.get_error()        
 
 
     def received_data(self, data):
         msg = data[1].decode(errors='replace')
         self.output(msg)
+
+
+    def recieved_error(self, data):
+        err = data[1]
+        self.output(err)
 
     
     def output(self, msg):

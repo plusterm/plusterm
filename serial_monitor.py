@@ -63,6 +63,15 @@ class SerialMonitor(wx.App):
             pass
 
 
+    def get_error(self):
+        try: 
+            err = self.communicator.get_error()
+            pub.sendMessage('serial.error', data=err)
+
+        except queue.Empty:
+            pass
+
+
 def main():
     SM = SerialMonitor()
     SM.MainLoop()

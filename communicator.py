@@ -12,10 +12,11 @@ class Communicator():
     """
 
     def __init__(self,context):
-        self.threadq=queue.Queue()
-        self.comstream=None
-        self.readerthread=None
-        self.context=context
+        self.threadq = queue.Queue()
+        self.errorq = queue.Queue()
+        self.comstream = None
+        self.readerthread = None
+        self.context = context
         
 
     def start_communication(self):
@@ -33,17 +34,19 @@ class Communicator():
     
             if self.readerthread is not None:
                 if not self.readerthread.isAlive():
-                    self.readerthread = ComReaderThread(self.comstream, self.threadq)
+                    self.readerthread = ComReaderThread(self.comstream, self.threadq, self.errorq)
                     self.readerthread.start()
     
             else:
-                self.readerthread = ComReaderThread(self.comstream, self.threadq)
+                self.readerthread = ComReaderThread(self.comstream, self.threadq, self.errorq)
                 self.readerthread.start()
 
             return True
 
         except Exception as e:
-            print(e)
+            ts = time.time()
+            self.errorq.put((ts, str(e)))
+            print('error on connect' + e)
             return False
 
     
@@ -55,7 +58,9 @@ class Communicator():
             self.comstream.close()
             return True
 
-        except:
+        except Exception as e:
+            ts = time.time()
+            self.errorq.put((ts, e))
             return False
             
 
@@ -70,6 +75,10 @@ class Communicator():
         """ get the data from the readerthreadqueue
         """
         return self.threadq.get(False)
+
+
+    def get_error(self):
+        return self.errorq.get(False)
     
     
 def getPorts():

@@ -12,10 +12,11 @@ class ComReaderThread(threading.Thread):
 	Puts result as a tuple (timestamp, data) in a queue
 	'''
 	
-	def __init__(self, ser, data_que):
+	def __init__(self, ser, data_que, error_que):
 		threading.Thread.__init__(self)
 		self.comstream = ser
 		self.data_que = data_que
+		self.error_que = error_que
 
 		self.alive = threading.Event()
 		self.alive.set()
@@ -40,9 +41,11 @@ class ComReaderThread(threading.Thread):
 
 					self.data_que.put((timestamp, data))
 					
-			except serial.SerialException:
+			except serial.SerialException as e:
 				reconnected=False
 				print('Serial connection lost, trying to reconnect.')
+				ts = time.time()
+				self.error_que.put((ts, str(e)))
 				while not reconnected:
 					try:
 						#	if comstream still thinks it's open close it
@@ -56,8 +59,8 @@ class ComReaderThread(threading.Thread):
 						time.sleep(0.1)
 
 					else:
-						reconnected=True
-						print('Reconnected')				
+						reconnected=True	
+						print('Reconnected')			
 
 
 	def stop(self, timeout=None):		
