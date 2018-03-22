@@ -1,6 +1,7 @@
 import wx
 from wx.lib.pubsub import pub
 import os
+import sys
 import communicator
 
 import wx.lib.inspection
@@ -80,6 +81,7 @@ class SerialMonitorGUI(wx.Frame):
         send_button.Bind(wx.EVT_BUTTON, self.on_send)
         clear_button.Bind(wx.EVT_BUTTON, self.clear_output)     
         self.modules_menu.Bind(wx.EVT_MENU, self.on_checked_module)
+        self.Bind(wx.EVT_MENU_OPEN, self.on_open_menu)
 
         # Subscribe to data
         pub.subscribe(self.received_data, 'serial.data')
@@ -141,8 +143,20 @@ class SerialMonitorGUI(wx.Frame):
         self.output_text.Clear()
 
 
+    def on_open_menu(self, event):
+        for mod in self.modules_menu.GetMenuItems():
+            m = 'modules.' + mod.GetLabel()
+            if m in sys.modules:
+                mod.Check(check=True)
+            else:
+                mod.Check(check=False)
+
+
     def on_checked_module(self, event):
         items = self.modules_menu.GetMenuItems()
         for i in items:
             if i.IsChecked():
                 self.context.add_module(i.GetLabel())
+
+            elif not i.IsChecked():
+                self.context.remove_module(i.GetLabel())

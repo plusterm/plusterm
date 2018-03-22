@@ -11,13 +11,13 @@ class Plotter(wx.Frame):
         super(Plotter, self).__init__(parent, title=title, size=(640,480))
         pub.subscribe(self.plot_data, 'serial.data')
 
-        self.figure = Figure(dpi=90)
+        self.figure = Figure(dpi=100)
         self.axes = self.figure.subplots(2, 1)
 
         self.canvasPanel = wx.Panel(self)
         self.canvas = FigureCanvas(self.canvasPanel, wx.ID_ANY, self.figure)
         self.canvasSizer = wx.BoxSizer(wx.HORIZONTAL)
-        self.canvasSizer.Add(self.canvas, flag=wx.ALL | wx.EXPAND)
+        self.canvasSizer.Add(self.canvas, 1, flag=wx.ALL | wx.EXPAND)
 
         self.xdata = []
         self.ydata = []
@@ -33,6 +33,7 @@ class Plotter(wx.Frame):
     def on_close(self, event):
         del sys.modules['modules.plotter']
         del sys.modules['modules.plotter.plotter']
+        pub.unsubscribe(self.plot_data, 'serial.data')
         event.Skip()
 
 
@@ -54,4 +55,7 @@ class Plotter(wx.Frame):
         self.canvas.draw()
 
 
-Plotter(None, 'Plots')
+p = Plotter(None, 'Plots')
+
+def on_untick():
+    p.Close()

@@ -54,6 +54,16 @@ class SerialMonitor(wx.App):
             mod = importlib.import_module('modules.' + module)
 
 
+    def remove_module(self, module):
+        if 'modules.' + module in sys.modules:
+            m = sys.modules['modules.' + module]
+            try:
+                m.on_untick()
+            except Exception as e:
+                print(e)
+            del m
+
+
     def get_data(self):
         try:
             data = self.communicator.get_data()
