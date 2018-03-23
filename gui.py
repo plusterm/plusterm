@@ -35,14 +35,14 @@ class SerialMonitorGUI(wx.Frame):
 
         ### Widgets and Panels
         panel = wx.Panel(self)
-        port_label = wx.StaticText(panel, label=' Device:    ')
-        baud_label = wx.StaticText(panel, label=' Baudrate:    ')
+        port_label = wx.StaticText(panel, label='Device:')
+        baud_label = wx.StaticText(panel, label='Baudrate:')
         self.port_combobox = wx.ComboBox(panel, choices=device_choices)
         self.baud_combobox = wx.ComboBox(panel, choices=baudrates_choices)
         connect_button = wx.Button(panel, label='Open')
         disconnect_button = wx.Button(panel, label='Close')
         
-        self.output_text = wx.TextCtrl(panel, size=[500,300], style=wx.TE_READONLY | wx.TE_MULTILINE)
+        self.output_text = wx.TextCtrl(panel, size=[600,300], style=wx.TE_READONLY | wx.TE_MULTILINE)
         self.input_text = wx.TextCtrl(panel, style=wx.TE_PROCESS_ENTER)
 
         send_button = wx.Button(panel, label='Send')
@@ -53,16 +53,19 @@ class SerialMonitorGUI(wx.Frame):
         outputSizer = wx.BoxSizer(wx.HORIZONTAL)
         inputSizer = wx.BoxSizer(wx.HORIZONTAL)
 
-        connectionSizer.Add(port_label, 0, 0, 0)
-        connectionSizer.Add(self.port_combobox, 0, 0, 0)
-        connectionSizer.Add(baud_label, 0, 0, 0)
-        connectionSizer.Add(self.baud_combobox, 0, 0, 0)
-        connectionSizer.Add(connect_button, 0, 0, 0)
-        connectionSizer.Add(disconnect_button, 0, 0, 0)
+        connectionSizer.Add(port_label, 0, wx.LEFT | wx.RIGHT | wx.ALIGN_LEFT | wx.ALIGN_CENTER_VERTICAL, 7)
+        connectionSizer.Add(self.port_combobox, 0, wx.RIGHT | wx.ALIGN_LEFT | wx.ALIGN_CENTER_VERTICAL, 7)
+        connectionSizer.Add(baud_label, 0, wx.RIGHT | wx.ALIGN_LEFT | wx.ALIGN_CENTER_VERTICAL, 7)
+        connectionSizer.Add(self.baud_combobox, 0, wx.RIGHT | wx.ALIGN_LEFT | wx.ALIGN_CENTER_VERTICAL, 7)
+        
+        connectionSizer.AddStretchSpacer(1) 
+        connectionSizer.Add(connect_button, 0, wx.ALIGN_LEFT, 10)
+        connectionSizer.Add(disconnect_button, 0, wx.ALIGN_LEFT, 10)
 
         outputSizer.Add(self.output_text, 1, wx.EXPAND, 0)
 
         inputSizer.Add(self.input_text, 0, 0, 0)
+        inputSizer.AddStretchSpacer(1)
         inputSizer.Add(send_button, 0, 0, 0)
         inputSizer.Add(clear_button, 0, 0, 0)
 
