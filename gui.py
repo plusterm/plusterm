@@ -72,7 +72,8 @@ class SerialMonitorGUI(wx.Frame):
 
         panel.SetSizer(topSizer)
         topSizer.Fit(self)
-
+        self.SetMinSize(self.GetSize())
+        
         ### Bindings
         self.Bind(wx.EVT_CLOSE, self.on_quit)
         self.input_text.Bind(wx.EVT_TEXT_ENTER, self.on_enter_send)
