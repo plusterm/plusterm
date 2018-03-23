@@ -62,9 +62,15 @@ class SerialMonitor(wx.App):
             m = sys.modules['modules.' + module]
             try:
                 m.on_untick()
-            except Exception as e:
-                print(e)
-            del m
+            except Exception:
+                pass
+
+        # remove references
+        mod_refs = [m for m in sys.modules 
+            if m.startswith('modules.' + module)]
+
+        for mr in mod_refs:
+            del sys.modules[mr]
 
 
     def send_from_module(self, data):

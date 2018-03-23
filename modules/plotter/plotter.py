@@ -31,9 +31,15 @@ class Plotter(wx.Frame):
 
 
     def on_close(self, event):
-        del sys.modules['modules.plotter']
-        del sys.modules['modules.plotter.plotter']
         pub.unsubscribe(self.plot_data, 'serial.data')
+
+        # "unimport" from serial monitor
+        mod_refs = [mod for mod in sys.modules 
+        if mod.startswith('modules.plotter')]
+
+        for mr in mod_refs:
+            del sys.modules[mr]
+
         event.Skip()
 
 
