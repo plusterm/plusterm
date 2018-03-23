@@ -13,6 +13,9 @@ class SerialMonitor(wx.App):
         super(SerialMonitor, self).__init__()
         self.communicator = communicator.Communicator(self) 
 
+        # Subscribe to input from modules
+        pub.subscribe(self.send_from_module, 'module.send')
+
 
     def OnInit(self):
         # Show the GUI
@@ -61,6 +64,12 @@ class SerialMonitor(wx.App):
             except Exception as e:
                 print(e)
             del m
+
+
+    def send_from_module(self, data):
+        # PubSub callback, send from module
+        self.log_to_gui('module >' + data + '\n')
+        self.send_serial(data)
 
 
     def get_data(self):
