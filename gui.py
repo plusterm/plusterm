@@ -59,6 +59,12 @@ class ConnectionSettingsDialog(wx.Dialog):
         ser_panel.SetSizerAndFit(ser_conn_sizer)
 
         connect_button.Bind(wx.EVT_BUTTON, self.connect_serial)
+        self.Bind(wx.EVT_CLOSE, self.on_close)
+
+
+    def on_close(self, event):
+        self.Destroy()
+
 
     def connect_serial(self, event):
         port = self.port_cb.GetValue()
