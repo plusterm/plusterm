@@ -25,7 +25,7 @@ class Multimeter(wx.Frame):
     def show_data(self, data):
         data = data[1]
         self.multimeter_output.Clear()
-        self.multimeter_output.AppendText(data)
+        self.multimeter_output.WriteText(data)
 
 
     def on_close(self, event):
