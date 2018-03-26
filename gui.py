@@ -41,19 +41,14 @@ class ConnectionSettingsDialog(wx.Dialog):
         ser_conn_sizer = wx.GridBagSizer(vgap=5, hgap=5)
         ser_conn_sizer.Add(port_label, pos=(0,0))
         ser_conn_sizer.Add(self.port_cb, pos=(0,1))
-
         ser_conn_sizer.Add(baud_label, pos=(1,0))
         ser_conn_sizer.Add(self.baud_cb, pos=(1,1))
-
         ser_conn_sizer.Add(bytesize_label, pos=(2,0))
         ser_conn_sizer.Add(self.bytesize_cb, pos=(2,1))
-
         ser_conn_sizer.Add(parity_label, pos=(3,0))
         ser_conn_sizer.Add(self.parity_cb, pos=(3,1))
-
         ser_conn_sizer.Add(stopb_label, pos=(4,0))
         ser_conn_sizer.Add(self.stopb_cb, pos=(4,1))
-
         ser_conn_sizer.Add(connect_button, pos=(5,0))
 
         ser_panel.SetSizerAndFit(ser_conn_sizer)
@@ -154,8 +149,8 @@ class SerialMonitorGUI(wx.Frame):
         connect_button = wx.Button(panel, label='Open')
         disconnect_button = wx.Button(panel, label='Close')
         
-        self.output_text = wx.TextCtrl(panel, size=[600,300], style=wx.TE_READONLY | wx.TE_MULTILINE)
-        self.input_text = wx.TextCtrl(panel, style=wx.TE_PROCESS_ENTER)
+        self.output_text = wx.TextCtrl(panel, size=(600,300), style=wx.TE_READONLY | wx.TE_MULTILINE)
+        self.input_text = wx.TextCtrl(panel, size=(200, 23), style=wx.TE_PROCESS_ENTER)
 
         send_button = wx.Button(panel, label='Send')
         clear_button = wx.Button(panel, label='Clear')
@@ -176,13 +171,13 @@ class SerialMonitorGUI(wx.Frame):
 
         outputSizer.Add(self.output_text, 1, wx.EXPAND, 0)
 
-        inputSizer.Add(self.input_text, 0, 0, 0)
+        inputSizer.Add(self.input_text, 0, wx.RIGHT | wx.ALIGN_CENTER_VERTICAL, 60)
         inputSizer.AddStretchSpacer(1)
-        inputSizer.Add(send_button, 0, 0, 0)
-        inputSizer.Add(clear_button, 0, 0, 0)
+        inputSizer.Add(send_button, 0, wx.RIGHT, 0)
+        inputSizer.Add(clear_button, 0, wx.RIGHT, 0)
 
         topSizer.Add(connectionSizer)
-        topSizer.Add(outputSizer, 1, wx.EXPAND)
+        topSizer.Add(outputSizer, 1, wx.ALL | wx.EXPAND)
         topSizer.Add(inputSizer)
 
         panel.SetSizer(topSizer)
@@ -234,6 +229,7 @@ class SerialMonitorGUI(wx.Frame):
         if conn:
             self.Bind(wx.EVT_TIMER, self.check_for_serialdata)
             self.timer.Start()
+            self.SetTitle('Plusterm - {} open'.format(port))
 
 
     def connect_serial_adv(self, **settings):
@@ -242,12 +238,14 @@ class SerialMonitorGUI(wx.Frame):
             print('done')           
             self.Bind(wx.EVT_TIMER, self.check_for_serialdata)
             self.timer.Start()
+            self.SetTitle('Plusterm - {} open'.format(settings['port']))
             return True
         return False
 
 
     def disconnect_serial(self, event):
         self.context.disconnect_serial()
+        self.SetTitle('Plusterm')
 
 
     def on_send(self, event):
