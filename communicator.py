@@ -26,8 +26,12 @@ class Communicator():
     def connect(self, **options):
         try:
             self.comstream = serial.Serial()
+
             self.comstream.port = options['port']
             self.comstream.baudrate = options['baudrate']
+            self.comstream.stopbits = options['stopbits']
+            self.comstream.parity = options['parity']
+            self.comstream.bytesize = options['bytesize']
             self.comstream.timeout = 0.1
             
             self.comstream.open()
@@ -46,7 +50,7 @@ class Communicator():
         except Exception as e:
             ts = time.time()
             self.errorq.put((ts, str(e)))
-            print('error on connect' + e)
+            print('error on connect' + str(e))
             return False
 
     

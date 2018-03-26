@@ -7,6 +7,7 @@ import sys
 import gui
 import communicator
 
+
 class SerialMonitor(wx.App):
     ''' Entry point and central class ('context') for Plusterm '''
     def __init__(self): 
@@ -25,8 +26,8 @@ class SerialMonitor(wx.App):
         return True
 
 
-    def connect_serial(self, port, baudrate):
-        if self.communicator.connect(port=port, baudrate=baudrate):
+    def connect_serial(self, **options):
+        if self.communicator.connect(**options):
             self.log_to_gui('Port opened\n')
             return True
         return False
@@ -55,6 +56,7 @@ class SerialMonitor(wx.App):
             importlib.reload(sys.modules['modules.' + module])
         else:
             mod = importlib.import_module('modules.' + module)
+
 
     def remove_module(self, module):
         if 'modules.' + module in sys.modules:
