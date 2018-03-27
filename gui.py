@@ -225,7 +225,7 @@ class SerialMonitorGUI(wx.Frame):
         connect_button = wx.Button(panel, label='Open')
         disconnect_button = wx.Button(panel, label='Close')
         
-        self.output_text = wx.TextCtrl(panel, size=(600,300), style=wx.TE_READONLY | wx.TE_MULTILINE)
+        self.output_text = wx.TextCtrl(panel, size=(600,280), style=wx.TE_READONLY | wx.TE_MULTILINE)
         
         term_font = wx.Font(10, wx.MODERN, wx.NORMAL, wx.NORMAL, False, u'Consolas')
         self.output_text.SetFont(term_font)
