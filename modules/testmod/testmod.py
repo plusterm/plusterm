@@ -3,8 +3,9 @@ import sys
 
 
 def handle_data(data):
-    m = 'rs'
-    pub.sendMessage('module.send', data=m)
+    #m = 'rs'
+    #pub.sendMessage('module.send', data=m)
+    print(data[1].decode(errors='ignore'))
 
 
 def on_untick():

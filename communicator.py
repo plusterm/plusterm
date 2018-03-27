@@ -89,6 +89,7 @@ class Communicator():
             self.comstream.write(cmd.encode())
 
         if self.socket is not None and self.connection_type == 'socket':
+            cmd += '\n'
             self.socket.sendall(cmd.encode())
 
 
@@ -100,7 +101,10 @@ class Communicator():
 
         if self.connection_type == 'socket':
             try:
-                res = self.socket.recv(1024)
+                res = self.socket.recv(2056)
+                if not res:
+                    return
+
                 t = time.time()
                 return (t, res)
 
@@ -110,12 +114,12 @@ class Communicator():
             except ConnectionResetError as e:
                 self.socket.close()
                 t = time.time()
-                res = str(e)
+                res = str(e) + '\n'
                 return (t, res)
 
             except Exception as e:
                 t = time.time()
-                self.errorq.put((t, str(e)))
+                self.errorq.put((t, str(e) + '\n'))
 
 
     def get_error(self):

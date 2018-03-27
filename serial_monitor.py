@@ -90,7 +90,8 @@ class SerialMonitor(wx.App):
         ''' Try to get data from queue '''
         try:
             data = self.communicator.get_data()
-            pub.sendMessage('serial.data', data=data)
+            if data is not None:
+                pub.sendMessage('serial.data', data=data)
 
         except queue.Empty:
             pass
@@ -100,7 +101,8 @@ class SerialMonitor(wx.App):
         ''' Try to get error from queue '''
         try: 
             err = self.communicator.get_error()
-            pub.sendMessage('serial.error', data=err)
+            if err is not None:
+                pub.sendMessage('serial.error', data=err)
 
         except queue.Empty:
             pass

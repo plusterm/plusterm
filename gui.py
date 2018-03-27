@@ -371,7 +371,7 @@ class SerialMonitorGUI(wx.Frame):
     def received_data(self, data):
         ''' Pubsub callback for serial.data '''
         try:
-            msg = data[1].decode(errors='replace')
+            msg = data[1].decode(errors='ignore')
             self.output(msg)
 
         except AttributeError:
