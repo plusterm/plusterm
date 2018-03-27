@@ -28,7 +28,7 @@ class SerialMonitor(wx.App):
 
     def connect_serial(self, **options):
         if self.communicator.connect(**options):
-            self.log_to_gui('Port opened\n')
+            self.log_to_gui('Connection opened\n')
             return True
         return False
 
@@ -36,7 +36,7 @@ class SerialMonitor(wx.App):
     def disconnect_serial(self):
         if self.communicator.disconnect():
             try:
-                self.log_to_gui('Port closed\n')
+                self.log_to_gui('Connection closed\n')
             except Exception:
                 pass
             return True
@@ -76,7 +76,7 @@ class SerialMonitor(wx.App):
 
     def send_from_module(self, data):
         # PubSub callback, send from module
-        self.log_to_gui('module >' + data + '\n')
+        self.log_to_gui('module > ' + data + '\n')
         self.send_serial(data)
 
 
@@ -88,6 +88,9 @@ class SerialMonitor(wx.App):
         except queue.Empty:
             pass
 
+        except TypeError:
+            pass
+
 
     def get_error(self):
         try: 
@@ -95,6 +98,9 @@ class SerialMonitor(wx.App):
             pub.sendMessage('serial.error', data=err)
 
         except queue.Empty:
+            pass
+
+        except TypeError:
             pass
 
 

@@ -9,7 +9,6 @@ void setup() {
   delay(100);
 }
 
-String incoming;
 void loop() {
   int deg = 0;
   float sinus = 0;
