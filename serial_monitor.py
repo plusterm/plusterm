@@ -27,6 +27,7 @@ class SerialMonitor(wx.App):
 
 
     def connect_serial(self, **options):
+        ''' Instruct communicator to initialize a connection '''
         if self.communicator.connect(**options):
             self.log_to_gui('Connection opened\n')
             return True
@@ -34,6 +35,7 @@ class SerialMonitor(wx.App):
 
 
     def disconnect_serial(self):
+        ''' Instruct communicator to disconnect connection '''
         if self.communicator.disconnect():
             try:
                 self.log_to_gui('Connection closed\n')
@@ -44,14 +46,17 @@ class SerialMonitor(wx.App):
         
 
     def send_serial(self, cmd):
+        ''' Relay a message/command to send over the connection '''
         self.communicator.send_cmd(cmd)
 
 
     def log_to_gui(self, msg):
+        ''' Pass the message to be logged in the GUI '''
         self.sm_gui.output(msg)
 
 
     def add_module(self, module):
+        ''' Import a module '''
         if 'modules.' + module in sys.modules:
             importlib.reload(sys.modules['modules.' + module])
         else:
@@ -59,6 +64,7 @@ class SerialMonitor(wx.App):
 
 
     def remove_module(self, module):
+        ''' "Unimport" a module '''
         if 'modules.' + module in sys.modules:
             m = sys.modules['modules.' + module]
             try:
@@ -66,7 +72,7 @@ class SerialMonitor(wx.App):
             except Exception:
                 pass
 
-        # remove references
+        # remove references from sys.modules
         mod_refs = [m for m in sys.modules 
             if m.startswith('modules.' + module)]
 
@@ -75,12 +81,13 @@ class SerialMonitor(wx.App):
 
 
     def send_from_module(self, data):
-        # PubSub callback, send from module
+        # PubSub callback, topic module.send
         self.log_to_gui('module > ' + data + '\n')
         self.send_serial(data)
 
 
     def get_data(self):
+        ''' Try to get data from queue '''
         try:
             data = self.communicator.get_data()
             pub.sendMessage('serial.data', data=data)
@@ -88,19 +95,14 @@ class SerialMonitor(wx.App):
         except queue.Empty:
             pass
 
-        except TypeError:
-            pass
-
 
     def get_error(self):
+        ''' Try to get error from queue '''
         try: 
             err = self.communicator.get_error()
             pub.sendMessage('serial.error', data=err)
 
         except queue.Empty:
-            pass
-
-        except TypeError:
             pass
 
 

@@ -57,7 +57,6 @@ class Communicator():
                 return True
 
         except Exception as e:
-            print(e)
             ts = time.time()
             self.errorq.put((ts, str(e)))
             return False
@@ -114,13 +113,13 @@ class Communicator():
                 res = str(e)
                 return (t, res)
 
-            except OSError as e:
-                pass
+            except Exception as e:
+                t = time.time()
+                self.errorq.put((t, str(e)))
 
 
     def get_error(self):
-        if self.connection_type == 'serial':
-            return self.errorq.get(False)
+        return self.errorq.get(False)
     
     
 def getPorts():

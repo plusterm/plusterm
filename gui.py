@@ -2,13 +2,16 @@ import wx
 from wx.lib.pubsub import pub
 import os
 import sys
-import communicator
 import serial
 
+import communicator
+
+# For GUI debugging
 import wx.lib.inspection
 
 
 class ConnectionSettingsDialog(wx.Dialog):
+    ''' A dialog for more advanced connection settings '''
     def __init__(self, *args, **kwargs):
 
         self.gui = kwargs['gui']
@@ -90,6 +93,7 @@ class ConnectionSettingsDialog(wx.Dialog):
         top_sizer.Add(self.sock_panel, 1, wx.ALL | wx.EXPAND)
         self.SetSizerAndFit(top_sizer)
 
+        # Bindings
         self.c_type_rb.Bind(wx.EVT_RADIOBOX, self.toggle_panel)
         ser_conn_button.Bind(wx.EVT_BUTTON, self.connect_serial)
         sock_conn_btn.Bind(wx.EVT_BUTTON, self.connect_socket)
@@ -97,10 +101,12 @@ class ConnectionSettingsDialog(wx.Dialog):
 
 
     def on_close(self, event):
+        ''' Close event callback '''
         self.Destroy()
 
 
     def toggle_panel(self, event):
+        ''' Toggling between connection type '''
         sel = self.c_type_rb.GetSelection()
         if sel == 0:
             self.ser_panel.Show()
@@ -115,6 +121,7 @@ class ConnectionSettingsDialog(wx.Dialog):
 
 
     def connect_socket(self, event):
+        ''' Connect to socket callback '''
         c_type = 'socket'
         ip = self.ip_txt.GetValue()
         port = self.port_txt.GetValue()
@@ -127,6 +134,7 @@ class ConnectionSettingsDialog(wx.Dialog):
 
 
     def connect_serial(self, event):
+        ''' Serial connection callback '''
         c_type = 'serial'
         port = self.port_cb.GetValue()
         baudrate = self.baud_cb.GetValue()
@@ -172,6 +180,7 @@ class ConnectionSettingsDialog(wx.Dialog):
 
 
 class SerialMonitorGUI(wx.Frame):   
+    ''' The main GUI class for Plusterm '''
     def __init__(self, parent, title, context):
         super(SerialMonitorGUI, self).__init__(parent, title=title)
 
@@ -274,6 +283,7 @@ class SerialMonitorGUI(wx.Frame):
 
 
     def on_quit(self, event):
+        ''' Callback for close event '''
         del self.timer
         self.context.disconnect_serial()
         pub.unsubscribe(self.received_data, 'serial.data')
@@ -281,10 +291,12 @@ class SerialMonitorGUI(wx.Frame):
 
 
     def on_enter_send(self, event):
+        ''' Callback for when pressing enter to send  '''
         self.on_send(wx.EVT_BUTTON)
 
 
     def connect_serial(self, event):
+        '''Quick connection from main gui '''
         port = self.port_combobox.GetValue()
         baudrate = self.baud_combobox.GetValue()
 
@@ -303,29 +315,37 @@ class SerialMonitorGUI(wx.Frame):
             self.SetTitle('Plusterm - {} open'.format(port))
             self.connected = True
 
+        self.context.get_error()
+
 
     def connect_serial_adv(self, **settings):
-        # If connection is successful, start timer that checks for data
+        ''' Advanced connection from dialog '''
         if self.context.connect_serial(**settings):         
             self.Bind(wx.EVT_TIMER, self.check_for_data)
             self.timer.Start()
             self.SetTitle('Plusterm - {} open'.format(settings['port']))
             self.connected = True
             return True
+
+        self.context.get_error()
         return False
 
 
     def connect_socket(self, **options):
+        ''' Socket connection '''
         if self.context.connect_serial(**options):
             self.SetTitle('Plusterm - {} open'.format(options['host']))
             self.Bind(wx.EVT_TIMER, self.check_for_data)
             self.timer.Start()
             self.connected = True
             return True
+
+        self.context.get_error()
         return False
 
 
     def disconnect_serial(self, event):
+        ''' Disconnect connection '''
         if self.context.disconnect_serial():
             self.SetTitle('Plusterm')
             self.connected = False
@@ -333,6 +353,7 @@ class SerialMonitorGUI(wx.Frame):
 
 
     def on_send(self, event):
+        ''' Callback for clicking Send button '''
         cmd = self.input_text.GetValue()
         self.output('> ' + cmd + '\n')
         self.context.send_serial(cmd)
@@ -340,33 +361,45 @@ class SerialMonitorGUI(wx.Frame):
 
 
     def check_for_data(self, event):
+        ''' Timer event callback, checks periodically for 
+        data or errors '''
         if self.connected:
             self.context.get_data()
             self.context.get_error()        
 
 
     def received_data(self, data):
+        ''' Pubsub callback for serial.data '''
         try:
             msg = data[1].decode(errors='replace')
             self.output(msg)
+
+        except AttributeError:
+            msg = data[1]
+            self.output(msg)
+
         except TypeError:
             pass
 
 
     def recieved_error(self, data):
+        ''' Pubsub callback for serial.error '''
         err = data[1]
         self.output(err)
 
     
     def output(self, msg):
+        ''' Output to text widget in GUI '''
         self.output_text.AppendText(msg)
 
 
     def clear_output(self, event):
+        ''' Clear button callback '''
         self.output_text.Clear()
 
 
     def on_file_menu(self, event):
+        ''' File menu callback '''
         if event.GetId() == wx.ID_OPEN:
             settings = ConnectionSettingsDialog(
                 None,  
@@ -377,6 +410,7 @@ class SerialMonitorGUI(wx.Frame):
 
 
     def on_open_menu(self, event):
+        ''' When opening menu, check if modules are loaded '''
         for mod in self.modules_menu.GetMenuItems():
             m = 'modules.' + mod.GetLabel()
             if m in sys.modules:
