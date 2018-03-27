@@ -15,7 +15,7 @@ c.send(b'Thank you for connecting. Let\'s play!\n')
 
 responses = {
     'You fight like a dairy farmer\n':
-        'how appropriate! You fight like a cow!',
+        'how appropriate! you fight like a cow!',
     'Every word you say to me is stupid\n':
         'i wanted to make sure you\'d feel comfortable with me.',
     'My name is feared in every dirty corner of this island!\n':
