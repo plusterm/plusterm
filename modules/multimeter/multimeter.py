@@ -29,8 +29,12 @@ class Multimeter(wx.Frame):
 
 
     def on_close(self, event):
-        del sys.modules['modules.multimeter']
         pub.unsubscribe(self.show_data, 'serial.data')
+        mod_refs = [m for m in sys.modules 
+            if m.startswith('modules.multimeter')]
+
+        for mr in mod_refs:
+            del sys.modules[mr]
         event.Skip()
 
 m = Multimeter(None, 'Multimeter')
