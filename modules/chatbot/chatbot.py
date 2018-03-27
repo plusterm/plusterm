@@ -66,20 +66,17 @@ class Chatbot(wx.Frame):
 
     # Search through all of the textctrls and clear them.
     def on_clear(self, event):
-        print("nbr: {}".format(self.nbrOfTextSizers))
+        #print("nbr: {}".format(self.nbrOfTextSizers))
         for i in range(self.nbrOfTextSizers, 0, -1):
             print(i)
             self.mainSizer.Hide(index=i)
             self.mainSizer.Remove(index=i)
-        #self.mainSizer.Remove(index=1:len) [1:self.nbrOfTextSizers]
-        #self.mainSizer.Hide(index=(len(self.mainSizer.GetChildren()) - 1))
-        #self.mainSizer.Remove(index=(len(self.mainSizer.GetChildren()) - 1))
+
         self.sizerDict.clear()
         self.nbrOfTextSizers = 0
         print(self.mainSizer.GetChildren())
         self.mainSizer.Layout()
-        #self.Refresh()
-        #self.chatbot_panel.SetSizer(self.mainSizer)
+
         '''
         for k, v in self.sizerDict.items():
             sizerContent = v.GetChildren()
