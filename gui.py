@@ -291,6 +291,10 @@ class SerialMonitorGUI(wx.Frame):
         del self.timer
         self.context.disconnect_serial()
         pub.unsubscribe(self.received_data, 'serial.data')
+
+        for w in wx.GetTopLevelWindows():
+            w.Destroy()
+
         event.Skip()
 
 
