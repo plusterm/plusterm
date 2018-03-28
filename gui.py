@@ -207,14 +207,15 @@ class SerialMonitorGUI(wx.Frame):
             file_menu, 
             wx.ID_OPEN, 
             text='&Connection Settings',
-            kind=wx.ITEM_NORMAL)
+            kind=wx.ITEM_NORMAL,
+            helpString='Show advanced connection options')
         file_menu.Append(connect_menu_item)
 
         self.modules_menu = wx.Menu()
         module_files = [f for f in os.listdir('./modules') if f not in ['__pycache__', '__init__.py']]
         
         for file in module_files:
-            self.modules_menu.Append(wx.ID_ANY, file, kind=wx.ITEM_CHECK)
+            self.modules_menu.Append(wx.ID_ANY, file, kind=wx.ITEM_CHECK, helpString='Load a custom script')
 
         menubar.Append(file_menu, '&File')
         menubar.Append(self.modules_menu, '&Modules')

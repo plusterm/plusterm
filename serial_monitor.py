@@ -35,7 +35,7 @@ class SerialMonitor(wx.App):
                 stat = options['host']
             except KeyError:
                 stat = options['port']
-            self.sm_gui.statusbar.SetStatusText('{} open'.format(stat))
+            self.sm_gui.statusbar.PushStatusText('{} open'.format(stat))
             return True
         return False
 
@@ -45,7 +45,7 @@ class SerialMonitor(wx.App):
         if self.communicator.disconnect():
             try:
                 self.log_to_gui('Connection closed\n')
-                self.sm_gui.statusbar.SetStatusText('No connection open')
+                self.sm_gui.statusbar.PopStatusText()
                 self.sm_gui.timer.Stop()
             except Exception:
                 pass
