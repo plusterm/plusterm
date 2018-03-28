@@ -196,6 +196,10 @@ class SerialMonitorGUI(wx.Frame):
 
         device_choices = communicator.getPorts()
 
+        self.statusbar = wx.StatusBar(self)
+        self.SetStatusBar(self.statusbar)
+        self.statusbar.SetStatusText('No connection open')
+
         ### Menubar
         menubar = wx.MenuBar()
         file_menu = wx.Menu()
