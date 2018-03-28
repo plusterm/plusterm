@@ -320,7 +320,6 @@ class SerialMonitorGUI(wx.Frame):
         if conn:
             self.Bind(wx.EVT_TIMER, self.check_for_data)
             self.timer.Start()
-            self.SetTitle('Plusterm - {} open'.format(port))
             self.connected = True
 
         self.context.get_error()
@@ -331,7 +330,6 @@ class SerialMonitorGUI(wx.Frame):
         if self.context.connect_serial(**settings):         
             self.Bind(wx.EVT_TIMER, self.check_for_data)
             self.timer.Start()
-            self.SetTitle('Plusterm - {} open'.format(settings['port']))
             self.connected = True
             return True
 
@@ -342,7 +340,6 @@ class SerialMonitorGUI(wx.Frame):
     def connect_socket(self, **options):
         ''' Socket connection '''
         if self.context.connect_serial(**options):
-            self.SetTitle('Plusterm - {} open'.format(options['host']))
             self.Bind(wx.EVT_TIMER, self.check_for_data)
             self.timer.Start()
             self.connected = True
@@ -355,7 +352,6 @@ class SerialMonitorGUI(wx.Frame):
     def disconnect_serial(self, event):
         ''' Disconnect connection '''
         if self.context.disconnect_serial():
-            self.SetTitle('Plusterm')
             self.connected = False
             self.timer.Stop()
 

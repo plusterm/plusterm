@@ -79,6 +79,7 @@ class Communicator():
 
         if self.connection_type == 'socket':
             self.socket.close()
+            self.connection_type = None
             return True
             
 
@@ -112,12 +113,13 @@ class Communicator():
                 pass
 
             except ConnectionResetError as e:
-                self.socket.close()
+                self.context.disconnect_serial()
                 t = time.time()
                 res = str(e) + '\n'
                 return (t, res)
 
             except Exception as e:
+                self.context.disconnect_serial()
                 t = time.time()
                 self.errorq.put((t, str(e) + '\n'))
 

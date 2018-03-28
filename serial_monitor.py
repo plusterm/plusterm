@@ -30,6 +30,13 @@ class SerialMonitor(wx.App):
         ''' Instruct communicator to initialize a connection '''
         if self.communicator.connect(**options):
             self.log_to_gui('Connection opened\n')
+            tit = ''
+            try:
+                tit = options['host']
+            except KeyError:
+                tit = options['port']
+
+            self.sm_gui.SetTitle('Plusterm - {} open'.format(tit))
             return True
         return False
 
@@ -39,6 +46,7 @@ class SerialMonitor(wx.App):
         if self.communicator.disconnect():
             try:
                 self.log_to_gui('Connection closed\n')
+                self.sm_gui.SetTitle('Plusterm')
             except Exception:
                 pass
             return True
