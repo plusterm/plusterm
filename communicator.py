@@ -15,7 +15,7 @@ class Communicator():
     def __init__(self,context):
         self.threadq = queue.Queue()
         self.errorq = queue.Queue()
-        self.comstream = None
+        self.ser = None
         self.readerthread = None
         self.connection_type = None
         self.socket = None
@@ -26,24 +26,24 @@ class Communicator():
         try:
             if options['type'] == 'serial':
                 self.connection_type = 'serial'
-                self.comstream = serial.Serial()
+                self.ser = serial.Serial()
 
-                self.comstream.port = options['port']
-                self.comstream.baudrate = options['baudrate']
-                self.comstream.stopbits = options['stopbits']
-                self.comstream.parity = options['parity']
-                self.comstream.bytesize = options['bytesize']
-                self.comstream.timeout = 0.1
+                self.ser.port = options['port']
+                self.ser.baudrate = options['baudrate']
+                self.ser.stopbits = options['stopbits']
+                self.ser.parity = options['parity']
+                self.ser.bytesize = options['bytesize']
+                self.ser.timeout = 0.1
             
-                self.comstream.open()
+                self.ser.open()
     
                 if self.readerthread is not None:
                     if not self.readerthread.isAlive():
-                        self.readerthread = ComReaderThread(self.comstream, self.threadq, self.errorq)
+                        self.readerthread = ComReaderThread(self.ser, self.threadq, self.errorq)
                         self.readerthread.start()
     
                 else:
-                    self.readerthread = ComReaderThread(self.comstream, self.threadq, self.errorq)
+                    self.readerthread = ComReaderThread(self.ser, self.threadq, self.errorq)
                     self.readerthread.start()
 
                 return True
@@ -68,7 +68,7 @@ class Communicator():
         if self.connection_type == 'serial':
             try:
                 self.readerthread.stop(0.01)
-                self.comstream.close()
+                self.ser.close()
                 self.connection_type = None
                 return True
 
@@ -84,10 +84,10 @@ class Communicator():
             
 
     def send_cmd(self,cmd):
-        """ send a command to the comstream assuming it is a string
+        """ send a command to the ser assuming it is a string
         """
-        if self.comstream is not None and self.connection_type == 'serial':
-            self.comstream.write(cmd.encode())
+        if self.ser is not None and self.connection_type == 'serial':
+            self.ser.write(cmd.encode())
 
         if self.socket is not None and self.connection_type == 'socket':
             cmd += '\n'
