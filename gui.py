@@ -69,7 +69,6 @@ class ConnectionSettingsDialog(wx.Dialog):
 
         # Socket panel
         self.sock_panel = wx.Panel(self)
-
         ip_label = wx.StaticText(self.sock_panel, label='IP/Domain:')
         port_label = wx.StaticText(self.sock_panel, label='Port:')
         self.ip_txt = wx.TextCtrl(self.sock_panel, size=(100,23))
@@ -83,7 +82,7 @@ class ConnectionSettingsDialog(wx.Dialog):
         sock_conn_sizer.Add(self.port_txt, pos=(1,1))
         sock_conn_sizer.Add(sock_conn_btn, pos=(2,0))
 
-        self.sock_panel.SetSizerAndFit(sock_conn_sizer)
+        self.sock_panel.SetSizer(sock_conn_sizer)
         self.sock_panel.Hide()
 
         # Organize
@@ -206,10 +205,13 @@ class SerialMonitorGUI(wx.Frame):
         connect_menu_item = wx.MenuItem(
             file_menu, 
             wx.ID_OPEN, 
-            text='&Connection Settings',
+            text='&Connection',
             kind=wx.ITEM_NORMAL,
             helpString='Show advanced connection options')
         file_menu.Append(connect_menu_item)
+
+        self.recent_connections = wx.Menu()
+        file_menu.AppendSubMenu(self.recent_connections, text='&History')
 
         self.modules_menu = wx.Menu()
         module_files = [f for f in os.listdir('./modules') if f not in ['__pycache__', '__init__.py']]
@@ -276,7 +278,8 @@ class SerialMonitorGUI(wx.Frame):
         disconnect_button.Bind(wx.EVT_BUTTON, self.disconnect_serial)
         send_button.Bind(wx.EVT_BUTTON, self.on_send)
         clear_button.Bind(wx.EVT_BUTTON, self.clear_output)  
-        file_menu.Bind(wx.EVT_MENU, self.on_file_menu)   
+        file_menu.Bind(wx.EVT_MENU, self.on_file_menu)
+        self.recent_connections.Bind(wx.EVT_MENU, self.re_connect)
         self.Bind(wx.EVT_MENU_OPEN, self.on_open_menu)
         self.modules_menu.Bind(wx.EVT_MENU, self.on_checked_module)
 
@@ -321,11 +324,18 @@ class SerialMonitorGUI(wx.Frame):
                 parity=serial.PARITY_NONE,
                 stopbits=serial.STOPBITS_ONE)
 
+        settings = {'type':'serial',
+                'port': port, 
+                'baudrate': baudrate,
+                'bytesize': serial.EIGHTBITS,
+                'parity': serial.PARITY_NONE,
+                'stopbits': serial.STOPBITS_ONE}
         # If connection is successful, start timer that checks for data
         if conn:
             self.Bind(wx.EVT_TIMER, self.check_for_data)
             self.timer.Start()
             self.connected = True
+            wx.CallAfter(self.after_connection, settings=settings)
 
         self.context.get_error()
 
@@ -337,21 +347,45 @@ class SerialMonitorGUI(wx.Frame):
             self.timer.Start()
             self.connected = True
             return True
+            wx.CallAfter(self.after_connection, settings=settings)
 
         self.context.get_error()
         return False
 
 
-    def connect_socket(self, **options):
+    def connect_socket(self, **settings):
         ''' Socket connection '''
-        if self.context.connect_serial(**options):
+        if self.context.connect_serial(**settings):
             self.Bind(wx.EVT_TIMER, self.check_for_data)
             self.timer.Start()
             self.connected = True
+            wx.CallAfter(self.after_connection, settings=settings)
             return True
 
         self.context.get_error()
         return False
+
+
+    def after_connection(self, settings):
+        menu_item = wx.MenuItem(
+            self.recent_connections,
+            wx.ID_ANY,
+            text=str(settings),
+            kind=wx.ITEM_NORMAL,
+            helpString='Open a recent connection')
+        self.recent_connections.Prepend(menu_item)
+
+
+    def re_connect(self, event):
+        item = self.GetMenuBar().FindItemById(event.GetId())
+        conn_string = item.GetText()
+        settings = eval(conn_string)
+
+        if settings['type'] == 'serial':
+            self.connect_serial_adv(**settings)
+
+        elif settings['type'] == 'socket':
+            self.connect_socket(**settings)       
 
 
     def disconnect_serial(self, event):
@@ -415,7 +449,7 @@ class SerialMonitorGUI(wx.Frame):
                 title='Connection',
                 gui=self)
             settings.ShowModal()
-            del settings
+            del settings            
 
 
     def on_open_menu(self, event):

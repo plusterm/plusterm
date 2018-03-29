@@ -26,17 +26,19 @@ class SerialMonitor(wx.App):
         return True
 
 
-    def connect_serial(self, **options):
+    def connect_serial(self, **settings):
         ''' Instruct communicator to initialize a connection '''
-        if self.communicator.connect(**options):
+        if self.communicator.connect(**settings):
             self.log_to_gui('Connection opened\n')
             stat = ''
             try:
-                stat = options['host']
+                stat = settings['host']
             except KeyError:
-                stat = options['port']
+                stat = settings['port']
+
             self.sm_gui.statusbar.PushStatusText('{} open'.format(stat))
             return True
+
         return False
 
 
@@ -49,6 +51,7 @@ class SerialMonitor(wx.App):
                 self.sm_gui.timer.Stop()
             except Exception:
                 pass
+
             return True
         return False
         
