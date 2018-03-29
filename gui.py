@@ -233,11 +233,13 @@ class SerialMonitorGUI(wx.Frame):
         disconnect_button = wx.Button(panel, label='Close')
         
         self.output_text = wx.TextCtrl(panel, size=(600,280), style=wx.TE_READONLY | wx.TE_MULTILINE)
-        
+        self.output_text.SetBackgroundColour('black')
+        self.output_text.SetForegroundColour('white')
+
         term_font = wx.Font(10, wx.MODERN, wx.NORMAL, wx.NORMAL, False, u'Consolas')
         self.output_text.SetFont(term_font)
 
-        self.input_text = wx.TextCtrl(panel, size=(200, 23), style=wx.TE_PROCESS_ENTER)
+        self.input_text = wx.TextCtrl(panel, size=(250, 23), style=wx.TE_PROCESS_ENTER)
 
         send_button = wx.Button(panel, label='Send')
         clear_button = wx.Button(panel, label='Clear')
@@ -258,10 +260,10 @@ class SerialMonitorGUI(wx.Frame):
 
         outputSizer.Add(self.output_text, 1, wx.EXPAND, 0)
 
-        inputSizer.Add(self.input_text, 0, wx.RIGHT | wx.ALIGN_CENTER_VERTICAL, 60)
+        inputSizer.Add(self.input_text, 0, wx.RIGHT | wx.ALIGN_CENTER_VERTICAL, 5)
         inputSizer.AddStretchSpacer(1)
-        inputSizer.Add(send_button, 0, wx.RIGHT, 0)
-        inputSizer.Add(clear_button, 0, wx.RIGHT, 0)
+        inputSizer.Add(send_button, 0, wx.ALIGN_CENTRE_VERTICAL, 0)
+        inputSizer.Add(clear_button, 0, wx.ALIGN_CENTRE_VERTICAL, 0)
 
         topSizer.Add(connectionSizer)
         topSizer.Add(outputSizer, 1, wx.ALL | wx.EXPAND)
@@ -418,8 +420,7 @@ class SerialMonitorGUI(wx.Frame):
             self.output(msg)
 
         except AttributeError:
-            msg = data[1]
-            self.output(msg)
+            self.output(data[1])
 
         except TypeError:
             pass
@@ -427,8 +428,12 @@ class SerialMonitorGUI(wx.Frame):
 
     def recieved_error(self, data):
         ''' Pubsub callback for serial.error '''
-        err = data[1]
-        self.output(err)
+        try:
+            err = data[1]
+            self.output(err)
+
+        except AttributeError:
+            self.output(data)
 
     
     def output(self, msg):
