@@ -38,6 +38,7 @@ class Chatbot(wx.Frame):
 
         self.sizerLst = []
         self.responses = {}
+        self.received = []
 
         self.Show()
         self.Bind(wx.EVT_CLOSE, self.on_close)
@@ -46,7 +47,8 @@ class Chatbot(wx.Frame):
     def on_add(self, event):
         ''' Add new textboxes to chatbot panel'''
         new_sizer = wx.BoxSizer(wx.HORIZONTAL)
-        new_sizer.Add(wx.TextCtrl(self.chatbot_panel), 0, wx.ALL, 5)
+        # new_sizer.Add(wx.TextCtrl(self.chatbot_panel), 0, wx.ALL, 5)
+        new_sizer.Add(wx.ComboBox(self.chatbot_panel, choices=self.received), 0, wx.ALL, 5)
         new_sizer.Add(wx.TextCtrl(self.chatbot_panel), 0, wx.ALL, 5)
         self.sizerLst.append(new_sizer)
         self.chatbot_sizer.Add(new_sizer)
@@ -57,10 +59,13 @@ class Chatbot(wx.Frame):
     def on_apply(self, event):
         ''' Search through all of the textctrls and 
         generate a dict with corresponding I/O.'''
-        for sizer in self.sizerLst:            
+        for sizer in self.sizerLst:
             vals = []
             for child in sizer.GetChildren():
                 w = child.GetWindow()
+                if isinstance(w, wx.ComboBox):
+                    vals.append(w.GetValue())
+
                 if isinstance(w, wx.TextCtrl):
                     vals.append(w.GetValue())
 
@@ -81,6 +86,8 @@ class Chatbot(wx.Frame):
 
     def chat(self, data):
         r = data[1].decode(errors='ignore').strip()
+        self.received.append(r)
+        self.received = list(set(self.received))
         if r in self.responses:
             s = self.responses[r]
             pub.sendMessage('module.send', data=s)

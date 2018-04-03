@@ -52,10 +52,13 @@ class SerialMonitor(wx.App):
                 self.log_to_gui('Connection closed\n')
                 self.sm_gui.statusbar.PopStatusText()
                 self.sm_gui.timer.Stop()
+
             except Exception:
                 pass
 
             return True
+
+        self.sm_gui.statusbar.PopStatusText()
         return False
         
 
