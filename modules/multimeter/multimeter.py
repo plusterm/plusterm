@@ -39,5 +39,5 @@ class Multimeter(wx.Frame):
 
 m = Multimeter(None, 'Multimeter')
 
-def on_untick():
+def dispose():
     m.Close()

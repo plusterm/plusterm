@@ -76,6 +76,7 @@ class Communicator():
 
         if self.connection_type == 'socket':
             self.socket.close()
+            self.socket = None
             self.connection_type = None
             return True
             

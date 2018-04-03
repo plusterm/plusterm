@@ -14,7 +14,7 @@ class ComReaderThread(threading.Thread):
     
     def __init__(self, ser, data_que, error_que):
         threading.Thread.__init__(self)
-        self.comstream = ser
+        self.ser = ser
         self.data_que = data_que
         self.error_que = error_que
 
@@ -25,19 +25,19 @@ class ComReaderThread(threading.Thread):
     def run(self):
 
         # start the timer
-        startTime = time.time() #   start "timer"
+        start_time = time.time()
 
         while self.alive.isSet():
             try:
                 # reads data until newline (x0A/10) 
-                data = self.comstream.read()
+                data = self.ser.read()
                 if len(data) > 0:
 
-                    timestamp = time.time() - startTime
+                    timestamp = time.time() - start_time
                     #timestamp = datetime.datetime.now()
 
                     while data[-1] != 0x0A:
-                        data += self.comstream.read()
+                        data += self.ser.read()
 
                     self.data_que.put((timestamp, data))
                     
@@ -48,11 +48,11 @@ class ComReaderThread(threading.Thread):
                 self.error_que.put((ts, str(e)))
                 while not reconnected:
                     try:
-                        #   if comstream still thinks it's open close it
-                        if self.comstream.is_open:
-                            self.comstream.close()
+                        #   if ser still thinks it's open close it
+                        if self.ser.is_open:
+                            self.ser.close()
                         
-                        self.comstream.open()
+                        self.ser.open()
                         
                     except Exception as e:  
                         # if reconnection failed let some time pass                 

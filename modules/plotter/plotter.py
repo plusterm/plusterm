@@ -63,5 +63,5 @@ class Plotter(wx.Frame):
 
 p = Plotter(None, 'Plots')
 
-def on_untick():
+def dispose():
     p.Close()

@@ -213,7 +213,7 @@ class SerialMonitorGUI(wx.Frame):
         self.recent_connections = wx.Menu()
         file_menu.AppendSubMenu(self.recent_connections, text='&History')
         file_menu.AppendSeparator()
-        file_menu.Append(wx.ID_CLOSE, 'Quit', helpString='Quit Plusterm')
+        file_menu.Append(wx.ID_CLOSE, '&Quit', helpString='Quit Plusterm')
 
         self.modules_menu = wx.Menu()
         module_files = [f for f in os.listdir('./modules') if f not in ['__pycache__', '__init__.py']]
@@ -289,7 +289,7 @@ class SerialMonitorGUI(wx.Frame):
 
         # Subscribe to data
         pub.subscribe(self.received_data, 'serial.data')
-        pub.subscribe(self.recieved_error, 'serial.error')
+        pub.subscribe(self.received_error, 'serial.error')
 
         # Create a timer
         self.timer = wx.Timer(self)
@@ -305,7 +305,7 @@ class SerialMonitorGUI(wx.Frame):
             self.context.disconnect_serial()
 
         pub.unsubscribe(self.received_data, 'serial.data')
-        pub.unsubscribe(self.recieved_error, 'serial.error')
+        pub.unsubscribe(self.received_error, 'serial.error')
 
         for w in wx.GetTopLevelWindows():
             w.Destroy()
@@ -433,7 +433,7 @@ class SerialMonitorGUI(wx.Frame):
             pass
 
 
-    def recieved_error(self, data):
+    def received_error(self, data):
         ''' Pubsub callback for serial.error '''
         try:
             err = data[1]

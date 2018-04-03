@@ -65,5 +65,5 @@ class Histogram(wx.Frame):
 h = Histogram(None, 'Histogram')
 
 
-def on_untick():
+def dispose():
     h.Close()

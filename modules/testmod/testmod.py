@@ -8,7 +8,7 @@ def handle_data(data):
     print(data[1].decode(errors='ignore'))
 
 
-def on_untick():
+def dispose():
     pub.unsubscribe(handle_data, 'serial.data')
 
 

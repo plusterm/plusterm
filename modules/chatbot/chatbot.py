@@ -101,5 +101,5 @@ class Chatbot(wx.Frame):
 
 c = Chatbot(None, 'Chatbot')
 
-def on_untick():
+def dispose():
     c.Close()

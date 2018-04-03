@@ -76,17 +76,19 @@ class SerialMonitor(wx.App):
 
     def remove_module(self, module):
         ''' "Unimport" a module '''
-        if 'modules.' + module in sys.modules:
-            m = sys.modules['modules.' + module]
+        mod_name = 'modules.' + module
+
+        # try to call dispose function in module
+        if mod_name in sys.modules:
+            m = sys.modules[mod_name]
             try:
-                m.on_untick()
-            except Exception:
+                m.dispose()
+
+            except AttributeError:
                 pass
 
         # remove references from sys.modules
-        mod_refs = [m for m in sys.modules 
-            if m.startswith('modules.' + module)]
-
+        mod_refs = list(filter(lambda m: m.startswith(mod_name), sys.modules))
         for mr in mod_refs:
             del sys.modules[mr]
 
