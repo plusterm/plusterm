@@ -2,7 +2,6 @@ import wx
 from wx.lib.pubsub import pub
 import os
 import sys
-import serial
 
 import communicator
 
@@ -13,10 +12,11 @@ import wx.lib.inspection
 class ConnectionSettingsDialog(wx.Dialog):
     ''' A dialog for more advanced connection settings '''
     def __init__(self, *args, **kwargs):
-
+        # Extract and remove gui kw before calling Dialog constructor
         self.gui = kwargs['gui']
         del kwargs['gui']
-        wx.Dialog.__init__(self, *args, **kwargs)
+
+        super(ConnectionSettingsDialog, self).__init__(*args, **kwargs)
 
         baudrates_choices = ['50', '75', '110', '134', 
             '150', '200', '300', '600',  '1200', '1800', 
@@ -140,38 +140,14 @@ class ConnectionSettingsDialog(wx.Dialog):
         bytesize = self.bytesize_cb.GetValue()
         parity = self.parity_cb.GetValue()
         stopbits = self.stopb_cb.GetValue()
-
-        bytesize_dict = {
-            '': serial.EIGHTBITS,
-            '5': serial.FIVEBITS,
-            '6': serial.SIXBITS,
-            '7': serial.SEVENBITS,
-            '8': serial.EIGHTBITS
-        }
-
-        parity_dict = {
-            '': serial.PARITY_NONE,
-            'None': serial.PARITY_NONE,
-            'Even': serial.PARITY_EVEN,
-            'Odd': serial.PARITY_ODD,
-            'Mark': serial.PARITY_MARK,
-            'Space': serial.PARITY_SPACE
-        } 
-
-        stopb_dict = {
-            '': serial.STOPBITS_ONE,
-            '1': serial.STOPBITS_ONE,
-            '1.5': serial.STOPBITS_ONE_POINT_FIVE,
-            '2': serial.STOPBITS_TWO
-        }
         
         conn = self.gui.connect_serial_adv(
             type=c_type,
             port=port, 
             baudrate=baudrate,
-            bytesize=bytesize_dict[bytesize],
-            parity=parity_dict[parity],
-            stopbits=stopb_dict[stopbits]
+            bytesize=bytesize,
+            parity=parity,
+            stopbits=stopbits
         )
 
         if conn:
@@ -327,16 +303,16 @@ class SerialMonitorGUI(wx.Frame):
                 type='serial',
                 port=port, 
                 baudrate=baudrate,
-                bytesize=serial.EIGHTBITS,
-                parity=serial.PARITY_NONE,
-                stopbits=serial.STOPBITS_ONE)
+                bytesize='8',
+                parity='None',
+                stopbits='1')
 
         settings = {'type': 'serial',
                 'port': port, 
                 'baudrate': baudrate,
-                'bytesize': serial.EIGHTBITS,
-                'parity': serial.PARITY_NONE,
-                'stopbits': serial.STOPBITS_ONE}
+                'bytesize': '8',
+                'parity': 'None',
+                'stopbits': '1'}
 
         # If connection is successful, start timer that checks for data
         if conn:

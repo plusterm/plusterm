@@ -7,6 +7,33 @@ from wx.lib.pubsub import pub
 from serial.tools import list_ports
 from com_reader import ComReaderThread
 
+
+# Converter dicts
+bytesize_dict = {
+            '': serial.EIGHTBITS,
+            '5': serial.FIVEBITS,
+            '6': serial.SIXBITS,
+            '7': serial.SEVENBITS,
+            '8': serial.EIGHTBITS
+}
+
+parity_dict = {
+            '': serial.PARITY_NONE,
+            'None': serial.PARITY_NONE,
+            'Even': serial.PARITY_EVEN,
+            'Odd': serial.PARITY_ODD,
+            'Mark': serial.PARITY_MARK,
+            'Space': serial.PARITY_SPACE
+} 
+
+stopb_dict = {
+            '': serial.STOPBITS_ONE,
+            '1': serial.STOPBITS_ONE,
+            '1.5': serial.STOPBITS_ONE_POINT_FIVE,
+            '2': serial.STOPBITS_TWO
+}
+
+
 class Communicator():
     """ Handles all external comunication """
 
@@ -28,9 +55,9 @@ class Communicator():
 
                 self.ser.port = settings['port']
                 self.ser.baudrate = settings['baudrate']
-                self.ser.stopbits = settings['stopbits']
-                self.ser.parity = settings['parity']
-                self.ser.bytesize = settings['bytesize']
+                self.ser.stopbits = stopb_dict[settings['stopbits']]
+                self.ser.parity = parity_dict[settings['parity']]
+                self.ser.bytesize = bytesize_dict[settings['bytesize']]
                 self.ser.timeout = 0.1
             
                 self.ser.open()

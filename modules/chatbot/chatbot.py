@@ -44,7 +44,7 @@ class Chatbot(wx.Frame):
 
 
     def on_add(self, event):
-        ''' Add new textboxes '''
+        ''' Add new textboxes to chatbot panel'''
         new_sizer = wx.BoxSizer(wx.HORIZONTAL)
         new_sizer.Add(wx.TextCtrl(self.chatbot_panel), 0, wx.ALL, 5)
         new_sizer.Add(wx.TextCtrl(self.chatbot_panel), 0, wx.ALL, 5)
@@ -82,7 +82,6 @@ class Chatbot(wx.Frame):
     def chat(self, data):
         r = data[1].decode(errors='ignore').strip()
         if r in self.responses:
-            print(r, self.responses[r])
             s = self.responses[r]
             pub.sendMessage('module.send', data=s)
 
