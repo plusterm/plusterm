@@ -212,6 +212,8 @@ class SerialMonitorGUI(wx.Frame):
 
         self.recent_connections = wx.Menu()
         file_menu.AppendSubMenu(self.recent_connections, text='&History')
+        file_menu.AppendSeparator()
+        file_menu.Append(wx.ID_CLOSE, 'Quit', helpString='Quit Plusterm')
 
         self.modules_menu = wx.Menu()
         module_files = [f for f in os.listdir('./modules') if f not in ['__pycache__', '__init__.py']]
@@ -459,7 +461,10 @@ class SerialMonitorGUI(wx.Frame):
                 title='Connection',
                 gui=self)
             settings.ShowModal()
-            del settings            
+            del settings
+
+        elif event.GetId() == wx.ID_CLOSE:
+            self.on_quit(event)
 
 
     def on_open_menu(self, event):

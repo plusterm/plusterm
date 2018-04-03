@@ -8,9 +8,7 @@ from serial.tools import list_ports
 from com_reader import ComReaderThread
 
 class Communicator():
-    """ communicator handles all external comunication with comports, server/s or p2p....
-        etc...
-    """
+    """ Handles all external comunication """
 
     def __init__(self,context):
         self.threadq = queue.Queue()
@@ -63,8 +61,7 @@ class Communicator():
 
     
     def disconnect(self):
-        """ stops/close all threads and streams
-        """
+        """ stops/close all threads and streams """
         if self.connection_type == 'serial':
             try:
                 self.readerthread.stop(0.01)
@@ -83,7 +80,7 @@ class Communicator():
             return True
             
 
-    def send_cmd(self,cmd):
+    def send_cmd(self, cmd):
         """ send a command to the ser assuming it is a string
         """
         if self.ser is not None and self.connection_type == 'serial':
@@ -95,8 +92,7 @@ class Communicator():
 
 
     def get_data(self):
-        """ get the data
-        """
+        """ get the data """
         if self.connection_type == 'serial':
             return self.threadq.get(False)
 
@@ -111,12 +107,6 @@ class Communicator():
 
             except socket.timeout:
                 pass
-
-            except ConnectionResetError as e:
-                self.context.disconnect_serial()
-                t = time.time()
-                res = str(e) + '\n'
-                return (t, res)
 
             except Exception as e:
                 self.context.disconnect_serial()
