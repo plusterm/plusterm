@@ -30,9 +30,8 @@ class Multimeter(wx.Frame):
 
     def on_close(self, event):
         pub.unsubscribe(self.show_data, 'serial.data')
-        mod_refs = [m for m in sys.modules 
-            if m.startswith('modules.multimeter')]
-
+        mod_refs = list(
+            filter(lambda m: m.startswith('modules.multimeter'), sys.modules))
         for mr in mod_refs:
             del sys.modules[mr]
         event.Skip()

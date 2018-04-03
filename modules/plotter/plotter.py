@@ -34,9 +34,8 @@ class Plotter(wx.Frame):
         pub.unsubscribe(self.plot_data, 'serial.data')
 
         # "unimport" from serial monitor
-        mod_refs = [mod for mod in sys.modules 
-        if mod.startswith('modules.plotter')]
-
+        mod_refs = list(
+            filter(lambda m: m.startswith('modules.plotter'), sys.modules))
         for mr in mod_refs:
             del sys.modules[mr]
 
@@ -44,7 +43,8 @@ class Plotter(wx.Frame):
 
 
     def plot_data(self, data):
-        numericData = re.findall("-?\d*\.\d+|-?\d+", data[1].decode(errors='ignore'))
+        numericData = re.findall("-?\d*\.\d+|-?\d+", 
+            data[1].decode(errors='ignore'))
 
         if len(numericData) == 1:
             self.axes[0].clear()

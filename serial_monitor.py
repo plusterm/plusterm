@@ -30,15 +30,18 @@ class SerialMonitor(wx.App):
         ''' Instruct communicator to initialize a connection '''
         if self.communicator.connect(**settings):
             self.log_to_gui('Connection opened\n')
+            
             stat = ''
-            try:
-                stat = settings['host']
-            except KeyError:
-                stat = settings['port']
+            if settings['type'] == 'serial':
+                stat = 'Open: {}, {}'.format(
+                    settings['port'], settings['baudrate'])
 
-            self.sm_gui.statusbar.PushStatusText('{} open'.format(stat))
+            elif settings['type'] == 'socket':
+                stat = 'Open: {}:{}'.format(
+                    settings['host'], settings['port'])
+
+            self.sm_gui.statusbar.PushStatusText(stat)
             return True
-
         return False
 
 
@@ -78,7 +81,7 @@ class SerialMonitor(wx.App):
         ''' "Unimport" a module '''
         mod_name = 'modules.' + module
 
-        # try to call dispose function in module
+        # try to call dispose() function in module
         if mod_name in sys.modules:
             m = sys.modules[mod_name]
             try:

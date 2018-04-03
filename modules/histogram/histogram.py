@@ -40,9 +40,8 @@ class Histogram(wx.Frame):
         self.dataList.clear()
 
         # "unimport" from serial monitor
-        mod_refs = [mod for mod in sys.modules
-            if mod.startswith('modules.histogram')]
-
+        mod_refs = list(
+            filter(lambda m: m.startswith('modules.histogram'), sys.modules))
         for mr in mod_refs:
             del sys.modules[mr]
 
@@ -55,7 +54,7 @@ class Histogram(wx.Frame):
         self.dataDict.clear()
         self.dataDict = dict(Counter(self.dataList).most_common(5))
         '''
-        #show for all data
+        # show for all data
         self.dataDict[data[1].decode(errors='ignore').strip()] = self.dataDict.get(data[1].decode(errors='ignore').strip(), 0) + 1
         self.ax.barh(list(self.dataDict.keys()), list(self.dataDict.values()), color='#CCD3F7', edgecolor='black')
 

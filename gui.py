@@ -69,15 +69,15 @@ class ConnectionSettingsDialog(wx.Dialog):
 
         # Socket panel
         self.sock_panel = wx.Panel(self)
-        ip_label = wx.StaticText(self.sock_panel, label='IP/Domain:')
+        host_label = wx.StaticText(self.sock_panel, label='IP/Domain:')
         port_label = wx.StaticText(self.sock_panel, label='Port:')
-        self.ip_txt = wx.TextCtrl(self.sock_panel, size=(100,23))
+        self.host_txt = wx.TextCtrl(self.sock_panel, size=(100,23))
         self.port_txt = wx.TextCtrl(self.sock_panel, size=(100,23))
         sock_conn_btn = wx.Button(self.sock_panel, label='Connect')
 
         sock_conn_sizer = wx.GridBagSizer(vgap=5, hgap=5)
-        sock_conn_sizer.Add(ip_label, pos=(0,0))
-        sock_conn_sizer.Add(self.ip_txt, pos=(0,1))
+        sock_conn_sizer.Add(host_label, pos=(0,0))
+        sock_conn_sizer.Add(self.host_txt, pos=(0,1))
         sock_conn_sizer.Add(port_label, pos=(1,0))
         sock_conn_sizer.Add(self.port_txt, pos=(1,1))
         sock_conn_sizer.Add(sock_conn_btn, pos=(2,0))
@@ -122,11 +122,11 @@ class ConnectionSettingsDialog(wx.Dialog):
     def connect_socket(self, event):
         ''' Connect to socket callback '''
         c_type = 'socket'
-        ip = self.ip_txt.GetValue()
+        host = self.host_txt.GetValue()
         port = self.port_txt.GetValue()
 
         conn = self.gui.connect_socket(
-            type=c_type, host=ip, port=port)
+            type=c_type, host=host, port=port)
 
         if conn:
             self.Destroy()
