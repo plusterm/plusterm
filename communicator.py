@@ -22,17 +22,17 @@ class Communicator():
         self.context = context
 
 
-    def connect(self, **options):
+    def connect(self, **settings):
         try:
-            if options['type'] == 'serial':
+            if settings['type'] == 'serial':
                 self.connection_type = 'serial'
                 self.ser = serial.Serial()
 
-                self.ser.port = options['port']
-                self.ser.baudrate = options['baudrate']
-                self.ser.stopbits = options['stopbits']
-                self.ser.parity = options['parity']
-                self.ser.bytesize = options['bytesize']
+                self.ser.port = settings['port']
+                self.ser.baudrate = settings['baudrate']
+                self.ser.stopbits = settings['stopbits']
+                self.ser.parity = settings['parity']
+                self.ser.bytesize = settings['bytesize']
                 self.ser.timeout = 0.1
             
                 self.ser.open()
@@ -48,11 +48,11 @@ class Communicator():
 
                 return True
 
-            elif options['type'] == 'socket':
+            elif settings['type'] == 'socket':
                 self.connection_type = 'socket'
                 self.socket = socket.socket(
                     socket.AF_INET, socket.SOCK_STREAM)
-                self.socket.connect((options['host'], int(options['port'])))
+                self.socket.connect((settings['host'], int(settings['port'])))
                 self.socket.settimeout(0.01)
                 return True
 

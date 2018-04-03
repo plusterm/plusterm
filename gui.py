@@ -299,8 +299,11 @@ class SerialMonitorGUI(wx.Frame):
     def on_quit(self, event):
         ''' Callback for close event '''
         del self.timer
-        self.context.disconnect_serial()
+        if self.connected:
+            self.context.disconnect_serial()
+
         pub.unsubscribe(self.received_data, 'serial.data')
+        pub.unsubscribe(self.recieved_error, 'serial.error')
 
         for w in wx.GetTopLevelWindows():
             w.Destroy()
@@ -326,12 +329,13 @@ class SerialMonitorGUI(wx.Frame):
                 parity=serial.PARITY_NONE,
                 stopbits=serial.STOPBITS_ONE)
 
-        settings = {'type':'serial',
+        settings = {'type': 'serial',
                 'port': port, 
                 'baudrate': baudrate,
                 'bytesize': serial.EIGHTBITS,
                 'parity': serial.PARITY_NONE,
                 'stopbits': serial.STOPBITS_ONE}
+
         # If connection is successful, start timer that checks for data
         if conn:
             self.Bind(wx.EVT_TIMER, self.check_for_data)
@@ -348,8 +352,8 @@ class SerialMonitorGUI(wx.Frame):
             self.Bind(wx.EVT_TIMER, self.check_for_data)
             self.timer.Start()
             self.connected = True
-            return True
             wx.CallAfter(self.after_connection, settings=settings)
+            return True
 
         self.context.get_error()
         return False
@@ -369,6 +373,7 @@ class SerialMonitorGUI(wx.Frame):
 
 
     def after_connection(self, settings):
+        ''' After successful connection, add to history in menubar '''
         menu_item = wx.MenuItem(
             self.recent_connections,
             wx.ID_ANY,
@@ -468,11 +473,12 @@ class SerialMonitorGUI(wx.Frame):
 
 
     def on_checked_module(self, event):
-        ''' Checks which modules are checked or not
-        Adds or remove modules'''
-        for i in self.modules_menu.GetMenuItems():
-            if i.IsChecked():
-                self.context.add_module(i.GetLabel())
+        ''' When a module is checked import it, when unchecked remove it'''
+        item = self.GetMenuBar().FindItemById(event.GetId())
+        
+        if item.IsChecked():
+            self.context.add_module(item.GetText())
 
-            elif not i.IsChecked():
-                self.context.remove_module(i.GetLabel())
+        elif not item.IsChecked():
+            self.context.remove_module(item.GetText())
+
