@@ -23,7 +23,7 @@ class Multimeter(wx.Frame):
 
 
     def show_data(self, data):
-        data = data[1]
+        data = data[1].decode(errors='ignore')
         self.multimeter_output.Clear()
         self.multimeter_output.WriteText(data)
 

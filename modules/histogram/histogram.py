@@ -4,6 +4,7 @@ import re
 import sys
 import matplotlib.pyplot as plt
 from collections import Counter
+from collections import defaultdict
 from matplotlib.figure import Figure
 from matplotlib.backends.backend_wxagg import FigureCanvasWxAgg as FigureCanvas
 from matplotlib.ticker import MaxNLocator
@@ -49,14 +50,23 @@ class Histogram(wx.Frame):
 
     def plot(self, data):
         # show the n(=5) most common in desc order
-        '''
-        self.dataList.append(data[1].decode(errors='ignore').strip())
-        self.dataDict.clear()
-        self.dataDict = dict(Counter(self.dataList).most_common(5))
-        '''
+        param_name = data[1].decode(errors='ignore').strip()  # .split()[0]
+        self.dataList.append(param_name)
+        self.dataDict = dict(Counter(self.dataList))  # .most_common(5))
+
         # show for all data
-        self.dataDict[data[1].decode(errors='ignore').strip()] = self.dataDict.get(data[1].decode(errors='ignore').strip(), 0) + 1
-        self.ax.barh(list(self.dataDict.keys()), list(self.dataDict.values()), color='#CCD3F7', edgecolor='black')
+        '''
+        data = data[1].decode(errors='ignore').strip()
+        self.dataDict[data] = self.dataDict.get(data, 0) + 1
+        '''
+        self.ax.barh(
+            range(len(self.dataDict)),
+            list(self.dataDict.values()),
+            color='#CCD3F7',
+            edgecolor=['black'] * len(self.dataDict))
+
+        self.ax.set_yticks(range(len(self.dataDict)))
+        self.ax.set_yticklabels(list(self.dataDict.keys()))
 
         self.canvas.draw()
 

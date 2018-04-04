@@ -47,7 +47,6 @@ class Chatbot(wx.Frame):
     def on_add(self, event):
         ''' Add new textboxes to chatbot panel'''
         new_sizer = wx.BoxSizer(wx.HORIZONTAL)
-        # new_sizer.Add(wx.TextCtrl(self.chatbot_panel), 0, wx.ALL, 5)
         new_sizer.Add(wx.ComboBox(self.chatbot_panel, choices=self.received), 0, wx.ALL, 5)
         new_sizer.Add(wx.TextCtrl(self.chatbot_panel), 0, wx.ALL, 5)
         self.sizerLst.append(new_sizer)
@@ -62,12 +61,12 @@ class Chatbot(wx.Frame):
         for sizer in self.sizerLst:
             vals = []
             for child in sizer.GetChildren():
-                w = child.GetWindow()
-                if isinstance(w, wx.ComboBox):
-                    vals.append(w.GetValue())
+                widget = child.GetWindow()
+                if isinstance(widget, wx.ComboBox):
+                    vals.append(widget.GetValue())
 
-                if isinstance(w, wx.TextCtrl):
-                    vals.append(w.GetValue())
+                if isinstance(widget, wx.TextCtrl):
+                    vals.append(widget.GetValue())
 
             if len(vals) == 2:
                 self.responses[vals[0]] = vals[1]
@@ -86,8 +85,12 @@ class Chatbot(wx.Frame):
 
     def chat(self, data):
         r = data[1].decode(errors='ignore').strip()
+
+        # Add received messages to list
         self.received.append(r)
         self.received = list(set(self.received))
+
+        # Send chosen response if match is found
         if r in self.responses:
             s = self.responses[r]
             pub.sendMessage('module.send', data=s)
@@ -104,6 +107,7 @@ class Chatbot(wx.Frame):
 
 def dispose():
     c.Close()
+
 
 if __name__ == '__main__':
     app = wx.App()
