@@ -43,6 +43,7 @@ class ComReaderThread(threading.Thread):
                     
             except serial.SerialException as e:
                 reconnected=False
+                print(e)
                 print('Serial connection lost, trying to reconnect.')
                 ts = time.time()
                 self.error_que.put((ts, str(e)))
