@@ -91,7 +91,7 @@ class Communicator():
         """ stops/close all threads and streams """
         if self.connection_type == 'serial':
             try:
-                self.readerthread.stop(0.01)
+                self.readerthread.stop()
                 self.ser.close()
                 self.connection_type = None
                 return True
