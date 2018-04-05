@@ -1,10 +1,7 @@
 import wx
 from wx.lib.pubsub import pub
-import re
 import sys
-import matplotlib.pyplot as plt
 from collections import Counter
-from collections import defaultdict
 from matplotlib.figure import Figure
 from matplotlib.backends.backend_wxagg import FigureCanvasWxAgg as FigureCanvas
 from matplotlib.ticker import MaxNLocator

@@ -276,7 +276,7 @@ class SerialMonitorGUI(wx.Frame):
 
     def on_quit(self, event):
         ''' Callback for close event '''
-        del self.timer
+        # del self.timer
         if self.connected:
             self.context.disconnect_serial()
 

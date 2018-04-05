@@ -48,7 +48,7 @@ class ComReaderThread(threading.Thread):
                 self.error_que.put((ts, str(e)))
                 while not reconnected:
                     try:
-                        #   if ser still thinks it's open close it
+                        # if ser still thinks it's open close it
                         if self.ser.is_open:
                             self.ser.close()
                         
