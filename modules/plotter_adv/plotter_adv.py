@@ -5,6 +5,9 @@ import sys
 from matplotlib.figure import Figure
 from matplotlib.backends.backend_wxagg import FigureCanvasWxAgg as FigureCanvas
 
+# Alternative regex:
+# (-?\d*\.\d+|-?\d+)( [a-zA-Z_]+)
+
 
 class Plotter_adv(wx.Frame):
     def __init__(self, parent, title):
@@ -14,12 +17,56 @@ class Plotter_adv(wx.Frame):
         self.plots_choices = ['1', '2', '3', '4', '5']
         self.nplot_sizerlist = []
         self.params = ['time']
+        self.regex = "(\w+)(: |, |,|:)(-?\d*\.\d+|-?\d+)"
+        self.group_role = []
 
         self.Bind(wx.EVT_CLOSE, self.on_close)
 
         self.init_ui()
 
     def init_ui(self):
+        self.regex_panel = wx.Panel(self)
+
+        self.regex_sizer = wx.BoxSizer(wx.VERTICAL)
+        self.regex_tb = wx.TextCtrl(
+            self.regex_panel,
+            style=wx.TE_PROCESS_ENTER,
+            size=(400, 23))
+
+        self.regex_group_sizer = wx.BoxSizer(wx.VERTICAL)
+        self.choices = ['parameter name', 'value', 'delimiter']
+
+        group_label1 = wx.StaticText(self.regex_panel, label='Group 1')
+        group_dd1 = wx.ComboBox(
+            self.regex_panel, choices=self.choices, style=wx.CB_READONLY)
+        group_dd1.Bind(wx.EVT_COMBOBOX, self.generate_group_role)
+        group_dd1.SetSelection(0)
+        self.regex_group_sizer.Add(group_label1)
+        self.regex_group_sizer.Add(group_dd1)
+
+        group_label2 = wx.StaticText(self.regex_panel, label='Group 2')
+        group_dd2 = wx.ComboBox(
+            self.regex_panel, choices=self.choices, style=wx.CB_READONLY)
+        group_dd2.Bind(wx.EVT_COMBOBOX, self.generate_group_role)
+        group_dd2.SetSelection(2)
+        self.regex_group_sizer.Add(group_label2)
+        self.regex_group_sizer.Add(group_dd2)
+
+        group_label3 = wx.StaticText(self.regex_panel, label='Group 3')
+        group_dd3 = wx.ComboBox(
+            self.regex_panel, choices=self.choices, style=wx.CB_READONLY)
+        group_dd3.Bind(wx.EVT_COMBOBOX, self.generate_group_role)
+        group_dd3.SetSelection(1)
+        self.regex_group_sizer.Add(group_label3)
+        self.regex_group_sizer.Add(group_dd3)
+
+        self.regex_tb.Bind(wx.EVT_TEXT_ENTER, self.on_enter_regex)
+        self.regex_tb.SetValue(self.regex)
+
+        self.regex_sizer.Add(self.regex_tb)
+        self.regex_sizer.Add(self.regex_group_sizer)
+        self.regex_panel.SetSizer(self.regex_sizer)
+
         self.panel = wx.Panel(self)
 
         nplot_label = wx.StaticText(self.panel, label='How many plots? ')
@@ -28,7 +75,7 @@ class Plotter_adv(wx.Frame):
         self.applybutton = wx.Button(self.panel, label='Apply')
         self.applybutton.Bind(wx.EVT_BUTTON, self.on_apply)
 
-        self.mainSizer = wx.BoxSizer(wx.VERTICAL)
+        self.plot_set_sizer = wx.BoxSizer(wx.VERTICAL)
         self.nplot_sizer = wx.BoxSizer(wx.HORIZONTAL)
         self.nplot_sizer.Add(
             nplot_label, 0, wx.ALIGN_CENTER_HORIZONTAL | wx.ALL, 5)
@@ -37,25 +84,69 @@ class Plotter_adv(wx.Frame):
         self.nplot_sizer.Add(
             self.applybutton, 0, wx.ALIGN_CENTER_HORIZONTAL | wx.ALL, 5)
 
-        self.mainSizer.Add(self.nplot_sizer)
+        self.plot_set_sizer.Add(self.nplot_sizer)
+        self.panel.SetSizer(self.plot_set_sizer)
 
-        self.panel.SetSizerAndFit(self.mainSizer)
+        self.mainSizer = wx.BoxSizer(wx.VERTICAL)
+        self.mainSizer.Add(self.regex_panel)
+        self.mainSizer.Add(self.panel)
+
+        self.SetSizerAndFit(self.mainSizer)
         self.Centre()
         self.Show(True)
 
+    def clear_regex_panel(self):
+        nr = len(self.regex_group_sizer.GetChildren()) - 1
+        if nr <= 0:
+            return
+
+        for i in range(nr, -1, -1):
+            self.regex_group_sizer.Hide(index=i)
+            self.regex_group_sizer.Remove(index=i)
+
+    def on_enter_regex(self, event):
+        self.clear_regex_panel()
+        self.params = ['time']
+        text = self.regex_tb.GetValue()
+        try:
+            cr = re.compile(text)
+
+        except Exception:
+            print('hej')
+
+        else:
+            self.regex = text
+            nr_groups = cr.groups
+            for i in range(nr_groups):
+                label = 'Group {}'.format(i + 1)
+                group_label = wx.StaticText(self.regex_panel, label=label)
+                group_dd = wx.ComboBox(
+                    self.regex_panel,
+                    choices=self.choices,
+                    style=wx.CB_READONLY)
+                group_dd.Bind(wx.EVT_COMBOBOX, self.generate_group_role)
+                self.regex_group_sizer.Add(group_label)
+                self.regex_group_sizer.Add(group_dd)
+
+            self.regex_panel.Update()
+            self.Layout()
+            self.Fit()
+
     def get_params(self, data):
         a = re.findall(
-            "(\w+)(: |, |,|:)(-?\d*\.\d+|-?\d+)",
+            self.regex,
             data[1].decode(errors='ignore'))
 
-        for i in range(len(a)):
-            if a[i][0] not in self.params:
-                self.params.append(a[i][0])
+        for match in a:
+            for g_ind, r in self.group_role:
+                if r == 'parameter name':
+                    if match[g_ind] not in self.params:
+                        self.params.append(match[g_ind])
 
     def generate_plot_info(self, event):
         n = self.nplot_combo.GetCurrentSelection() + 1
 
-        if len(self.mainSizer.GetChildren()) - 1 > 0:
+        if len(self.plot_set_sizer.GetChildren()) - 1 > 0:
             self.clear_plot_info()
 
         for i in range(n):
@@ -76,18 +167,37 @@ class Plotter_adv(wx.Frame):
                     self.panel,
                     style=wx.CB_READONLY,
                     choices=self.params[1:]))
-            self.mainSizer.Add(self.nplot_sizerlist[i])
+            self.plot_set_sizer.Add(self.nplot_sizerlist[i])
 
-        self.mainSizer.Layout()
+        self.panel.Update()
+        self.Layout()
+        self.Fit()
+
+    def generate_group_role(self, event):
+        self.params = ['time']
+        for child in self.regex_group_sizer.GetChildren():
+            widget = child.GetWindow()
+
+            if isinstance(widget, wx.StaticText):
+                i = int(widget.GetLabel()[-1]) - 1
+                continue
+
+            if isinstance(widget, wx.ComboBox):
+                t = widget.GetValue()
+
+                self.group_role.append((i, t))
+
+        print(self.group_role)
 
     def clear_plot_info(self):
-        nplotsizers = len(self.mainSizer.GetChildren()) - 1
+        nplotsizers = len(self.plot_set_sizer.GetChildren()) - 1
         for i in range(nplotsizers, 0, -1):
-            self.mainSizer.Hide(index=i)
-            self.mainSizer.Remove(index=i)
+            self.plot_set_sizer.Hide(index=i)
+            self.plot_set_sizer.Remove(index=i)
             del self.nplot_sizerlist[i - 1]
 
     def on_apply(self, event):
+        self.generate_group_role(wx.EVT_COMBOBOX)
         self.plot_window = Plotwindow(self, 'Plotwindow')
         # plot_window.Show()
         pub.unsubscribe(self.get_params, 'serial.data')
@@ -148,12 +258,25 @@ class Plotwindow(wx.Frame):
 
     def plot_data(self, data):
         a = re.findall(
-            "(\w+)(: |, |,|:)(-?\d*\.\d+|-?\d+)",
+            settings.regex,
             data[1].decode(errors='ignore'))
 
         for i in range(self.nplots):
             try:
-                param_val_pair = [(d[0], d[2]) for d in a]
+                param_val_pair = []
+                group_role = settings.group_role
+                for match in a:
+                    param, val = None, None
+                    for g_ind, r in group_role:
+                        if r == 'parameter name':
+                            param = match[g_ind]
+
+                        elif r == 'value':
+                            val = match[g_ind]
+
+                    if param and val:
+                        param_val_pair.append((param, val))
+
                 px, py = self.selected_params[i]
                 xfound = False
                 yfound = False
@@ -186,12 +309,12 @@ class Plotwindow(wx.Frame):
                     self.axes[i].clear()
                     self.axes[i].plot(self.xdata[i], self.ydata[i], 'b.')
 
-            except IndexError:
+            except IndexError as e:
                 if not self.index_warned:
                     self.index_warned = True
                     dlg = wx.MessageDialog(
                         self,
-                        message='Did you forget to set all parameters?',
+                        message='Did you forget to set all parameters? {}'.format(e),
                         caption='Index error')
                     dlg.SetOKLabel('Yes')
                     dlg.ShowModal()
