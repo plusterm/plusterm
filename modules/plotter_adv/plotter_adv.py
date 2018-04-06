@@ -152,30 +152,50 @@ class Plotwindow(wx.Frame):
             data[1].decode(errors='ignore'))
 
         for i in range(self.nplots):
-            for d in a:
-                try:
-                    if self.selected_params[i][1] == d[0]:  # y
-                        self.ydata[i].append(float(d[2]))
-                        if self.selected_params[i][0] == 'time':  # x
-                            self.xdata[i].append(float(data[0]))
-                        elif self.selected_params[i][0] == d[0]:
-                            self.xdata[i].append(float(d[2]))
-                    if self.nplots == 1:
-                        self.axes.clear()
-                        self.axes.plot(self.xdata[i], self.ydata[i])
-                    else:
-                        self.axes[i].clear()
-                        self.axes[i].plot(self.xdata[i], self.ydata[i])
-                except IndexError:
-                    if not self.index_warned:
-                        self.index_warned = True
-                        dlg = wx.MessageDialog(
-                            self,
-                            message='Did you forget to set all parameters?',
-                            caption='Index error')
-                        dlg.SetOKLabel('Yes')
-                        dlg.ShowModal()
-                        del dlg
+            try:
+                param_val_pair = [(d[0], d[2]) for d in a]
+                px, py = self.selected_params[i]
+                xfound = False
+                yfound = False
+                found_vals = {}
+
+                for param, val in param_val_pair:
+                    if not yfound and param == py:
+                        found_vals['y'] = float(val)
+                        yfound = True
+
+                    if not xfound:
+                        if param == px:
+                            found_vals['x'] = float(val)
+                            xfound = True
+
+                        elif px == 'time':
+                            found_vals['x'] = data[0]
+                            xfound = True
+
+                    if yfound and xfound:
+                        self.xdata[i].append(found_vals['x'])
+                        self.ydata[i].append(found_vals['y'])
+                        break
+
+                if self.nplots == 1:
+                    self.axes.clear()
+                    self.axes.plot(self.xdata[i], self.ydata[i], 'b.')
+
+                else:
+                    self.axes[i].clear()
+                    self.axes[i].plot(self.xdata[i], self.ydata[i], 'b.')
+
+            except IndexError:
+                if not self.index_warned:
+                    self.index_warned = True
+                    dlg = wx.MessageDialog(
+                        self,
+                        message='Did you forget to set all parameters?',
+                        caption='Index error')
+                    dlg.SetOKLabel('Yes')
+                    dlg.ShowModal()
+                    del dlg
 
         self.canvas.draw()
 
