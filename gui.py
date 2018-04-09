@@ -302,6 +302,9 @@ class SerialMonitorGUI(wx.Frame):
         port = self.port_combobox.GetValue()
         baudrate = self.baud_combobox.GetValue()
 
+        if self.connected:
+            return
+
         conn = self.context.connect_serial(
                 type='serial',
                 port=port, 
@@ -318,6 +321,7 @@ class SerialMonitorGUI(wx.Frame):
                 'stopbits': '1'}
 
         # If connection is successful, start timer that checks for data
+
         if conn:
             self.Bind(wx.EVT_TIMER, self.check_for_data)
             self.timer.Start()
@@ -329,6 +333,9 @@ class SerialMonitorGUI(wx.Frame):
 
     def connect_serial_adv(self, **settings):
         ''' Advanced connection from dialog '''
+        if self.connected:
+            return
+
         if self.context.connect_serial(**settings):         
             self.Bind(wx.EVT_TIMER, self.check_for_data)
             self.timer.Start()
@@ -342,6 +349,9 @@ class SerialMonitorGUI(wx.Frame):
 
     def connect_socket(self, **settings):
         ''' Socket connection '''
+        if self.connected:
+            return
+
         if self.context.connect_serial(**settings):
             self.Bind(wx.EVT_TIMER, self.check_for_data)
             self.timer.Start()

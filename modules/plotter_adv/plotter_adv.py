@@ -4,9 +4,11 @@ import re
 import sys
 from matplotlib.figure import Figure
 from matplotlib.backends.backend_wxagg import FigureCanvasWxAgg as FigureCanvas
-import random
+
+
 # Alternative regex:
 # (-?\d*\.\d+|-?\d+)( [a-zA-Z_]+)
+# ^(\d+)$|(\d+)(, )(-?\d+)
 
 
 class Plotter_adv(wx.Frame):
@@ -75,10 +77,15 @@ class Plotter_adv(wx.Frame):
         self.panel = wx.Panel(self)
 
         nplot_label = wx.StaticText(self.panel, label='Number of plots: ')
-        self.nplot_combo = wx.ComboBox(self.panel, choices=self.plots_choices)
+        self.nplot_combo = wx.ComboBox(
+            self.panel,
+            choices=self.plots_choices,
+            style=wx.CB_READONLY)
         self.nplot_combo.Bind(wx.EVT_COMBOBOX, self.generate_plot_info)
+        '''
         self.applybutton = wx.Button(self.panel, label='Apply')
         self.applybutton.Bind(wx.EVT_BUTTON, self.on_apply)
+        '''
 
         self.plot_set_sizer = wx.BoxSizer(wx.VERTICAL)
         self.nplot_sizer = wx.BoxSizer(wx.HORIZONTAL)
@@ -86,9 +93,10 @@ class Plotter_adv(wx.Frame):
             nplot_label, 0, wx.ALIGN_CENTER_HORIZONTAL | wx.ALL, 5)
         self.nplot_sizer.Add(
             self.nplot_combo, 0, wx.ALIGN_CENTER_HORIZONTAL | wx.ALL, 5)
+        '''
         self.nplot_sizer.Add(
             self.applybutton, 0, wx.ALIGN_CENTER_HORIZONTAL | wx.ALL, 5)
-
+        '''
         self.plot_set_sizer.Add(self.nplot_sizer)
         self.panel.SetSizer(self.plot_set_sizer)
 
@@ -96,6 +104,7 @@ class Plotter_adv(wx.Frame):
         self.mainSizer.Add(self.regex_panel)
         self.mainSizer.Add(self.panel)
 
+        self.SetBackgroundColour('lightgray')
         self.SetSizerAndFit(self.mainSizer)
         self.Centre()
         self.Show(True)
@@ -138,11 +147,11 @@ class Plotter_adv(wx.Frame):
             self.Fit()
 
     def get_params(self, data):
-        a = self.cregex.findall(data[1].decode(errors='ignore'))
+        a = self.cregex.findall(data[1].decode(errors='ignore').strip())
+        print(a)
         for match in a:
             for g_ind, r in self.group_role:
                 if r == 'value (without name)':
-                    print(g_ind)
                     if not 'val' + str(g_ind) in self.params:
                         self.params.append('val' + str(g_ind))
 
@@ -159,7 +168,7 @@ class Plotter_adv(wx.Frame):
         for i in range(n):
             self.nplot_sizerlist.append(wx.BoxSizer(wx.HORIZONTAL))
             self.nplot_sizerlist[i].Add(
-                wx.StaticText(self.panel, label='x: '))
+                wx.StaticText(self.panel, label=' x: '))
             self.nplot_sizerlist[i].Add(
                 wx.ComboBox(
                     self.panel,
@@ -176,9 +185,17 @@ class Plotter_adv(wx.Frame):
                     choices=self.params[1:]))
             self.plot_set_sizer.Add(self.nplot_sizerlist[i])
 
+        self.applybutton = wx.Button(self.panel, label='Plot')
+        self.applybutton.Bind(wx.EVT_BUTTON, self.on_apply)
+        self.plot_set_sizer.Add(
+            self.applybutton,
+            0,  # Not stretchable
+            wx.ALIGN_LEFT | wx.ALL,  # Left aligned, border on all sides
+            5)  # Border size
+
         self.panel.Update()
         self.Layout()
-        self.Fit()
+        self.SetSizerAndFit(self.mainSizer)
 
     def generate_group_role(self, event):
         self.params = ['time']
@@ -195,11 +212,13 @@ class Plotter_adv(wx.Frame):
                 self.group_role.append((i, t))
 
     def clear_plot_info(self):
-        nplotsizers = len(self.plot_set_sizer.GetChildren()) - 1
-        for i in range(nplotsizers, 0, -1):
+        # This was changed with the new apply button
+        nplotsizers = len(self.nplot_sizerlist)
+        for i in range(nplotsizers + 1, 0, -1):
             self.plot_set_sizer.Hide(index=i)
             self.plot_set_sizer.Remove(index=i)
-            del self.nplot_sizerlist[i - 1]
+            # del nplot_sizerlist[i]
+        self.nplot_sizerlist = []
 
     def on_apply(self, event):
         self.generate_group_role(wx.EVT_COMBOBOX)
@@ -249,7 +268,7 @@ class Plotwindow(wx.Frame):
         self.init_ui()
 
     def init_ui(self):
-        self.figure = Figure(dpi=100)
+        self.figure = Figure(dpi=75)
 
         self.axes = self.figure.subplots(self.nplots, 1)
         self.canvasPanel = wx.Panel(self)
@@ -261,8 +280,7 @@ class Plotwindow(wx.Frame):
         self.Show()
 
     def plot_data(self, data):
-        a = settings.cregex.findall(data[1].decode(errors='ignore'))
-
+        a = settings.cregex.findall(data[1].decode(errors='ignore').strip())
         for i in range(self.nplots):
             try:
                 param_val_pair = []
@@ -283,22 +301,21 @@ class Plotwindow(wx.Frame):
                             val = match[g_ind]
 
                     if param and val and r != 'value (without name)':
-                        print('hej')
                         param_val_pair.append((param, val))
-                        print(param_val_pair)
 
                 px, py = self.selected_params[i]
                 xfound = False
                 yfound = False
                 found_vals = {}
 
-                for param, val in param_val_pair:
-                    if not yfound and param == py:
+                print(param_val_pair)
+                for (param, val) in param_val_pair:
+                    if not yfound and param == py and val != '':
                         found_vals['y'] = float(val)
                         yfound = True
 
                     if not xfound:
-                        if param == px:
+                        if param == px and val != '':
                             found_vals['x'] = float(val)
                             xfound = True
 
@@ -314,10 +331,14 @@ class Plotwindow(wx.Frame):
                 if self.nplots == 1:
                     self.axes.clear()
                     self.axes.plot(self.xdata[i], self.ydata[i], 'b.')
+                    self.axes.set_xlabel(px)
+                    self.axes.set_ylabel(py)
 
                 else:
                     self.axes[i].clear()
                     self.axes[i].plot(self.xdata[i], self.ydata[i], 'b.')
+                    self.axes[i].set_xlabel(px)
+                    self.axes[i].set_ylabel(py)
 
             except IndexError as e:
                 if not self.index_warned:
@@ -339,6 +360,7 @@ class Plotwindow(wx.Frame):
 
     def on_close(self, event):
         pub.unsubscribe(self.plot_data, 'serial.data')
+        pub.subscribe(settings.get_params, 'serial.data')
         event.Skip()
 
 
