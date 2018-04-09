@@ -78,7 +78,6 @@ class SerialMonitor(wx.App):
         else:
             mod = importlib.import_module('modules.' + module)
 
-
     def remove_module(self, module):
         ''' "Unimport" a module '''
         mod_name = 'modules.' + module

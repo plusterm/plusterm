@@ -4,7 +4,7 @@ import re
 import sys
 from matplotlib.figure import Figure
 from matplotlib.backends.backend_wxagg import FigureCanvasWxAgg as FigureCanvas
-
+import random
 # Alternative regex:
 # (-?\d*\.\d+|-?\d+)( [a-zA-Z_]+)
 
@@ -18,6 +18,7 @@ class Plotter_adv(wx.Frame):
         self.nplot_sizerlist = []
         self.params = ['time']
         self.regex = "(\w+)(: |, |,|:)(-?\d*\.\d+|-?\d+)"
+        self.cregex = re.compile(self.regex)
         self.group_role = []
 
         self.Bind(wx.EVT_CLOSE, self.on_close)
@@ -34,8 +35,11 @@ class Plotter_adv(wx.Frame):
             size=(400, 23))
 
         self.regex_group_sizer = wx.BoxSizer(wx.VERTICAL)
-        self.choices = ['parameter name', 'value', 'delimiter']
+        self.choices = [
+            'parameter name', 'value',
+            'delimiter', 'value (without name)']
 
+        # Initial regex settings
         group_label1 = wx.StaticText(self.regex_panel, label='Group 1')
         group_dd1 = wx.ComboBox(
             self.regex_panel, choices=self.choices, style=wx.CB_READONLY)
@@ -62,6 +66,7 @@ class Plotter_adv(wx.Frame):
 
         self.regex_tb.Bind(wx.EVT_TEXT_ENTER, self.on_enter_regex)
         self.regex_tb.SetValue(self.regex)
+        self.generate_group_role(wx.EVT_TEXT_ENTER)
 
         self.regex_sizer.Add(self.regex_tb)
         self.regex_sizer.Add(self.regex_group_sizer)
@@ -69,7 +74,7 @@ class Plotter_adv(wx.Frame):
 
         self.panel = wx.Panel(self)
 
-        nplot_label = wx.StaticText(self.panel, label='How many plots? ')
+        nplot_label = wx.StaticText(self.panel, label='Number of plots: ')
         self.nplot_combo = wx.ComboBox(self.panel, choices=self.plots_choices)
         self.nplot_combo.Bind(wx.EVT_COMBOBOX, self.generate_plot_info)
         self.applybutton = wx.Button(self.panel, label='Apply')
@@ -109,14 +114,14 @@ class Plotter_adv(wx.Frame):
         self.params = ['time']
         text = self.regex_tb.GetValue()
         try:
-            cr = re.compile(text)
+            self.cregex = re.compile(text)
 
         except Exception:
             print('hej')
 
         else:
             self.regex = text
-            nr_groups = cr.groups
+            nr_groups = self.cregex.groups
             for i in range(nr_groups):
                 label = 'Group {}'.format(i + 1)
                 group_label = wx.StaticText(self.regex_panel, label=label)
@@ -133,12 +138,14 @@ class Plotter_adv(wx.Frame):
             self.Fit()
 
     def get_params(self, data):
-        a = re.findall(
-            self.regex,
-            data[1].decode(errors='ignore'))
-
+        a = self.cregex.findall(data[1].decode(errors='ignore'))
         for match in a:
             for g_ind, r in self.group_role:
+                if r == 'value (without name)':
+                    print(g_ind)
+                    if not 'val' + str(g_ind) in self.params:
+                        self.params.append('val' + str(g_ind))
+
                 if r == 'parameter name':
                     if match[g_ind] not in self.params:
                         self.params.append(match[g_ind])
@@ -175,7 +182,8 @@ class Plotter_adv(wx.Frame):
 
     def generate_group_role(self, event):
         self.params = ['time']
-        for child in self.regex_group_sizer.GetChildren():
+        self.group_role = []
+        for ind, child in enumerate(self.regex_group_sizer.GetChildren()):
             widget = child.GetWindow()
 
             if isinstance(widget, wx.StaticText):
@@ -184,10 +192,7 @@ class Plotter_adv(wx.Frame):
 
             if isinstance(widget, wx.ComboBox):
                 t = widget.GetValue()
-
                 self.group_role.append((i, t))
-
-        print(self.group_role)
 
     def clear_plot_info(self):
         nplotsizers = len(self.plot_set_sizer.GetChildren()) - 1
@@ -199,7 +204,6 @@ class Plotter_adv(wx.Frame):
     def on_apply(self, event):
         self.generate_group_role(wx.EVT_COMBOBOX)
         self.plot_window = Plotwindow(self, 'Plotwindow')
-        # plot_window.Show()
         pub.unsubscribe(self.get_params, 'serial.data')
 
     def on_close(self, event):
@@ -257,9 +261,7 @@ class Plotwindow(wx.Frame):
         self.Show()
 
     def plot_data(self, data):
-        a = re.findall(
-            settings.regex,
-            data[1].decode(errors='ignore'))
+        a = settings.cregex.findall(data[1].decode(errors='ignore'))
 
         for i in range(self.nplots):
             try:
@@ -268,14 +270,22 @@ class Plotwindow(wx.Frame):
                 for match in a:
                     param, val = None, None
                     for g_ind, r in group_role:
-                        if r == 'parameter name':
+
+                        if r == 'value (without name)':
+                            param = 'val' + str(g_ind)
+                            val = match[g_ind]
+                            param_val_pair.append((param, val))
+
+                        elif r == 'parameter name':
                             param = match[g_ind]
 
                         elif r == 'value':
                             val = match[g_ind]
 
-                    if param and val:
+                    if param and val and r != 'value (without name)':
+                        print('hej')
                         param_val_pair.append((param, val))
+                        print(param_val_pair)
 
                 px, py = self.selected_params[i]
                 xfound = False
@@ -314,13 +324,18 @@ class Plotwindow(wx.Frame):
                     self.index_warned = True
                     dlg = wx.MessageDialog(
                         self,
-                        message='Did you forget to set all parameters? {}'.format(e),
+                        message='Did you forget to set \
+                            all parameters?\n{}'.format(e),
                         caption='Index error')
                     dlg.SetOKLabel('Yes')
                     dlg.ShowModal()
                     del dlg
 
-        self.canvas.draw()
+        try:
+            self.canvas.draw_idle()
+
+        except Exception:
+            pass
 
     def on_close(self, event):
         pub.unsubscribe(self.plot_data, 'serial.data')
