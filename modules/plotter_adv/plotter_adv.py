@@ -28,6 +28,13 @@ class Plotter_adv(wx.Frame):
         self.init_ui()
 
     def init_ui(self):
+
+        menubar = wx.MenuBar()
+        advanced_settings = wx.Menu()
+        menubar.Append(advanced_settings, '&Advanced Settings')
+        self.Bind(wx.EVT_MENU_OPEN, self.toggle_adv_settings)
+        self.SetMenuBar(menubar)
+
         self.regex_panel = wx.Panel(self)
 
         self.regex_sizer = wx.BoxSizer(wx.VERTICAL)
@@ -105,9 +112,20 @@ class Plotter_adv(wx.Frame):
         self.mainSizer.Add(self.panel)
 
         self.SetBackgroundColour('lightgray')
-        self.SetSizerAndFit(self.mainSizer)
+        self.SetSizer(self.mainSizer)
+        self.regex_panel.Hide()
         self.Centre()
         self.Show(True)
+
+    def toggle_adv_settings(self, event):
+        if not self.regex_panel.IsShown():
+            self.regex_panel.Show()
+        else:
+            self.regex_panel.Hide()
+
+        self.Layout()
+        self.Fit()
+        self.Update()
 
     def clear_regex_panel(self):
         nr = len(self.regex_group_sizer.GetChildren()) - 1
@@ -148,7 +166,6 @@ class Plotter_adv(wx.Frame):
 
     def get_params(self, data):
         a = self.cregex.findall(data[1].decode(errors='ignore').strip())
-        print(a)
         for match in a:
             for g_ind, r in self.group_role:
                 if r == 'value (without name)':
@@ -198,7 +215,7 @@ class Plotter_adv(wx.Frame):
         self.SetSizerAndFit(self.mainSizer)
 
     def generate_group_role(self, event):
-        self.params = ['time']
+        # self.params = ['time']
         self.group_role = []
         for ind, child in enumerate(self.regex_group_sizer.GetChildren()):
             widget = child.GetWindow()
@@ -270,7 +287,13 @@ class Plotwindow(wx.Frame):
     def init_ui(self):
         self.figure = Figure(dpi=75)
 
-        self.axes = self.figure.subplots(self.nplots, 1)
+        if self.nplots == 1:
+            self.axes = []
+            self.axes.append(self.figure.subplots(self.nplots, 1))
+
+        else:
+            self.axes = self.figure.subplots(self.nplots, 1)
+
         self.canvasPanel = wx.Panel(self)
         self.canvas = FigureCanvas(self.canvasPanel, wx.ID_ANY, self.figure)
         self.canvasSizer = wx.BoxSizer(wx.HORIZONTAL)
@@ -308,7 +331,6 @@ class Plotwindow(wx.Frame):
                 yfound = False
                 found_vals = {}
 
-                print(param_val_pair)
                 for (param, val) in param_val_pair:
                     if not yfound and param == py and val != '':
                         found_vals['y'] = float(val)
@@ -328,17 +350,10 @@ class Plotwindow(wx.Frame):
                         self.ydata[i].append(found_vals['y'])
                         break
 
-                if self.nplots == 1:
-                    self.axes.clear()
-                    self.axes.plot(self.xdata[i], self.ydata[i], 'b.')
-                    self.axes.set_xlabel(px)
-                    self.axes.set_ylabel(py)
-
-                else:
-                    self.axes[i].clear()
-                    self.axes[i].plot(self.xdata[i], self.ydata[i], 'b.')
-                    self.axes[i].set_xlabel(px)
-                    self.axes[i].set_ylabel(py)
+                self.axes[i].clear()
+                self.axes[i].plot(self.xdata[i], self.ydata[i], 'b.-')
+                self.axes[i].set_xlabel(px)
+                self.axes[i].set_ylabel(py)
 
             except IndexError as e:
                 if not self.index_warned:
