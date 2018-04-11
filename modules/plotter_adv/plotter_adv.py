@@ -120,12 +120,14 @@ class Plotter_adv(wx.Frame):
     def toggle_adv_settings(self, event):
         if not self.regex_panel.IsShown():
             self.regex_panel.Show()
+            self.Layout()
+            self.Fit()
+            self.Update()
         else:
             self.regex_panel.Hide()
-
-        self.Layout()
-        self.Fit()
-        self.Update()
+            self.Layout()
+            # self.Fit()
+            self.Update()
 
     def clear_regex_panel(self):
         nr = len(self.regex_group_sizer.GetChildren()) - 1
@@ -212,7 +214,7 @@ class Plotter_adv(wx.Frame):
 
         self.panel.Update()
         self.Layout()
-        self.SetSizerAndFit(self.mainSizer)
+        self.SetSizer(self.mainSizer)
 
     def generate_group_role(self, event):
         # self.params = ['time']

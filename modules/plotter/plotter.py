@@ -3,7 +3,6 @@ from wx.lib.pubsub import pub
 import re
 import sys
 import matplotlib
-from mpl_toolkits.mplot3d import Axes3D
 from matplotlib.figure import Figure
 from matplotlib.backends.backend_wxagg import FigureCanvasWxAgg as FigureCanvas
 
@@ -13,10 +12,7 @@ class Plotter(wx.Frame):
         pub.subscribe(self.plot_data, 'serial.data')
 
         self.figure = Figure(dpi=100)
-        #self.axes = self.figure.subplots(2, 1)
-
-        self.ax1 = self.figure.add_subplot(2, 1, 1)
-        self.ax2 = self.figure.add_subplot(2, 1, 2, projection = '3d')
+        self.axes = self.figure.subplots(2, 1)
 
         self.canvasPanel = wx.Panel(self)
         self.canvas = FigureCanvas(self.canvasPanel, wx.ID_ANY, self.figure)
@@ -27,7 +23,6 @@ class Plotter(wx.Frame):
         self.ydata = []
         self.xdata2 = []
         self.ydata2 = []
-        self.zdata =  []
 
         self.canvasPanel.SetSizer(self.canvasSizer)
         self.Show()
@@ -52,17 +47,16 @@ class Plotter(wx.Frame):
             data[1].decode(errors='ignore'))
 
         if len(numericData) == 1:
-            self.ax1.clear()
+            self.axes[0].clear()
             self.xdata.append(float(data[0]))
             self.ydata.append(float(numericData[0]))
-            self.ax1.plot(self.xdata, self.ydata)
+            self.axes[0].plot(self.xdata, self.ydata, '.-')
 
         elif len(numericData) == 2:
-            self.ax2.clear()
+            self.axes[1].clear()
             self.xdata2.append(float(numericData[0]))
             self.ydata2.append(float(numericData[1]))
-            self.zdata.append(float(data[0]))
-            self.ax2.scatter(self.ydata2, self.xdata2, self.zdata)
+            self.axes[1].plot(self.xdata2, self.ydata2, '.-')
 
         self.canvas.draw()
 
