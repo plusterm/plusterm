@@ -253,7 +253,7 @@ class SerialMonitorGUI(wx.Frame):
         
         ### Bindings
         self.Bind(wx.EVT_CLOSE, self.on_quit)
-        self.input_text.Bind(wx.EVT_TEXT_ENTER, self.on_enter_send)
+        self.input_text.Bind(wx.EVT_CHAR, self.on_char_input)
         connect_button.Bind(wx.EVT_BUTTON, self.connect_serial)
         disconnect_button.Bind(wx.EVT_BUTTON, self.disconnect_serial)
         send_button.Bind(wx.EVT_BUTTON, self.on_send)
@@ -290,11 +290,6 @@ class SerialMonitorGUI(wx.Frame):
             w.Destroy()
 
         event.Skip()
-
-
-    def on_enter_send(self, event):
-        ''' Callback for when pressing enter to send  '''
-        self.on_send(wx.EVT_BUTTON)
 
 
     def connect_serial(self, event):
@@ -397,8 +392,25 @@ class SerialMonitorGUI(wx.Frame):
         ''' Callback for clicking Send button '''
         cmd = self.input_text.GetValue()
         self.output('> ' + cmd + '\n')
+        self.last_command = cmd
         self.context.send_serial(cmd)
         self.input_text.Clear()
+
+
+    def on_char_input(self, event):
+        k = event.GetKeyCode()
+
+        if k == 315:
+            # on key up
+            self.input_text.SetValue(self.last_command)
+
+        elif k == 13:
+            # on enter
+            self.on_send(wx.EVT_BUTTON)
+
+        else:
+            # else, append character
+            self.input_text.AppendText(chr(k))
 
 
     def check_for_data(self, event):
