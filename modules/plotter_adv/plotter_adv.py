@@ -164,7 +164,7 @@ class Plotter_adv(wx.Frame):
         for match in a:
             for g_ind, r in self.group_role:
                 if r == 'value (without name)':
-                    if not 'val' + str(g_ind) in self.params:
+                    if 'val' + str(g_ind) not in self.params:
                         self.params.append('val' + str(g_ind))
 
                 if r == 'parameter name':
@@ -210,7 +210,7 @@ class Plotter_adv(wx.Frame):
         self.SetSizer(self.mainSizer)
 
     def generate_group_role(self, event):
-        # self.params = ['time']
+        self.params = ['time']
         self.group_role = []
         for ind, child in enumerate(self.regex_group_sizer.GetChildren()):
             widget = child.GetWindow()
@@ -317,11 +317,9 @@ class Plotwindow(wx.Frame):
                 for match in a:
                     param, val = None, None
                     for g_ind, r in group_role:
-
                         if r == 'value (without name)':
                             param = 'val' + str(g_ind)
                             val = match[g_ind]
-                            param_val_pair.append((param, val))
 
                         elif r == 'parameter name':
                             param = match[g_ind]
@@ -329,8 +327,8 @@ class Plotwindow(wx.Frame):
                         elif r == 'value':
                             val = match[g_ind]
 
-                    if param and val and r != 'value (without name)':
-                        param_val_pair.append((param, val))
+                        if param and val:
+                            param_val_pair.append((param, val))
 
                 px, py = self.selected_params[i]
                 xfound = False
@@ -366,15 +364,14 @@ class Plotwindow(wx.Frame):
                     self.index_warned = True
                     dlg = wx.MessageDialog(
                         self,
-                        message='Did you forget to set \
-                            all parameters?\n{}'.format(e),
+                        message='Did you forget to set all parameters?\n',
                         caption='Index error')
                     dlg.SetOKLabel('Yes')
                     dlg.ShowModal()
                     del dlg
 
         try:
-            self.canvas.draw_idle()
+            self.canvas.draw()
 
         except Exception:
             pass
