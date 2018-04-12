@@ -89,10 +89,6 @@ class Plotter_adv(wx.Frame):
             choices=self.plots_choices,
             style=wx.CB_READONLY)
         self.nplot_combo.Bind(wx.EVT_COMBOBOX, self.generate_plot_info)
-        '''
-        self.applybutton = wx.Button(self.panel, label='Apply')
-        self.applybutton.Bind(wx.EVT_BUTTON, self.on_apply)
-        '''
 
         self.plot_set_sizer = wx.BoxSizer(wx.VERTICAL)
         self.nplot_sizer = wx.BoxSizer(wx.HORIZONTAL)
@@ -100,10 +96,7 @@ class Plotter_adv(wx.Frame):
             nplot_label, 0, wx.ALIGN_CENTER_HORIZONTAL | wx.ALL, 5)
         self.nplot_sizer.Add(
             self.nplot_combo, 0, wx.ALIGN_CENTER_HORIZONTAL | wx.ALL, 5)
-        '''
-        self.nplot_sizer.Add(
-            self.applybutton, 0, wx.ALIGN_CENTER_HORIZONTAL | wx.ALL, 5)
-        '''
+
         self.plot_set_sizer.Add(self.nplot_sizer)
         self.panel.SetSizer(self.plot_set_sizer)
 
