@@ -3,7 +3,6 @@ import serial
 import threading
 import queue
 import time
-import datetime
 
 
 class ComReaderThread(threading.Thread):
@@ -33,8 +32,8 @@ class ComReaderThread(threading.Thread):
                 data = self.ser.read()
                 if len(data) > 0:
 
-                    timestamp = time.time() - start_time
-                    #timestamp = datetime.datetime.now()
+                    #timestamp = time.time() - start_time
+                    timestamp = time.time()
 
                     while data[-1] != 0x0A:
                         data += self.ser.read()

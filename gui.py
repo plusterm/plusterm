@@ -430,10 +430,12 @@ class SerialMonitorGUI(wx.Frame):
         if k == 315:
             # on key up, show last command
             self.input_text.SetValue(self.last_command)
+            return
 
         elif k == 13:
             # on enter, send command
             self.on_send(wx.EVT_BUTTON)
+            return
 
         event.Skip()
 

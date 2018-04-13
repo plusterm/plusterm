@@ -2,6 +2,7 @@ import wx
 from wx.lib.pubsub import pub
 import re
 import sys
+import time
 from matplotlib.figure import Figure
 from matplotlib.backends.backend_wxagg import FigureCanvasWxAgg as FigureCanvas
 from matplotlib.backends.backend_wxagg import NavigationToolbar2WxAgg
@@ -306,6 +307,8 @@ class Plotwindow(wx.Frame):
         self.canvasSizer.Add(self.canvas_toolbar, 0, wx.ALL | wx.EXPAND)
         self.canvas_toolbar.Update()
         self.canvasPanel.SetSizer(self.canvasSizer)
+        # set t0
+        self.t0 = time.time()
         self.Show()
 
     def plot_data(self, data):
@@ -346,7 +349,7 @@ class Plotwindow(wx.Frame):
                             xfound = True
 
                         elif px == 'time':
-                            found_vals['x'] = data[0]
+                            found_vals['x'] = data[0] - self.t0
                             xfound = True
 
                     if yfound and xfound:
