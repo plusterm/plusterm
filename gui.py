@@ -435,14 +435,7 @@ class SerialMonitorGUI(wx.Frame):
             # on enter, send command
             self.on_send(wx.EVT_BUTTON)
 
-        elif k in [8, 314, 315, 316, 317]:
-            # backspace and arrow keys, do default
-            event.Skip()
-            return
-
-        else:
-            # else, append character
-            self.input_text.AppendText(chr(k))
+        event.Skip()
 
 
     def check_for_data(self, event):
