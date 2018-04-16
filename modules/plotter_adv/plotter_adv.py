@@ -337,7 +337,6 @@ class Plotwindow(wx.Frame):
                 xfound = False
                 yfound = False
                 found_vals = {}
-
                 for (param, val) in param_val_pair:
                     if not yfound and param == py and val != '':
                         found_vals['y'] = float(val)
@@ -355,10 +354,9 @@ class Plotwindow(wx.Frame):
                     if yfound and xfound:
                         self.xdata[i].append(found_vals['x'])
                         self.ydata[i].append(found_vals['y'])
-                        break
 
                 self.axes[i].clear()
-                self.axes[i].plot(self.xdata[i], self.ydata[i], 'b.-')
+                self.axes[i].plot(self.xdata[i], self.ydata[i], '.-')
                 self.axes[i].set_xlabel(px)
                 self.axes[i].set_ylabel(py)
 

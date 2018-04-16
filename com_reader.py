@@ -22,19 +22,13 @@ class ComReaderThread(threading.Thread):
 
 
     def run(self):
-
-        # start the timer
-        start_time = time.time()
-
         while self.alive.isSet():
             try:
-                # reads data until newline (x0A/10) 
                 data = self.ser.read()
                 if len(data) > 0:
-
-                    #timestamp = time.time() - start_time
                     timestamp = time.time()
 
+                    # read data until newline (x0A/10) 
                     while data[-1] != 0x0A:
                         data += self.ser.read()
 
@@ -42,11 +36,10 @@ class ComReaderThread(threading.Thread):
                     
             except serial.SerialException as e:
                 reconnected=False
-                print(e)
                 print('Serial connection lost, trying to reconnect.')
                 ts = time.time()
                 self.error_que.put((ts, str(e)))
-                while not reconnected:
+                while not reconnected and self.alive.isSet():
                     try:
                         # if ser still thinks it's open close it
                         if self.ser.is_open:
