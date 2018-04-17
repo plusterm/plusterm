@@ -14,195 +14,245 @@ import pythoncom
 class Multimeter(wx.Frame):
     def __init__(self, parent, title):
         super(Multimeter, self).__init__(parent, title=title)
-        pub.subscribe(self.gather_data, 'serial.data')
+        pub.subscribe(self.interpret_data, 'serial.data')
+
+        self.unit = ''
+        self.ph_unit = ''
+        self.looking_for_unit = False
+        self.unit_regex = '^\"(\w+)\,?|\"?'
+        self.prefix_regex = '\d+E([\+\-]\d+)'
+        self.unit_found = False
+        self.light_toggle = 0
+        self.auto_talk = False
+        self.talk_once = False
 
         self.init_ui()
 
     def init_ui(self):
+        # Menu
         menubar = wx.MenuBar()
-        advanced_settings = wx.Menu()
-        menubar.Append(advanced_settings, '&TTS Settings')
-        self.Bind(wx.EVT_MENU_OPEN, self.toggle_adv_settings)
+        tts_settings = wx.Menu()
+        menubar.Append(tts_settings, '&TTS Settings')
         self.SetMenuBar(menubar)
 
-        self.multimeter_panel = wx.Panel(self)
+        # Sizers and panels
+        self.display_panel = wx.Panel(self)
+        self.display_sizer = wx.BoxSizer(wx.VERTICAL)
         self.tts_panel = wx.Panel(self)
+        self.tts_sizer = wx.BoxSizer(wx.VERTICAL)
+        self.controls_panel = wx.Panel(self)
+        self.controls_main_sizer = wx.BoxSizer(wx.VERTICAL)
+        self.controls_sub_sizer1 = wx.BoxSizer(wx.HORIZONTAL)
+        self.controls_sub_sizer2 = wx.BoxSizer(wx.HORIZONTAL)
 
+        # These widgets will go in the always visible output panel
         self.multimeter_output = wx.TextCtrl(
-            self.multimeter_panel,
+            self.display_panel,
             style=wx.TE_READONLY,
             size=(250, 50))
-        self.multimeter_output.SetFont(wx.Font(wx.FontInfo(20)))
+        self.multimeter_output.SetFont(wx.Font(wx.FontInfo(24)))
 
-        tts_test1 = wx.StaticText(self.tts_panel, label='test1')
-        tts_test2 = wx.StaticText(self.tts_panel, label='test2')
-        tts_test3 = wx.StaticText(self.tts_panel, label='test3')
-        tts_test4 = wx.StaticText(self.tts_panel, label='test4')
+        self.display_sizer.Add(self.multimeter_output)
 
-        self.tts_sizer = wx.BoxSizer(wx.HORIZONTAL)
-        self.tts_test_sizer = wx.BoxSizer(wx.VERTICAL)
-        
-        self.tts_sizer.Add(tts_test1)
-        self.tts_sizer.Add(tts_test2)
-        self.tts_sizer.Add(tts_test3)
-        self.tts_sizer.Add(tts_test4)
-        self.tts_sizer.Add(self.tts_panel)
+        # These widgets will go in the multimeter control panel
+        fetch_button = wx.Button(
+            self.controls_panel,
+            label='Update data')
+        fetch_button.Bind(wx.EVT_BUTTON, self.fetch_data)
 
-        self.output_sizer = wx.BoxSizer(wx.HORIZONTAL)
-        self.output_sizer.Add(self.multimeter_panel)
+        unit_button = wx.Button(
+            self.controls_panel,
+            label='Update unit')
+        unit_button.Bind(wx.EVT_BUTTON, self.get_unit)
 
+        light_button = wx.Button(
+            self.controls_panel,
+            label='Toggle display lighting')
+        light_button.Bind(wx.EVT_BUTTON, self.toggle_light)
+
+        beep_button = wx.Button(
+            self.controls_panel,
+            label='Beep')
+        beep_button.Bind(wx.EVT_BUTTON, self.beep)
+
+        self.value_spam = wx.CheckBox(
+            self.controls_panel,
+            label='Continuous data')
+
+        self.controls_sub_sizer1.Add(fetch_button)
+        self.controls_sub_sizer1.Add(unit_button)
+        self.controls_sub_sizer1.Add(self.value_spam)
+        self.controls_sub_sizer2.Add(light_button)
+        self.controls_sub_sizer2.Add(beep_button)
+
+        self.controls_main_sizer.Add(self.controls_sub_sizer1)
+        self.controls_main_sizer.Add(self.controls_sub_sizer2)
+
+        # These widgets will go in the hidable tts panel
+        talk_once_button = wx.Button(
+            self.tts_panel,
+            label='Talk once')
+        talk_once_button.Bind(wx.EVT_BUTTON, self.talk_one_time)
+
+        self.tts_sizer.Add(wx.StaticLine(self.tts_panel))
+        self.tts_sizer.Add(talk_once_button)
+
+        # Set sizers for panels
+        self.tts_panel.SetSizer(self.tts_sizer)
+        self.display_panel.SetSizer(self.display_sizer)
+        self.tts_panel.SetSizer(self.tts_sizer)
+        self.controls_panel.SetSizer(self.controls_main_sizer)
+
+        # Organize main sizer
         self.main_sizer = wx.BoxSizer(wx.VERTICAL)
-        self.main_sizer.Add(self.output_sizer)
-        self.main_sizer.Add(self.tts_sizer)
-
+        self.main_sizer.Add(self.display_panel)
+        self.main_sizer.Add(self.controls_panel)
+        self.main_sizer.Add(self.tts_panel)
         self.SetSizer(self.main_sizer)
-        self.SetBackgroundColour('lightgray')
-        self.tts_panel.Hide()
-        self.Show(True)
 
+        # Bindings
+        self.Bind(wx.EVT_MENU_OPEN, self.on_menu)
         self.Bind(wx.EVT_CLOSE, self.on_close)
 
-    def gather_data(self, data):
-        data = data[1].decode(errors='ignore')
-        self.multimeter_output.Clear()
-        self.multimeter_output.WriteText(data)
-        ''' to talk
-        t = threading.Thread(target=self.talk)
-        t.start()
-        '''
+        # Final gui settings
+        self.SetBackgroundColour('lightgray')
+        self.tts_panel.Hide()
+        self.Centre()
+        self.Show(True)
+        self.Fit()
 
-    def interpret_string(self, string):
-        _prefixes_phonetic = {
-            'y': ' yocto',
-            'z': ' zepto',
-            'a': ' atto',
-            'f': ' femto',
-            'p': ' pico',
-            'n': ' nano',
-            'u': ' micro',
-            'm': ' milli',
-            'c': ' centi',
-            'd': ' deci',
-            'k': ' killo',
-            'M': ' mega',
-            'G': ' gihga',
-            'T': ' terra',
-            'P': ' peta',
-            'E': ' exa',
-            'Z': ' zetta',
-            'Y': ' yotta'
+    def fetch_data(self, event):
+        pub.sendMessage('module.send', data='FETC?')
+
+    def toggle_light(self, event):
+        if not self.light_toggle:
+            pub.sendMessage('module.send', data='SYST:BLIT 1')
+            self.light_toggle = 1
+        else:
+            pub.sendMessage('module.send', data='SYST:BLIT 0')
+            self.light_toggle = 0
+
+    def beep(self, event):
+        pub.sendMessage('module.send', data='SYST:BEEP TONE')
+
+    def talk_one_time(self, event):
+        try:
+            if self.talk_string != '':
+                threading.Thread(target=talk, args=(self.talk_string,)).start()
+        except AttributeError:
+            threading.Thread(target=talk, args=('Don\'t be silly!',)).start()
+            self.multimeter_output.Clear()
+            self.multimeter_output.WriteText('No data.')
+
+    def get_unit(self, event):
+        self.looking_for_unit = True
+        pub.sendMessage('module.send', data='CONF?')
+
+    def interpret_data(self, data):
+        r = data[1].decode(errors='ignore').strip()
+
+        self._prefixes_phonetic = {
+            '': '',
+            ' p': ' pico',
+            ' n': ' nano',
+            ' u': ' micro',
+            ' m': ' milli',
+            ' k': ' kilo',
+            ' M': ' mega'
         }
 
-        _units_phonetic = {
-            'K': ' Kelvin',
-            'V': ' Volt',
-            'A': ' Ampere',
-            'J': ' Joole',
-            'Hz': ' Hertz',
-            'm': ' Meter',
-            'bz': ' Bizzles',
-            'ohm': ' Ohm',
-            'W': ' Watt',
-            '°C': ' Degrees Celsius',
-            'C': ' Centigrade'
-        }
+        self._units_phonetic = [
+            ['V', ' Volt', 'V'],
+            ['DIOD', '', ''],
+            ['RES', ' Ohm', 'Ω'],
+            ['CAP', ' Fahrad', 'F'],
+            ['A', ' Ampere', 'A'],
+            ['FREQ', ' Hertz', 'Hz'],
+            ['MV', ' Degrees Celsius', '°C']
+        ]
 
-        # Search string, to be replaced with subscribed data
-        n = 'Voltage: 1234V'
+        p = 2  # Precision, how many digits after point
 
-        # Finds last digit. n[m.start()] gives it's index
-        m = re.search('(\d)[^\d]*$', n)
-        # Finds value, last group with a number of digits.
-        val = re.findall('(-?\d+)', n)
+        val = ''
+        power = ''
+        prefix = ''
 
-        p = 0  # How many digits after the point
-        i = 1  # Iter to find difference in index between value and prefix/unit
+        if self.looking_for_unit:
+            unit_match = re.findall(self.unit_regex, r)
+            for t in self._units_phonetic:
+                if unit_match[0] == t[0]:
+                    self.unit = t[2]
+                    self.ph_unit = t[1]
 
-        # Value formatted to given precision
-        fval = format(float(val[-1]), '.{}f'.format(p))
-        print(fval)
-
-        unit_found = False
-        prefix_found = False
+                    self.unit_found = True
+                    self.looking_for_unit = False
 
         try:
-            if n[m.start() + 1]:  # Will throw IndexError if no unit was given
-                # Identify number of whitespace between value and unit/prefix
-                while n[m.start() + i] == ' ':
-                    i += 1
-                # Assuming a prefix is only one character long
-                given_prefix = n[m.start() + i]
+            val = float(r)
+            if not self.unit == '°C':
+                prefix_match = re.findall(self.prefix_regex, r)
+                power = int(prefix_match[0])
+                if power < -9:
+                    val *= 10 ** 12
+                    prefix = ' p'
+                elif power < -6 and power >= -9:
+                    val *= 10 ** 9
+                    prefix = ' n'
+                elif power < -3 and power >= -6:
+                    val *= 10 ** 6
+                    prefix = ' u'
+                elif power < 0 and power >= -3:
+                    val *= 10 ** 3
+                    prefix = ' m'
+                elif power >= 3 and power < 6:
+                    val *= 10 ** -3
+                    prefix = ' k'
+                elif power >= 6 and power < 9:
+                    val *= 10 ** -6
+                    prefix = ' M'
+                elif power >= 9:
+                    val = 'inf '
+                    power = ''
+            try:
+                val = round(val, p)
+            except Exception:
+                pass
 
-                # See if given prefix matches any in dict.
-                # Special handling for 'm'due to 'milli' and 'meter' conflict.
-                for s, l in _prefixes_phonetic.items():
-                    if given_prefix == s and not given_prefix == 'm':
-                        read_prefix = l
-                        print('Prefix found: {}'.format(s.strip()))
-                        prefix_found = True
+        except ValueError:
+            # print('Not a float')
+            pass
 
-                    if given_prefix == s and given_prefix == 'm':
-                        try:
-                            # Throws IndexError if no index after found m
-                            if not n[m.start() + i + 1] == ' ':
-                                read_prefix = l
-                                print('Prefix found: milli')
-                                prefix_found = True
-                        except IndexError:
-                            read_unit = ' Meter'
-                            if not unit_found:
-                                print('Unit found: Meter')
-                                unit_found = True
+        self.talk_string = str(val)
 
-                if prefix_found:
-                    # Prefix found means there is something following
-                    unit = n[m.start() + i + 1:]
-                    # Anything following our prefix
-                    for s, l in _units_phonetic.items():
-                        if unit == s:
-                            read_unit = l
-                            print('Unit found: {}'.format(s.strip()))
-                            unit_found = True
-                    if not unit_found:
-                        print('Unit not found: {}'.format(unit))
+        if self.unit_found and val:
+            self.multimeter_output.Clear()
+            self.multimeter_output.WriteText(
+                self.talk_string + prefix + self.unit)
+        elif self.unit_found:
+            self.multimeter_output.Clear()
+            self.multimeter_output.WriteText('Unit: ' + self.unit)
 
-                elif not unit_found:  # No matching prefix, no unit found yet
-                    print('Prefix not found: {}'.format(given_prefix))
-                    unit = n[m.start() + i:]
-                    for s, l in _units_phonetic.items():
-                        if unit == s:
-                            read_unit = l
-                            print('Unit found: ' + l)
-                            unit_found = True
+        if prefix and self.unit_found:
+            self.talk_string += self._prefixes_phonetic[prefix] + self.ph_unit
+        elif self.unit_found and val and (val != 'inf'):
+            self.talk_string += self.ph_unit
 
-                if not prefix_found and not unit_found:
-                    print('Unit not found: {}'.format(unit))
+        if val and (self.auto_talk or self.talk_once):
+            threading.Thread(target=talk, args=(self.talk_string,)).start()
+            self.auto_talk, self.talk_once = False, False
 
-        except IndexError:
-            # Gets thrown when there's nothing following the last digit
-            print('No unit.')
-            read_line = fval
-            # engine.say(read_line)
+        if self.value_spam.IsChecked():
+            pub.sendMessage('module.send', data='FETC?')
 
-        except AttributeError:
-            print('Empty string')
+    def on_close(self, event):
+        pub.unsubscribe(self.interpret_data, 'serial.data')
+        mod_refs = list(
+            filter(lambda m: m.startswith('modules.multimeter'), sys.modules))
+        for mr in mod_refs:
+            del sys.modules[mr]
+        event.Skip()
 
-        if unit_found:
-            if prefix_found:
-                read_line = fval + read_prefix + read_unit
-            else:
-                read_line = fval + read_unit
-
-        self.talk(self, read_line)
-
-    def talk(self, talk_string):
-        pythoncom.CoInitialize()
-        engine = pyttsx3.init()
-        engine.say(talk_string)
-        engine.runAndWait()
-        engine.stop()
-
-    def toggle_adv_settings(self, event):
+    def on_menu(self, event):
         if not self.tts_panel.IsShown():
             self.tts_panel.Show()
             self.Layout()
@@ -214,22 +264,27 @@ class Multimeter(wx.Frame):
             self.Fit()
             self.Update()
 
-    def on_close(self, event):
-        pub.unsubscribe(self.gather_data, 'serial.data')
-        mod_refs = list(
-            filter(lambda m: m.startswith('modules.multimeter'), sys.modules))
-        for mr in mod_refs:
-            del sys.modules[mr]
-        event.Skip()
-
 
 def dispose():
     m.Close()
 
 
+def talk(talk_string):
+    try:
+        pythoncom.CoInitialize()
+        engine = pyttsx3.init()
+        # engine.setProperty('voice', 'HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Speech\Voices\Tokens\TTS_MS_EN-US_ZIRA_11.0')
+        engine.say(talk_string)
+        engine.runAndWait()
+        # engine.stop()
+    except Exception as e:
+        # print(e)
+        pass
+
+
 if __name__ == '__main__':
     app = wx.App()
-    m = Multimeter(None, 'Plotter settings')
+    m = Multimeter(None, 'Multimeter')
     app.MainLoop()
 else:
-    m = Multimeter(None, 'Plotter settings')
+    m = Multimeter(None, 'Multimeter')

@@ -40,7 +40,7 @@ class SerialMonitor(wx.App):
                 stat = 'Open: {}:{}'.format(
                     settings['host'], settings['port'])
 
-            self.sm_gui.statusbar.SetStatusText(stat)
+            self.sm_gui.statusbar.PushStatusText(stat)
             return True
         return False
 
@@ -50,7 +50,7 @@ class SerialMonitor(wx.App):
         if self.communicator.disconnect():
             try:
                 self.log_to_gui('Connection closed\n')
-                self.sm_gui.statusbar.SetStatusText('No connection')
+                self.sm_gui.statusbar.PopStatusText()
                 self.sm_gui.timer.Stop()
                 return True
 
@@ -77,6 +77,7 @@ class SerialMonitor(wx.App):
             importlib.reload(sys.modules['modules.' + module])
         else:
             mod = importlib.import_module('modules.' + module)
+
 
     def remove_module(self, module):
         ''' "Unimport" a module '''
