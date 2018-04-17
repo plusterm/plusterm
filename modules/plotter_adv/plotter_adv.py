@@ -358,7 +358,7 @@ class Plotwindow(wx.Frame):
                         message='Did you forget to set \
                             all parameters?\n{}'.format(e),
                         caption='Index error')
-                    dlg.SetOKLabel('Yes')
+                    dlg.SetOKLabel('Sorry')
                     dlg.ShowModal()
                     del dlg
 

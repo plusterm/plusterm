@@ -112,6 +112,7 @@ class Communicator():
         """ send a command to the ser assuming it is a string
         """
         if self.ser is not None and self.connection_type == 'serial':
+            cmd += '\r\n'
             self.ser.write(cmd.encode())
 
         if self.socket is not None and self.connection_type == 'socket':
