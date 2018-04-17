@@ -7,10 +7,6 @@ from matplotlib.figure import Figure
 from matplotlib.backends.backend_wxagg import FigureCanvasWxAgg as FigureCanvas
 from matplotlib.backends.backend_wxagg import NavigationToolbar2WxAgg
 
-# Alternative regex:
-# (-?\d*\.\d+|-?\d+)( [a-zA-Z_]+)
-# ^(\d+)$|(\d+)(, )(-?\d+)
-
 
 class Plotter_adv(wx.Frame):
     def __init__(self, parent, title):
@@ -37,8 +33,17 @@ class Plotter_adv(wx.Frame):
         self.SetMenuBar(menubar)
 
         self.regex_panel = wx.Panel(self)
-
         self.regex_sizer = wx.BoxSizer(wx.VERTICAL)
+
+        preview_sizer = wx.BoxSizer(wx.HORIZONTAL)
+        preview_label = wx.StaticText(self.regex_panel, label='Preview: ')
+        self.preview_regex = wx.StaticText(self.regex_panel)
+
+        preview_sizer.Add(preview_label)
+        preview_sizer.Add(self.preview_regex)
+
+        self.regex_sizer.Add(preview_sizer)
+
         self.regex_tb = wx.TextCtrl(
             self.regex_panel,
             style=wx.TE_PROCESS_ENTER,
@@ -136,11 +141,17 @@ class Plotter_adv(wx.Frame):
         self.clear_regex_panel()
         self.params = ['time']
         text = self.regex_tb.GetValue()
+
         try:
             self.cregex = re.compile(text)
 
         except Exception:
-            print('hej')
+            dlg = wx.MessageDialog(
+                self,
+                message='The regular expression seems to be invalid',
+                caption='Invalid regular expression')
+            dlg.ShowModal()
+            del dlg
 
         else:
             self.regex = text
@@ -162,6 +173,10 @@ class Plotter_adv(wx.Frame):
 
     def get_params(self, data):
         a = self.cregex.findall(data[1].decode(errors='ignore').strip())
+        if self.regex_panel.IsShown():
+            self.preview_regex.SetLabel(
+                str(a).replace('[', '').replace(']', ''))
+
         for match in a:
             for g_ind, r in self.group_role:
                 if r == 'value (without name)':
