@@ -171,6 +171,8 @@ class SerialMonitorGUI(wx.Frame):
 
         device_choices = communicator.getPorts()
 
+        le_choices = ['None', 'CR', 'LF', 'CR+LF'] 
+
         self.statusbar = wx.StatusBar(self)
         self.SetStatusBar(self.statusbar)
         self.statusbar.SetStatusText('No connection open')
@@ -219,6 +221,9 @@ class SerialMonitorGUI(wx.Frame):
 
         self.input_text = wx.TextCtrl(panel, size=(250, 23), style=wx.TE_PROCESS_ENTER)
 
+        self.line_end_combobox = wx.ComboBox(panel, choices=le_choices, style=wx.CB_READONLY) 
+        self.line_end_combobox.SetSelection(3)
+
         send_button = wx.Button(panel, label='Send')
         clear_button = wx.Button(panel, label='Clear')
 
@@ -240,6 +245,8 @@ class SerialMonitorGUI(wx.Frame):
 
         inputSizer.Add(self.input_text, 0, wx.RIGHT | wx.ALIGN_CENTER_VERTICAL, 5)
         inputSizer.AddStretchSpacer(1)
+        inputSizer.Add(self.line_end_combobox, 0, wx.RIGHT | wx.ALIGN_CENTER_VERTICAL, 5)
+        inputSizer.AddStretchSpacer(1)
         inputSizer.Add(send_button, 0, wx.ALIGN_CENTRE_VERTICAL, 0)
         inputSizer.Add(clear_button, 0, wx.ALIGN_CENTRE_VERTICAL, 0)
 
@@ -253,9 +260,10 @@ class SerialMonitorGUI(wx.Frame):
         
         ### Bindings
         self.Bind(wx.EVT_CLOSE, self.on_quit)
-        self.input_text.Bind(wx.EVT_TEXT_ENTER, self.on_enter_send)
+        self.input_text.Bind(wx.EVT_CHAR, self.on_char_input)
         connect_button.Bind(wx.EVT_BUTTON, self.connect_serial)
         disconnect_button.Bind(wx.EVT_BUTTON, self.disconnect_serial)
+        self.line_end_combobox.Bind(wx.EVT_COMBOBOX, self.change_line_end)
         send_button.Bind(wx.EVT_BUTTON, self.on_send)
         clear_button.Bind(wx.EVT_BUTTON, self.clear_output)  
         file_menu.Bind(wx.EVT_MENU, self.on_file_menu)
@@ -266,6 +274,12 @@ class SerialMonitorGUI(wx.Frame):
         # Subscribe to data
         pub.subscribe(self.received_data, 'serial.data')
         pub.subscribe(self.received_error, 'serial.error')
+
+        # Line ending when sending command
+        self.line_ending = '\r\n'
+
+        # last command, init to empty
+        self.last_command = ''
 
         # Create a timer
         self.timer = wx.Timer(self)
@@ -290,11 +304,6 @@ class SerialMonitorGUI(wx.Frame):
             w.Destroy()
 
         event.Skip()
-
-
-    def on_enter_send(self, event):
-        ''' Callback for when pressing enter to send  '''
-        self.on_send(wx.EVT_BUTTON)
 
 
     def connect_serial(self, event):
@@ -397,8 +406,38 @@ class SerialMonitorGUI(wx.Frame):
         ''' Callback for clicking Send button '''
         cmd = self.input_text.GetValue()
         self.output('> ' + cmd + '\n')
+        self.last_command = cmd
         self.context.send_serial(cmd)
         self.input_text.Clear()
+
+
+    def change_line_end(self, event):
+        sel = self.line_end_combobox.GetSelection()
+        
+        if sel == 0:
+            self.line_ending = ''
+        elif sel == 1:
+            self.line_ending = '\r'
+        elif sel == 2:
+            self.line_ending = '\n'
+        elif sel == 3:
+            self.line_ending = '\r\n'
+
+
+    def on_char_input(self, event):
+        k = event.GetKeyCode()
+
+        if k == 315:
+            # on key up, show last command
+            self.input_text.SetValue(self.last_command)
+            return
+
+        elif k == 13:
+            # on enter, send command
+            self.on_send(wx.EVT_BUTTON)
+            return
+
+        event.Skip()
 
 
     def check_for_data(self, event):

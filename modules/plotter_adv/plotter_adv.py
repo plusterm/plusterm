@@ -2,9 +2,10 @@ import wx
 from wx.lib.pubsub import pub
 import re
 import sys
+import time
 from matplotlib.figure import Figure
 from matplotlib.backends.backend_wxagg import FigureCanvasWxAgg as FigureCanvas
-
+from matplotlib.backends.backend_wxagg import NavigationToolbar2WxAgg
 
 # Alternative regex:
 # (-?\d*\.\d+|-?\d+)( [a-zA-Z_]+)
@@ -164,7 +165,7 @@ class Plotter_adv(wx.Frame):
         for match in a:
             for g_ind, r in self.group_role:
                 if r == 'value (without name)':
-                    if not 'val' + str(g_ind) in self.params:
+                    if 'val' + str(g_ind) not in self.params:
                         self.params.append('val' + str(g_ind))
 
                 if r == 'parameter name':
@@ -210,7 +211,7 @@ class Plotter_adv(wx.Frame):
         self.SetSizer(self.mainSizer)
 
     def generate_group_role(self, event):
-        # self.params = ['time']
+        self.params = ['time']
         self.group_role = []
         for ind, child in enumerate(self.regex_group_sizer.GetChildren()):
             widget = child.GetWindow()
@@ -255,7 +256,6 @@ class Plotwindow(wx.Frame):
         pub.subscribe(self.plot_data, 'serial.data')
 
         self.nplots = len(settings.nplot_sizerlist)
-
         self.selected_params = []
         self.index_warned = False
         self.xdata = []
@@ -280,6 +280,14 @@ class Plotwindow(wx.Frame):
         self.init_ui()
 
     def init_ui(self):
+
+        menubar = wx.MenuBar()
+        export = wx.Menu()
+
+        menubar.Append(export, 'Export to CSV')
+        self.SetMenuBar(menubar)
+        self.Bind(wx.EVT_MENU_OPEN, self.save_csv)
+
         self.figure = Figure(dpi=75)
 
         if self.nplots == 1:
@@ -291,10 +299,16 @@ class Plotwindow(wx.Frame):
 
         self.canvasPanel = wx.Panel(self)
         self.canvas = FigureCanvas(self.canvasPanel, wx.ID_ANY, self.figure)
-        self.canvasSizer = wx.BoxSizer(wx.HORIZONTAL)
+        self.canvasSizer = wx.BoxSizer(wx.VERTICAL)
         self.canvasSizer.Add(self.canvas, 1, flag=wx.ALL | wx.EXPAND)
 
+        self.canvas_toolbar = NavigationToolbar2WxAgg(self.canvas)
+        self.canvas_toolbar.Realize()
+        self.canvasSizer.Add(self.canvas_toolbar, 0, wx.ALL | wx.EXPAND)
+        self.canvas_toolbar.Update()
         self.canvasPanel.SetSizer(self.canvasSizer)
+        # set t0
+        self.t0 = time.time()
         self.Show()
 
     def plot_data(self, data):
@@ -306,11 +320,9 @@ class Plotwindow(wx.Frame):
                 for match in a:
                     param, val = None, None
                     for g_ind, r in group_role:
-
                         if r == 'value (without name)':
                             param = 'val' + str(g_ind)
                             val = match[g_ind]
-                            param_val_pair.append((param, val))
 
                         elif r == 'parameter name':
                             param = match[g_ind]
@@ -318,14 +330,13 @@ class Plotwindow(wx.Frame):
                         elif r == 'value':
                             val = match[g_ind]
 
-                    if param and val and r != 'value (without name)':
-                        param_val_pair.append((param, val))
+                        if param and val:
+                            param_val_pair.append((param, val))
 
                 px, py = self.selected_params[i]
                 xfound = False
                 yfound = False
                 found_vals = {}
-
                 for (param, val) in param_val_pair:
                     if not yfound and param == py and val != '':
                         found_vals['y'] = float(val)
@@ -337,16 +348,15 @@ class Plotwindow(wx.Frame):
                             xfound = True
 
                         elif px == 'time':
-                            found_vals['x'] = data[0]
+                            found_vals['x'] = data[0] - self.t0
                             xfound = True
 
                     if yfound and xfound:
                         self.xdata[i].append(found_vals['x'])
                         self.ydata[i].append(found_vals['y'])
-                        break
 
                 self.axes[i].clear()
-                self.axes[i].plot(self.xdata[i], self.ydata[i], 'b.-')
+                self.axes[i].plot(self.xdata[i], self.ydata[i], '.-')
                 self.axes[i].set_xlabel(px)
                 self.axes[i].set_ylabel(py)
 
@@ -355,18 +365,41 @@ class Plotwindow(wx.Frame):
                     self.index_warned = True
                     dlg = wx.MessageDialog(
                         self,
-                        message='Did you forget to set \
-                            all parameters?\n{}'.format(e),
+                        message='Did you forget to set all parameters?\n',
                         caption='Index error')
                     dlg.SetOKLabel('Sorry')
                     dlg.ShowModal()
                     del dlg
 
         try:
-            self.canvas.draw_idle()
+            self.canvas.draw()
 
         except Exception:
             pass
+
+    def save_csv(self, event):
+        fd = wx.FileDialog(
+            self,
+            "Save file",
+            wildcard='Text files (*.txt)|*.txt',
+            style=wx.FD_SAVE | wx.FD_OVERWRITE_PROMPT)
+
+        if fd.ShowModal() == wx.ID_CANCEL:
+            return
+
+        else:
+            pathname = fd.GetPath()
+            with open(pathname, 'w') as file:
+                # write header
+                header = 'plot_nr, x, y\n'
+                file.write(header)
+                for i, ax in enumerate(self.axes):
+                    line = ax.lines[0]
+                    x_data = line.get_xdata()
+                    y_data = line.get_ydata()
+                    for x, y in zip(x_data, y_data):
+                        data = '{}, {}, {}\n'.format(i + 1, x, y)
+                        file.write(data)
 
     def on_close(self, event):
         pub.unsubscribe(self.plot_data, 'serial.data')
