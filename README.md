@@ -28,9 +28,9 @@ The entry-point to run the application is serial_monitor.py.
 
 ### Operation
 
-For connecting, there are a few options. A quick-style (8N1) connect is available in the main window. For more options, go to File > Connection. Here is also an option to initialize a arbitrary (but basic) socket connection. 
+For connecting, there are a few options. A quick-style (8N1) connect is available in the main window. For more options, go to File > Connection. Here is also an option to initialize an arbitrary (but basic) socket connection. 
 In File > History, a list of successful connections will be saved. To reconnect with the settings saved, just click the desired entry.
-On the bottom of the main window, you can type, choose whether you want to send a linebreak, and then press either <Enter> or Send button, to send to the device. Up arrow will recover the last sent command. The Clear button will clear the output textarea.
+On the bottom of the main window, you can type, choose whether you want to send a linebreak, and then press either `Enter` or `Send` button, to send to the device. Up arrow will recover the last sent command. The Clear button will clear the output textarea.
 
 PlusTerm, when connected, will start a thread that continously reads from the serial port, and put the data in queues, when encountering newline '\n' (currently a big limitation, so keep this in mind). PlusTerm will periodically try to retrieve from these queues. The pubsub module will finally broadcast the data to the rest of the application. The published message is always a tuple: (timestamp, data), where timestamp is relative to epoch (i.e. absolute time when first byte in data was read), and data is a Python bytestring.
 
