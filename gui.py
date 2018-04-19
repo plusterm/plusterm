@@ -11,6 +11,7 @@ import wx.lib.inspection
 
 class ConnectionSettingsDialog(wx.Dialog):
     ''' A dialog for more advanced connection settings '''
+
     def __init__(self, *args, **kwargs):
         # Extract and remove gui kw before calling Dialog constructor
         self.gui = kwargs['gui']
@@ -18,9 +19,10 @@ class ConnectionSettingsDialog(wx.Dialog):
 
         super(ConnectionSettingsDialog, self).__init__(*args, **kwargs)
 
-        baudrates_choices = ['50', '75', '110', '134', 
-            '150', '200', '300', '600',  '1200', '1800', 
-            '2400', '4800', '9600', '19200', '38400', 
+        baudrates_choices = [
+            '50', '75', '110', '134',
+            '150', '200', '300', '600', '1200', '1800',
+            '2400', '4800', '9600', '19200', '38400',
             '57600', '115200']
 
         device_choices = communicator.getPorts()
@@ -32,8 +34,9 @@ class ConnectionSettingsDialog(wx.Dialog):
         # Connection type panel
         conn_t_panel = wx.Panel(self)
         conn_choices = ['Serial', 'Socket']
-        self.c_type_rb = wx.RadioBox(conn_t_panel, label="Connection type", choices=conn_choices)
-        
+        self.c_type_rb = wx.RadioBox(
+            conn_t_panel, label="Connection type", choices=conn_choices)
+
         conn_t_sizer = wx.BoxSizer()
         conn_t_sizer.Add(self.c_type_rb)
         conn_t_panel.SetSizerAndFit(conn_t_sizer)
@@ -47,23 +50,24 @@ class ConnectionSettingsDialog(wx.Dialog):
         stopb_label = wx.StaticText(self.ser_panel, label='Stopbits:')
         self.port_cb = wx.ComboBox(self.ser_panel, choices=device_choices)
         self.baud_cb = wx.ComboBox(self.ser_panel, choices=baudrates_choices)
-        self.bytesize_cb = wx.ComboBox(self.ser_panel, choices=bytesize_choices)
+        self.bytesize_cb = wx.ComboBox(
+            self.ser_panel, choices=bytesize_choices)
         self.parity_cb = wx.ComboBox(self.ser_panel, choices=parity_choices)
         self.stopb_cb = wx.ComboBox(self.ser_panel, choices=stopbits_choices)
         ser_conn_button = wx.Button(self.ser_panel, label='Open')
 
         ser_conn_sizer = wx.GridBagSizer(vgap=5, hgap=5)
-        ser_conn_sizer.Add(port_label, pos=(0,0))
-        ser_conn_sizer.Add(self.port_cb, pos=(0,1))
-        ser_conn_sizer.Add(baud_label, pos=(1,0))
-        ser_conn_sizer.Add(self.baud_cb, pos=(1,1))
-        ser_conn_sizer.Add(bytesize_label, pos=(2,0))
-        ser_conn_sizer.Add(self.bytesize_cb, pos=(2,1))
-        ser_conn_sizer.Add(parity_label, pos=(3,0))
-        ser_conn_sizer.Add(self.parity_cb, pos=(3,1))
-        ser_conn_sizer.Add(stopb_label, pos=(4,0))
-        ser_conn_sizer.Add(self.stopb_cb, pos=(4,1))
-        ser_conn_sizer.Add(ser_conn_button, pos=(5,0))
+        ser_conn_sizer.Add(port_label, pos=(0, 0))
+        ser_conn_sizer.Add(self.port_cb, pos=(0, 1))
+        ser_conn_sizer.Add(baud_label, pos=(1, 0))
+        ser_conn_sizer.Add(self.baud_cb, pos=(1, 1))
+        ser_conn_sizer.Add(bytesize_label, pos=(2, 0))
+        ser_conn_sizer.Add(self.bytesize_cb, pos=(2, 1))
+        ser_conn_sizer.Add(parity_label, pos=(3, 0))
+        ser_conn_sizer.Add(self.parity_cb, pos=(3, 1))
+        ser_conn_sizer.Add(stopb_label, pos=(4, 0))
+        ser_conn_sizer.Add(self.stopb_cb, pos=(4, 1))
+        ser_conn_sizer.Add(ser_conn_button, pos=(5, 0))
 
         self.ser_panel.SetSizerAndFit(ser_conn_sizer)
 
@@ -71,16 +75,16 @@ class ConnectionSettingsDialog(wx.Dialog):
         self.sock_panel = wx.Panel(self)
         host_label = wx.StaticText(self.sock_panel, label='IP/Domain:')
         port_label = wx.StaticText(self.sock_panel, label='Port:')
-        self.host_txt = wx.TextCtrl(self.sock_panel, size=(100,23))
-        self.port_txt = wx.TextCtrl(self.sock_panel, size=(100,23))
+        self.host_txt = wx.TextCtrl(self.sock_panel, size=(100, 23))
+        self.port_txt = wx.TextCtrl(self.sock_panel, size=(100, 23))
         sock_conn_btn = wx.Button(self.sock_panel, label='Connect')
 
         sock_conn_sizer = wx.GridBagSizer(vgap=5, hgap=5)
-        sock_conn_sizer.Add(host_label, pos=(0,0))
-        sock_conn_sizer.Add(self.host_txt, pos=(0,1))
-        sock_conn_sizer.Add(port_label, pos=(1,0))
-        sock_conn_sizer.Add(self.port_txt, pos=(1,1))
-        sock_conn_sizer.Add(sock_conn_btn, pos=(2,0))
+        sock_conn_sizer.Add(host_label, pos=(0, 0))
+        sock_conn_sizer.Add(self.host_txt, pos=(0, 1))
+        sock_conn_sizer.Add(port_label, pos=(1, 0))
+        sock_conn_sizer.Add(self.port_txt, pos=(1, 1))
+        sock_conn_sizer.Add(sock_conn_btn, pos=(2, 0))
 
         self.sock_panel.SetSizer(sock_conn_sizer)
         self.sock_panel.Hide()
@@ -98,11 +102,9 @@ class ConnectionSettingsDialog(wx.Dialog):
         sock_conn_btn.Bind(wx.EVT_BUTTON, self.connect_socket)
         self.Bind(wx.EVT_CLOSE, self.on_close)
 
-
     def on_close(self, event):
         ''' Close event callback '''
         self.Destroy()
-
 
     def toggle_panel(self, event):
         ''' Toggling between connection type '''
@@ -118,7 +120,6 @@ class ConnectionSettingsDialog(wx.Dialog):
         self.Layout()
         self.Fit()
 
-
     def connect_socket(self, event):
         ''' Connect to socket callback '''
         c_type = 'socket'
@@ -131,7 +132,6 @@ class ConnectionSettingsDialog(wx.Dialog):
         if conn:
             self.Destroy()
 
-
     def connect_serial(self, event):
         ''' Serial connection callback '''
         c_type = 'serial'
@@ -140,10 +140,10 @@ class ConnectionSettingsDialog(wx.Dialog):
         bytesize = self.bytesize_cb.GetValue()
         parity = self.parity_cb.GetValue()
         stopbits = self.stopb_cb.GetValue()
-        
+
         conn = self.gui.connect_serial_adv(
             type=c_type,
-            port=port, 
+            port=port,
             baudrate=baudrate,
             bytesize=bytesize,
             parity=parity,
@@ -154,8 +154,9 @@ class ConnectionSettingsDialog(wx.Dialog):
             self.Destroy()
 
 
-class SerialMonitorGUI(wx.Frame):   
+class SerialMonitorGUI(wx.Frame):
     ''' The main GUI class for Plusterm '''
+
     def __init__(self, parent, title, context):
         super(SerialMonitorGUI, self).__init__(parent, title=title)
 
@@ -165,24 +166,25 @@ class SerialMonitorGUI(wx.Frame):
         # Set the context, i.e. SerialMonitor() instance
         self.context = context
 
-        baudrates_choices = ['50', '75', '110', '134', '150', '200', '300', '600', 
-                            '1200', '1800', '2400', '4800', '9600', '19200', '38400', 
-                            '57600', '115200']
+        baudrates_choices = [
+            '50', '75', '110', '134', '150', '200', '300', '600',
+            '1200', '1800', '2400', '4800', '9600', '19200', '38400',
+            '57600', '115200']
 
         device_choices = communicator.getPorts()
 
-        le_choices = ['None', 'CR', 'LF', 'CR+LF'] 
+        le_choices = ['None', 'CR', 'LF', 'CR+LF']
 
         self.statusbar = wx.StatusBar(self)
         self.SetStatusBar(self.statusbar)
         self.statusbar.SetStatusText('No connection open')
 
-        ### Menubar
+        # Menubar
         menubar = wx.MenuBar()
         file_menu = wx.Menu()
         connect_menu_item = wx.MenuItem(
-            file_menu, 
-            wx.ID_OPEN, 
+            file_menu,
+            wx.ID_OPEN,
             text='&Connection',
             kind=wx.ITEM_NORMAL,
             helpString='Show advanced connection options')
@@ -194,16 +196,17 @@ class SerialMonitorGUI(wx.Frame):
         file_menu.Append(wx.ID_CLOSE, '&Quit', helpString='Quit Plusterm')
 
         self.modules_menu = wx.Menu()
-        module_files = [f for f in os.listdir('./modules') if f not in ['__pycache__', '__init__.py']]
-        
-        for file in module_files:
-            self.modules_menu.Append(wx.ID_ANY, file, kind=wx.ITEM_CHECK, helpString='Load a custom script')
+        mod_files = [f for f in os.listdir('./modules') if f != '__init__.py']
+
+        for file in mod_files:
+            self.modules_menu.Append(
+                wx.ID_ANY, file, kind=wx.ITEM_CHECK, helpString='Load script')
 
         menubar.Append(file_menu, '&File')
         menubar.Append(self.modules_menu, '&Modules')
         self.SetMenuBar(menubar)
 
-        ### Widgets and Panels
+        # Widgets and Panels
         panel = wx.Panel(self)
         port_label = wx.StaticText(panel, label='Device:')
         baud_label = wx.StaticText(panel, label='Baudrate:')
@@ -211,17 +214,21 @@ class SerialMonitorGUI(wx.Frame):
         self.baud_combobox = wx.ComboBox(panel, choices=baudrates_choices)
         connect_button = wx.Button(panel, label='Open')
         disconnect_button = wx.Button(panel, label='Close')
-        
-        self.output_text = wx.TextCtrl(panel, size=(600,280), style=wx.TE_READONLY | wx.TE_MULTILINE)
+
+        self.output_text = wx.TextCtrl(
+            panel, size=(600, 280), style=wx.TE_READONLY | wx.TE_MULTILINE)
         self.output_text.SetBackgroundColour('black')
         self.output_text.SetForegroundColour('white')
 
-        term_font = wx.Font(10, wx.MODERN, wx.NORMAL, wx.NORMAL, False, u'Consolas')
+        term_font = wx.Font(
+            10, wx.MODERN, wx.NORMAL, wx.NORMAL, False, u'Consolas')
         self.output_text.SetFont(term_font)
 
-        self.input_text = wx.TextCtrl(panel, size=(250, 23), style=wx.TE_PROCESS_ENTER)
+        self.input_text = wx.TextCtrl(
+            panel, size=(250, 23), style=wx.TE_PROCESS_ENTER)
 
-        self.line_end_combobox = wx.ComboBox(panel, choices=le_choices, style=wx.CB_READONLY) 
+        self.line_end_combobox = wx.ComboBox(
+            panel, choices=le_choices, style=wx.CB_READONLY)
         self.line_end_combobox.SetSelection(3)
 
         send_button = wx.Button(panel, label='Send')
@@ -232,20 +239,27 @@ class SerialMonitorGUI(wx.Frame):
         outputSizer = wx.BoxSizer(wx.HORIZONTAL)
         inputSizer = wx.BoxSizer(wx.HORIZONTAL)
 
-        connectionSizer.Add(port_label, 0, wx.LEFT | wx.RIGHT | wx.ALIGN_LEFT | wx.ALIGN_CENTER_VERTICAL, 7)
-        connectionSizer.Add(self.port_combobox, 0, wx.RIGHT | wx.ALIGN_LEFT | wx.ALIGN_CENTER_VERTICAL, 7)
-        connectionSizer.Add(baud_label, 0, wx.RIGHT | wx.ALIGN_LEFT | wx.ALIGN_CENTER_VERTICAL, 7)
-        connectionSizer.Add(self.baud_combobox, 0, wx.RIGHT | wx.ALIGN_LEFT | wx.ALIGN_CENTER_VERTICAL, 7)
-        
-        connectionSizer.AddStretchSpacer(1) 
+        connectionSizer.Add(
+            port_label,
+            0, wx.LEFT | wx.RIGHT | wx.ALIGN_CENTER_VERTICAL, 7)
+        connectionSizer.Add(
+            self.port_combobox, 0, wx.RIGHT | wx.ALIGN_CENTER_VERTICAL, 7)
+        connectionSizer.Add(
+            baud_label, 0, wx.RIGHT | wx.ALIGN_CENTER_VERTICAL, 7)
+        connectionSizer.Add(
+            self.baud_combobox, 0, wx.RIGHT | wx.ALIGN_CENTER_VERTICAL, 7)
+
+        connectionSizer.AddStretchSpacer(1)
         connectionSizer.Add(connect_button, 0, wx.ALIGN_LEFT, 10)
         connectionSizer.Add(disconnect_button, 0, wx.ALIGN_LEFT, 10)
 
         outputSizer.Add(self.output_text, 1, wx.EXPAND, 0)
 
-        inputSizer.Add(self.input_text, 0, wx.RIGHT | wx.ALIGN_CENTER_VERTICAL, 5)
+        inputSizer.Add(
+            self.input_text, 0, wx.RIGHT | wx.ALIGN_CENTER_VERTICAL, 5)
         inputSizer.AddStretchSpacer(1)
-        inputSizer.Add(self.line_end_combobox, 0, wx.RIGHT | wx.ALIGN_CENTER_VERTICAL, 5)
+        inputSizer.Add(
+            self.line_end_combobox, 0, wx.RIGHT | wx.ALIGN_CENTER_VERTICAL, 5)
         inputSizer.AddStretchSpacer(1)
         inputSizer.Add(send_button, 0, wx.ALIGN_CENTRE_VERTICAL, 0)
         inputSizer.Add(clear_button, 0, wx.ALIGN_CENTRE_VERTICAL, 0)
@@ -257,15 +271,15 @@ class SerialMonitorGUI(wx.Frame):
         panel.SetSizer(topSizer)
         topSizer.Fit(self)
         self.SetMinSize(self.GetSize())
-        
-        ### Bindings
+
+        # Bindings
         self.Bind(wx.EVT_CLOSE, self.on_quit)
         self.input_text.Bind(wx.EVT_CHAR, self.on_char_input)
         connect_button.Bind(wx.EVT_BUTTON, self.connect_serial)
         disconnect_button.Bind(wx.EVT_BUTTON, self.disconnect_serial)
         self.line_end_combobox.Bind(wx.EVT_COMBOBOX, self.change_line_end)
         send_button.Bind(wx.EVT_BUTTON, self.on_send)
-        clear_button.Bind(wx.EVT_BUTTON, self.clear_output)  
+        clear_button.Bind(wx.EVT_BUTTON, self.clear_output)
         file_menu.Bind(wx.EVT_MENU, self.on_file_menu)
         self.recent_connections.Bind(wx.EVT_MENU, self.re_connect)
         self.Bind(wx.EVT_MENU_OPEN, self.on_open_menu)
@@ -284,9 +298,8 @@ class SerialMonitorGUI(wx.Frame):
         # Create a timer
         self.timer = wx.Timer(self)
 
-        # Flag to keep track of whether a connection is open 
+        # Flag to keep track of whether a connection is open
         self.connected = False
-
 
     def on_quit(self, event):
         ''' Callback for close event '''
@@ -305,7 +318,6 @@ class SerialMonitorGUI(wx.Frame):
 
         event.Skip()
 
-
     def connect_serial(self, event):
         '''Quick connection from main gui '''
         port = self.port_combobox.GetValue()
@@ -315,19 +327,20 @@ class SerialMonitorGUI(wx.Frame):
             return
 
         conn = self.context.connect_serial(
-                type='serial',
-                port=port, 
-                baudrate=baudrate,
-                bytesize='8',
-                parity='None',
-                stopbits='1')
+            type='serial',
+            port=port,
+            baudrate=baudrate,
+            bytesize='8',
+            parity='None',
+            stopbits='1')
 
-        settings = {'type': 'serial',
-                'port': port, 
-                'baudrate': baudrate,
-                'bytesize': '8',
-                'parity': 'None',
-                'stopbits': '1'}
+        settings = {
+            'type': 'serial',
+            'port': port,
+            'baudrate': baudrate,
+            'bytesize': '8',
+            'parity': 'None',
+            'stopbits': '1'}
 
         # If connection is successful, start timer that checks for data
 
@@ -339,13 +352,12 @@ class SerialMonitorGUI(wx.Frame):
 
         self.context.get_error()
 
-
     def connect_serial_adv(self, **settings):
         ''' Advanced connection from dialog '''
         if self.connected:
             return
 
-        if self.context.connect_serial(**settings):         
+        if self.context.connect_serial(**settings):
             self.Bind(wx.EVT_TIMER, self.check_for_data)
             self.timer.Start()
             self.connected = True
@@ -354,7 +366,6 @@ class SerialMonitorGUI(wx.Frame):
 
         self.context.get_error()
         return False
-
 
     def connect_socket(self, **settings):
         ''' Socket connection '''
@@ -371,7 +382,6 @@ class SerialMonitorGUI(wx.Frame):
         self.context.get_error()
         return False
 
-
     def after_connection(self, settings):
         ''' After successful connection, add to history in menubar '''
         menu_item = wx.MenuItem(
@@ -382,7 +392,6 @@ class SerialMonitorGUI(wx.Frame):
             helpString='Open a recent connection')
         self.recent_connections.Prepend(menu_item)
 
-
     def re_connect(self, event):
         item = self.GetMenuBar().FindItemById(event.GetId())
         conn_string = item.GetText()
@@ -392,15 +401,13 @@ class SerialMonitorGUI(wx.Frame):
             self.connect_serial_adv(**settings)
 
         elif settings['type'] == 'socket':
-            self.connect_socket(**settings)       
-
+            self.connect_socket(**settings)
 
     def disconnect_serial(self, event):
         ''' Disconnect connection '''
         if self.context.disconnect_serial():
             self.connected = False
             self.timer.Stop()
-
 
     def on_send(self, event):
         ''' Callback for clicking Send button '''
@@ -410,10 +417,9 @@ class SerialMonitorGUI(wx.Frame):
         self.context.send_serial(cmd)
         self.input_text.Clear()
 
-
     def change_line_end(self, event):
         sel = self.line_end_combobox.GetSelection()
-        
+
         if sel == 0:
             self.line_ending = ''
         elif sel == 1:
@@ -422,7 +428,6 @@ class SerialMonitorGUI(wx.Frame):
             self.line_ending = '\n'
         elif sel == 3:
             self.line_ending = '\r\n'
-
 
     def on_char_input(self, event):
         k = event.GetKeyCode()
@@ -439,14 +444,12 @@ class SerialMonitorGUI(wx.Frame):
 
         event.Skip()
 
-
     def check_for_data(self, event):
-        ''' Timer event callback, checks periodically for 
+        ''' Timer event callback, checks periodically for
         data or errors '''
         if self.connected:
             self.context.get_data()
-            self.context.get_error()        
-
+            self.context.get_error()
 
     def received_data(self, data):
         ''' Pubsub callback for serial.data '''
@@ -459,7 +462,6 @@ class SerialMonitorGUI(wx.Frame):
 
         except TypeError:
             pass
-
 
     def received_error(self, data):
         ''' Pubsub callback for serial.error '''

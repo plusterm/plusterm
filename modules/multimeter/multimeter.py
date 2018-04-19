@@ -7,8 +7,8 @@ import threading
 import pythoncom
 
 ''' This module displays the current value given by a measuring instrument
-    and has the support for text-to-speech either via a string trigger,
-    a noise trigger or automatically given a time interval. '''
+    and has the support for text-to-speech either via a button
+    or automatically given a time interval. '''
 
 
 class Multimeter(wx.Frame):
@@ -16,15 +16,15 @@ class Multimeter(wx.Frame):
         super(Multimeter, self).__init__(parent, title=title)
         pub.subscribe(self.interpret_data, 'serial.data')
 
+        self.prec_choices = ['0', '1', '2']
+        self.prec = 2
         self.unit = ''
         self.ph_unit = ''
-        self.looking_for_unit = False
         self.unit_regex = '^\"(\w+)\,?|\"?'
         self.prefix_regex = '\d+E([\+\-]\d+)'
+        self.looking_for_unit = False
         self.unit_found = False
-        self.light_toggle = 0
-        self.auto_talk = False
-        self.talk_once = False
+        self.light_toggle = False
 
         self.init_ui()
 
@@ -37,22 +37,27 @@ class Multimeter(wx.Frame):
 
         # Sizers and panels
         self.display_panel = wx.Panel(self)
-        self.display_sizer = wx.BoxSizer(wx.VERTICAL)
+        self.display_sizer = wx.BoxSizer(wx.HORIZONTAL)
+
         self.tts_panel = wx.Panel(self)
-        self.tts_sizer = wx.BoxSizer(wx.VERTICAL)
+        self.tts_main_sizer = wx.BoxSizer(wx.VERTICAL)
+        self.tts_sub_sizer1 = wx.BoxSizer(wx.HORIZONTAL)
+        self.tts_sub_sizer2 = wx.BoxSizer(wx.HORIZONTAL)
+
         self.controls_panel = wx.Panel(self)
         self.controls_main_sizer = wx.BoxSizer(wx.VERTICAL)
         self.controls_sub_sizer1 = wx.BoxSizer(wx.HORIZONTAL)
         self.controls_sub_sizer2 = wx.BoxSizer(wx.HORIZONTAL)
+        self.controls_sub_sizer3 = wx.BoxSizer(wx.HORIZONTAL)
 
         # These widgets will go in the always visible output panel
         self.multimeter_output = wx.TextCtrl(
             self.display_panel,
             style=wx.TE_READONLY,
             size=(250, 50))
-        self.multimeter_output.SetFont(wx.Font(wx.FontInfo(24)))
+        self.multimeter_output.SetFont(wx.Font(wx.FontInfo(26)))
 
-        self.display_sizer.Add(self.multimeter_output)
+        self.display_sizer.Add(self.multimeter_output, 1, wx.EXPAND)
 
         # These widgets will go in the multimeter control panel
         fetch_button = wx.Button(
@@ -79,36 +84,85 @@ class Multimeter(wx.Frame):
             self.controls_panel,
             label='Continuous data')
 
-        self.controls_sub_sizer1.Add(fetch_button)
+        prec_label = wx.StaticText(
+            self.controls_panel,
+            label='  Digits after decimal')
+
+        self.prec_dd = wx.ComboBox(
+            self.controls_panel,
+            choices=self.prec_choices,
+            style=wx.CB_READONLY)
+        self.prec_dd.SetSelection(2)
+        self.prec_dd.Bind(wx.EVT_COMBOBOX, self.set_precision)
+
+        self.controls_sub_sizer1.Add(fetch_button, 0, wx.LEFT, 4)
         self.controls_sub_sizer1.Add(unit_button)
-        self.controls_sub_sizer1.Add(self.value_spam)
-        self.controls_sub_sizer2.Add(light_button)
+        self.controls_sub_sizer1.Add(
+            self.value_spam,
+            0,
+            wx.LEFT | wx.ALIGN_CENTER_VERTICAL,
+            5)
+        self.controls_sub_sizer2.Add(light_button, 0, wx.LEFT, 4)
         self.controls_sub_sizer2.Add(beep_button)
+        self.controls_sub_sizer3.Add(self.prec_dd, 0, wx.BOTTOM | wx.LEFT, 5)
+        self.controls_sub_sizer3.Add(prec_label, 0, wx.ALIGN_CENTER_VERTICAL)
 
         self.controls_main_sizer.Add(self.controls_sub_sizer1)
         self.controls_main_sizer.Add(self.controls_sub_sizer2)
+        self.controls_main_sizer.Add(self.controls_sub_sizer3)
 
         # These widgets will go in the hidable tts panel
+        tts_line = wx.StaticLine(
+            self.tts_panel,
+            style=wx.LI_VERTICAL)
+
         talk_once_button = wx.Button(
             self.tts_panel,
             label='Talk once')
         talk_once_button.Bind(wx.EVT_BUTTON, self.talk_one_time)
 
-        self.tts_sizer.Add(wx.StaticLine(self.tts_panel))
-        self.tts_sizer.Add(talk_once_button)
+        self.auto_talk_cb = wx.CheckBox(
+            self.tts_panel,
+            label=' Auto talk every')
+        self.auto_talk_cb.Bind(wx.EVT_CHECKBOX, self.auto_talk)
+
+        self.auto_talk_tc = wx.TextCtrl(
+            self.tts_panel,
+            size=(25, 20))
+        self.auto_talk_tc.SetValue('5')
+
+        auto_talk_st = wx.StaticText(self.tts_panel, label='seconds')
+
+        self.tts_sub_sizer1.Add(wx.StaticLine(self.tts_panel))
+        self.tts_sub_sizer1.Add(talk_once_button, 0, wx.LEFT, 4)
+        self.tts_sub_sizer2.Add(
+            self.auto_talk_cb,
+            0,
+            wx.ALIGN_CENTER_VERTICAL | wx.LEFT,
+            5)
+        self.tts_sub_sizer2.Add(
+            self.auto_talk_tc,
+            0, wx.ALIGN_CENTER_VERTICAL | wx.LEFT,
+            3)
+        self.tts_sub_sizer2.Add(
+            auto_talk_st,
+            0,
+            wx.ALIGN_CENTER_VERTICAL | wx.LEFT,
+            3)
+        self.tts_main_sizer.Add(tts_line, 0, wx.EXPAND | wx.BOTTOM, 5)
+        self.tts_main_sizer.Add(self.tts_sub_sizer1)
+        self.tts_main_sizer.Add(self.tts_sub_sizer2)
 
         # Set sizers for panels
-        self.tts_panel.SetSizer(self.tts_sizer)
+        self.tts_panel.SetSizer(self.tts_main_sizer)
         self.display_panel.SetSizer(self.display_sizer)
-        self.tts_panel.SetSizer(self.tts_sizer)
         self.controls_panel.SetSizer(self.controls_main_sizer)
 
         # Organize main sizer
         self.main_sizer = wx.BoxSizer(wx.VERTICAL)
-        self.main_sizer.Add(self.display_panel)
-        self.main_sizer.Add(self.controls_panel)
-        self.main_sizer.Add(self.tts_panel)
-        self.SetSizer(self.main_sizer)
+        self.main_sizer.Add(self.display_panel, 0, wx.EXPAND | wx.BOTTOM, 5)
+        self.main_sizer.Add(self.controls_panel, 0, wx.EXPAND)
+        self.main_sizer.Add(self.tts_panel, 0, wx.EXPAND | wx.BOTTOM, 5)
 
         # Bindings
         self.Bind(wx.EVT_MENU_OPEN, self.on_menu)
@@ -116,10 +170,15 @@ class Multimeter(wx.Frame):
 
         # Final gui settings
         self.SetBackgroundColour('lightgray')
+        self.SetSizer(self.main_sizer)
+        self.size_biggie = self.GetBestSize()
         self.tts_panel.Hide()
+        self.Fit()
+        self.size_smallz = self.GetBestSize()
+        self.SetMinSize(self.size_smallz)
+        self.SetMaxSize(self.size_smallz)
         self.Centre()
         self.Show(True)
-        self.Fit()
 
     def fetch_data(self, event):
         pub.sendMessage('module.send', data='FETC?')
@@ -127,10 +186,10 @@ class Multimeter(wx.Frame):
     def toggle_light(self, event):
         if not self.light_toggle:
             pub.sendMessage('module.send', data='SYST:BLIT 1')
-            self.light_toggle = 1
+            self.light_toggle = True
         else:
             pub.sendMessage('module.send', data='SYST:BLIT 0')
-            self.light_toggle = 0
+            self.light_toggle = False
 
     def beep(self, event):
         pub.sendMessage('module.send', data='SYST:BEEP TONE')
@@ -144,18 +203,28 @@ class Multimeter(wx.Frame):
             self.multimeter_output.Clear()
             self.multimeter_output.WriteText('No data.')
 
+    def auto_talk(self, event):
+        if self.auto_talk_cb.IsChecked():
+            self.talk_one_time()
+
+    def set_precision(self, event):
+        self.prec = self.prec_dd.GetSelection()
+        print(self.prec)
+
     def get_unit(self, event):
         self.looking_for_unit = True
         pub.sendMessage('module.send', data='CONF?')
 
     def interpret_data(self, data):
         r = data[1].decode(errors='ignore').strip()
+        if r.startswith('*'):
+            return
 
         self._prefixes_phonetic = {
-            '': '',
+            ' ': '',
             ' p': ' pico',
             ' n': ' nano',
-            ' u': ' micro',
+            ' μ': ' micro',
             ' m': ' milli',
             ' k': ' kilo',
             ' M': ' mega'
@@ -171,11 +240,9 @@ class Multimeter(wx.Frame):
             ['MV', ' Degrees Celsius', '°C']
         ]
 
-        p = 2  # Precision, how many digits after point
+        # self.prec = 2  # Precision, how many digits after point
 
-        val = ''
-        power = ''
-        prefix = ''
+        val, power, prefix = None, None, None
 
         if self.looking_for_unit:
             unit_match = re.findall(self.unit_regex, r)
@@ -183,7 +250,6 @@ class Multimeter(wx.Frame):
                 if unit_match[0] == t[0]:
                     self.unit = t[2]
                     self.ph_unit = t[1]
-
                     self.unit_found = True
                     self.looking_for_unit = False
 
@@ -200,10 +266,12 @@ class Multimeter(wx.Frame):
                     prefix = ' n'
                 elif power < -3 and power >= -6:
                     val *= 10 ** 6
-                    prefix = ' u'
+                    prefix = ' μ'
                 elif power < 0 and power >= -3:
                     val *= 10 ** 3
                     prefix = ' m'
+                elif power >= 0 and power < 3:
+                    prefix = ' '
                 elif power >= 3 and power < 6:
                     val *= 10 ** -3
                     prefix = ' k'
@@ -211,12 +279,17 @@ class Multimeter(wx.Frame):
                     val *= 10 ** -6
                     prefix = ' M'
                 elif power >= 9:
-                    val = 'inf '
-                    power = ''
-            try:
-                val = round(val, p)
-            except Exception:
-                pass
+                    self.multimeter_output.Clear()
+                    self.multimeter_output.WriteText('inf ' + self.unit)
+                    self.talk_string = 'inf'
+                    if self.value_spam.IsChecked():
+                        pub.sendMessage('module.send', data='FETC?')
+                    return
+
+                if self.prec == 0:
+                    val = int(round(val, self.prec))
+                else:
+                    val = round(val, self.prec)
 
         except ValueError:
             # print('Not a float')
@@ -224,22 +297,22 @@ class Multimeter(wx.Frame):
 
         self.talk_string = str(val)
 
-        if self.unit_found and val:
+        if self.unit_found and (val or val == 0):
             self.multimeter_output.Clear()
-            self.multimeter_output.WriteText(
-                self.talk_string + prefix + self.unit)
+            if prefix:
+                self.multimeter_output.WriteText(
+                    self.talk_string + prefix + self.unit)
+            else:
+                self.multimeter_output.WriteText(
+                    self.talk_string + self.unit)
         elif self.unit_found:
-            self.multimeter_output.Clear()
-            self.multimeter_output.WriteText('Unit: ' + self.unit)
+            print('Unit: ' + self.unit)
+            pub.sendMessage('module.send', data='FETC?')
 
         if prefix and self.unit_found:
             self.talk_string += self._prefixes_phonetic[prefix] + self.ph_unit
-        elif self.unit_found and val and (val != 'inf'):
+        elif self.unit_found and val and val != 'inf':
             self.talk_string += self.ph_unit
-
-        if val and (self.auto_talk or self.talk_once):
-            threading.Thread(target=talk, args=(self.talk_string,)).start()
-            self.auto_talk, self.talk_once = False, False
 
         if self.value_spam.IsChecked():
             pub.sendMessage('module.send', data='FETC?')
@@ -254,15 +327,18 @@ class Multimeter(wx.Frame):
 
     def on_menu(self, event):
         if not self.tts_panel.IsShown():
+            self.SetMaxSize(self.size_biggie)
+            self.SetMinSize(self.size_biggie)
             self.tts_panel.Show()
-            self.Layout()
-            self.Fit()
-            self.Update()
+
         else:
             self.tts_panel.Hide()
-            self.Layout()
-            self.Fit()
-            self.Update()
+            self.SetMinSize(self.size_smallz)
+            self.SetMaxSize(self.size_smallz)
+
+        self.Layout()
+        self.Fit()
+        self.Update()
 
 
 def dispose():
@@ -273,7 +349,9 @@ def talk(talk_string):
     try:
         pythoncom.CoInitialize()
         engine = pyttsx3.init()
-        # engine.setProperty('voice', 'HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Speech\Voices\Tokens\TTS_MS_EN-US_ZIRA_11.0')
+        # engine.setProperty(
+        # 'voice',
+        # 'HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Speech\Voices\Tokens\TTS_MS_EN-US_ZIRA_11.0')
         engine.say(talk_string)
         engine.runAndWait()
         # engine.stop()

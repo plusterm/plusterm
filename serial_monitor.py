@@ -10,27 +10,27 @@ import communicator
 
 class SerialMonitor(wx.App):
     ''' Entry point and central class ('context') for Plusterm '''
-    def __init__(self): 
+
+    def __init__(self):
         super(SerialMonitor, self).__init__()
-        self.communicator = communicator.Communicator(self) 
+        self.communicator = communicator.Communicator(self)
 
         # Subscribe to input from modules
         pub.subscribe(self.send_from_module, 'module.send')
 
-
     def OnInit(self):
         # Show the GUI
-        self.sm_gui = gui.SerialMonitorGUI(None, title='Plusterm', context=self)
+        self.sm_gui = gui.SerialMonitorGUI(
+            None, title='Plusterm', context=self)
         self.SetTopWindow(self.sm_gui)
         self.sm_gui.Show()
         return True
-
 
     def connect_serial(self, **settings):
         ''' Instruct communicator to initialize a connection '''
         if self.communicator.connect(**settings):
             self.log_to_gui('Connection opened\n')
-            
+
             stat = ''
             if settings['type'] == 'serial':
                 stat = 'Open: {}, {}'.format(
@@ -43,7 +43,6 @@ class SerialMonitor(wx.App):
             self.sm_gui.statusbar.PushStatusText(stat)
             return True
         return False
-
 
     def disconnect_serial(self):
         ''' Instruct communicator to disconnect connection '''
@@ -59,25 +58,21 @@ class SerialMonitor(wx.App):
                 return False
 
         return False
-        
 
     def send_serial(self, cmd):
         ''' Relay a message/command to send over the connection '''
         self.communicator.send_cmd(cmd)
 
-
     def log_to_gui(self, msg):
         ''' Pass the message to be logged in the GUI '''
         self.sm_gui.output(msg)
-
 
     def add_module(self, module):
         ''' Import a module '''
         if 'modules.' + module in sys.modules:
             importlib.reload(sys.modules['modules.' + module])
         else:
-            mod = importlib.import_module('modules.' + module)
-
+            importlib.import_module('modules.' + module)
 
     def remove_module(self, module):
         ''' "Unimport" a module '''
@@ -97,12 +92,10 @@ class SerialMonitor(wx.App):
         for mr in mod_refs:
             del sys.modules[mr]
 
-
     def send_from_module(self, data):
         # PubSub callback, topic module.send
         self.log_to_gui('module > ' + data + '\n')
         self.send_serial(data)
-
 
     def get_data(self):
         ''' Try to get data from queue '''
@@ -114,10 +107,9 @@ class SerialMonitor(wx.App):
         except queue.Empty:
             pass
 
-
     def get_error(self):
         ''' Try to get error from queue '''
-        try: 
+        try:
             err = self.communicator.get_error()
             if err is not None:
                 pub.sendMessage('serial.error', data=err)
@@ -129,6 +121,7 @@ class SerialMonitor(wx.App):
 def main():
     SM = SerialMonitor()
     SM.MainLoop()
+
 
 if __name__ == '__main__':
     main()
