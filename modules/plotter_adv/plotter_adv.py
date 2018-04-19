@@ -375,7 +375,7 @@ class Plotwindow(wx.Frame):
 
         self.dp_txt.SetValue(str(self.index_window))
 
-        reset_btn = wx.Button(self.canvasPanel, label='Reset')
+        reset_btn = wx.Button(self.canvasPanel, label='Show all')
         reset_btn.Bind(wx.EVT_BUTTON, self.on_reset)
 
         self.dp_txt.Bind(wx.EVT_TEXT_ENTER, self.on_enter_nrdp)
