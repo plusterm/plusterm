@@ -40,7 +40,7 @@ class SerialMonitor(wx.App):
                 stat = 'Open: {}:{}'.format(
                     settings['host'], settings['port'])
 
-            self.sm_gui.statusbar.PushStatusText(stat)
+            self.sm_gui.statusbar.SetStatusText(stat)
             return True
         return False
 
@@ -49,7 +49,7 @@ class SerialMonitor(wx.App):
         if self.communicator.disconnect():
             try:
                 self.log_to_gui('Connection closed\n')
-                self.sm_gui.statusbar.PopStatusText()
+                self.sm_gui.statusbar.SetStatusText('No connection open')
                 self.sm_gui.timer.Stop()
                 return True
 
