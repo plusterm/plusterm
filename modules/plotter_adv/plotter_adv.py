@@ -467,7 +467,12 @@ class Plotwindow(wx.Frame):
         max_len = max([len(x) for x in self.xdata])
         self.canvas_sb.SetMax(max_len - self.index_window)
         self.dp_tot_lab.SetLabel(' / ' + str(max_len) + ' (max)')
-        self.start_index = max_len - self.index_window
+
+        if max_len > self.index_window:
+            self.start_index = max_len - self.index_window
+        else:
+            self.start_index = 0
+
         self.end_index = max_len
         self.draw_plot()
 
