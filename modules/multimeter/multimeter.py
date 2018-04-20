@@ -1,6 +1,7 @@
 import wx
 from wx.lib.pubsub import pub
 import sys
+import math
 import pyttsx3
 import re
 import threading
@@ -19,8 +20,8 @@ class Multimeter(wx.Frame):
         super(Multimeter, self).__init__(parent, title=title)
         pub.subscribe(self.interpret_data, 'serial.data')
 
-        self.prec_choices = ['0', '1', '2']
-        self.prec = 2
+        self.prec_choices = ['1', '2', '3', '4', '5']
+        self.prec = 3
         self.unit = ''
         self.ph_unit = ''
         self.unit_regex = '^\"(\w+)\,?|\"?'
@@ -85,11 +86,11 @@ class Multimeter(wx.Frame):
 
         self.value_spam = wx.CheckBox(
             self.controls_panel,
-            label='Continuous data')
+            label='Auto update data')
 
         prec_label = wx.StaticText(
             self.controls_panel,
-            label='  Digits after decimal')
+            label='  Significant figures')
 
         self.prec_dd = wx.ComboBox(
             self.controls_panel,
@@ -228,7 +229,7 @@ class Multimeter(wx.Frame):
         self.talk(wx.EVT_BUTTON)
 
     def set_precision(self, event):
-        self.prec = self.prec_dd.GetSelection()
+        self.prec = self.prec_dd.GetSelection() + 1
 
     def get_unit(self, event):
         self.looking_for_unit = True
@@ -242,16 +243,23 @@ class Multimeter(wx.Frame):
         if r.startswith('*'):
             return
 
-        self._prefixes_phonetic = {
+        _prefixes_phonetic = {
             ' ': '',
-            ' p': ' pico',
+            ' a': ' atto',
+            ' f': ' femto',
+            ' p': ' picko',
             ' n': ' nano',
             ' μ': ' micro',
             ' m': ' milli',
             ' k': ' kilo',
-            ' M': ' mega'}
+            ' M': ' mega',
+            ' G': ' gihga',
+            ' T': ' terra',
+            ' P': ' peta',
+            ' E': ' exa',
+            ' Z': ' zetta'}
 
-        self._units_phonetic = [
+        _units_phonetic = [
             ['V', ' Volt', 'V'],
             ['DIOD', '', ''],
             ['RES', ' Ohm', 'Ω'],
@@ -260,11 +268,11 @@ class Multimeter(wx.Frame):
             ['FREQ', ' Hertz', 'Hz'],
             ['MV', ' Degrees Celsius', '°C']]
 
-        val, power, prefix = None, None, None
+        val, prefix = None, None
 
         if self.looking_for_unit:
             unit_match = re.findall(self.unit_regex, r)
-            for t in self._units_phonetic:
+            for t in _units_phonetic:
                 if unit_match[0] == t[0]:
                     self.unit = t[2]
                     self.ph_unit = t[1]
@@ -274,43 +282,10 @@ class Multimeter(wx.Frame):
         try:
             val = float(r)
             if not self.unit == '°C':
-                prefix_match = re.findall(self.prefix_regex, r)
-                power = int(prefix_match[0])
-                if power < -9:
-                    val *= 10 ** 12
-                    prefix = ' p'
-                elif power < -6 and power >= -9:
-                    val *= 10 ** 9
-                    prefix = ' n'
-                elif power < -3 and power >= -6:
-                    val *= 10 ** 6
-                    prefix = ' μ'
-                elif power < 0 and power >= -3:
-                    val *= 10 ** 3
-                    prefix = ' m'
-                elif power >= 0 and power < 3:
-                    prefix = ' '
-                elif power >= 3 and power < 6:
-                    val *= 10 ** -3
-                    prefix = ' k'
-                elif power >= 6 and power < 9:
-                    val *= 10 ** -6
-                    prefix = ' M'
-                elif power >= 9:
-                    self.multimeter_output.Clear()
-                    self.multimeter_output.WriteText('inf ' + self.unit)
-                    self.talk_string = 'inf'
-                    if self.value_spam.IsChecked():
-                        pub.sendMessage('module.send', data='FETC?')
-                    return
-
-                if self.prec == 0:
-                    val = int(round(val, self.prec))
-                else:
-                    val = round(val, self.prec)
+                val, prefix = self.to_si_2(val, self.prec)
 
         except ValueError:
-            # print('Not a float')
+            print('Not a float')
             pass
 
         self.talk_string = str(val)
@@ -328,12 +303,52 @@ class Multimeter(wx.Frame):
             pub.sendMessage('module.send', data='FETC?')
 
         if prefix and self.unit_found:
-            self.talk_string += self._prefixes_phonetic[prefix] + self.ph_unit
-        elif self.unit_found and val and val != 'inf':
+            self.talk_string += _prefixes_phonetic[prefix] + self.ph_unit
+        elif self.unit_found and val and val != 'Inf ':
             self.talk_string += self.ph_unit
 
         if self.value_spam.IsChecked():
             pub.sendMessage('module.send', data='FETC?')
+
+    def to_si_2(self, value, sig=3):
+        # Thanks Simon!
+        si_lookup = {
+            7: ' Z',
+            6: ' E',
+            5: ' P',
+            4: ' T',
+            3: ' G',
+            2: ' M',
+            1: ' k',
+            0: '',
+            -1: ' m',
+            -2: ' μ',
+            -3: ' n',
+            -4: ' p',
+            -5: ' f',
+            -6: ' a'
+        }
+
+        value = float(value)
+
+        exp = math.floor(math.log10(abs(value)) / 3)
+
+        if exp > 7:
+            stuff = 'Inf '
+            suffix = ''
+        elif exp < -6:
+            stuff = 'Zero '
+        else:
+            suffix = si_lookup[exp]
+
+            stuff = '{0:1g}'.format(
+                self.round_to_n(value / (10 ** (exp * 3)), sig))
+
+        return stuff, suffix
+
+    def round_to_n(self, x, n):
+        x = round(x, -int(math.floor(math.log10(abs(x)))) + (n - 1))
+        return x
 
     def on_close(self, event):
         pub.unsubscribe(self.interpret_data, 'serial.data')
