@@ -2,7 +2,6 @@ import wx
 from wx.lib.pubsub import pub
 import os
 import sys
-
 import communicator
 
 # For GUI debugging

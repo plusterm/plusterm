@@ -6,9 +6,12 @@ import re
 import threading
 import pythoncom
 
-''' This module displays the current value given by a measuring instrument
-    and has the support for text-to-speech either via a button
-    or automatically given a time interval. '''
+''' This module was build specifically for a Keysight Technologies U1232A
+    Multimeter but should realistically work well with any multimeter in
+    the Agilent U12xxx series. It displays either the most recent value or
+    updates continuously depending on user choices. There is support for
+    text-to-speech either via a button or automatically given a time interval.
+    '''
 
 
 class Multimeter(wx.Frame):
@@ -29,7 +32,7 @@ class Multimeter(wx.Frame):
         self.init_ui()
 
     def init_ui(self):
-        # Menu
+        # Menu (acts only as a button of sorts)
         menubar = wx.MenuBar()
         tts_settings = wx.Menu()
         menubar.Append(tts_settings, '&TTS Settings')
@@ -50,7 +53,7 @@ class Multimeter(wx.Frame):
         self.controls_sub_sizer2 = wx.BoxSizer(wx.HORIZONTAL)
         self.controls_sub_sizer3 = wx.BoxSizer(wx.HORIZONTAL)
 
-        # These widgets will go in the always visible output panel
+        # Visible output panel widgets
         self.multimeter_output = wx.TextCtrl(
             self.display_panel,
             style=wx.TE_READONLY,
@@ -59,7 +62,7 @@ class Multimeter(wx.Frame):
 
         self.display_sizer.Add(self.multimeter_output, 1, wx.EXPAND)
 
-        # These widgets will go in the multimeter control panel
+        # Multimeter control panel widgets
         fetch_button = wx.Button(
             self.controls_panel,
             label='Update data')
@@ -111,7 +114,7 @@ class Multimeter(wx.Frame):
         self.controls_main_sizer.Add(self.controls_sub_sizer2)
         self.controls_main_sizer.Add(self.controls_sub_sizer3)
 
-        # These widgets will go in the hidable tts panel
+        # Hidable tts panel widgets
         tts_line = wx.StaticLine(
             self.tts_panel,
             style=wx.LI_VERTICAL)
@@ -119,12 +122,12 @@ class Multimeter(wx.Frame):
         talk_once_button = wx.Button(
             self.tts_panel,
             label='Talk once')
-        talk_once_button.Bind(wx.EVT_BUTTON, self.talk_one_time)
+        talk_once_button.Bind(wx.EVT_BUTTON, self.talk)
 
         self.auto_talk_cb = wx.CheckBox(
             self.tts_panel,
             label=' Auto talk every')
-        self.auto_talk_cb.Bind(wx.EVT_CHECKBOX, self.auto_talk)
+        self.auto_talk_cb.Bind(wx.EVT_CHECKBOX, self.on_auto_talk)
 
         self.auto_talk_tc = wx.TextCtrl(
             self.tts_panel,
@@ -194,28 +197,47 @@ class Multimeter(wx.Frame):
     def beep(self, event):
         pub.sendMessage('module.send', data='SYST:BEEP TONE')
 
-    def talk_one_time(self, event):
+    def talk(self, event):
         try:
             if self.talk_string != '':
-                threading.Thread(target=talk, args=(self.talk_string,)).start()
+                threading.Thread(
+                    target=talk_once, args=(self.talk_string,)).start()
+
         except AttributeError:
-            threading.Thread(target=talk, args=('Don\'t be silly!',)).start()
+            threading.Thread(
+                target=talk_once, args=('Don\'t be silly!',)).start()
             self.multimeter_output.Clear()
             self.multimeter_output.WriteText('No data.')
 
-    def auto_talk(self, event):
-        if self.auto_talk_cb.IsChecked():
-            self.talk_one_time()
+    def on_auto_talk(self, event):
+        try:
+            if self.auto_talk_cb.IsChecked():
+                print('on auto talk')
+                self.timer = wx.Timer()
+                self.timer.Bind(wx.EVT_TIMER, self.on_timer)
+                print(str(int(self.auto_talk_tc.GetValue())))
+                self.timer.Start(int(self.auto_talk_tc.GetValue()) * 1000)
+            else:
+                self.timer.Stop()
+
+        except Exception as e:
+            print(e)
+
+    def on_timer(self, event):
+        print('on timer')
+        self.talk(wx.EVT_BUTTON)
 
     def set_precision(self, event):
         self.prec = self.prec_dd.GetSelection()
-        print(self.prec)
 
     def get_unit(self, event):
         self.looking_for_unit = True
         pub.sendMessage('module.send', data='CONF?')
 
     def interpret_data(self, data):
+        '''This function is subscribed to the data stream.
+        It interprets the data in order for the module to display it properly
+        as well as to prepare a talk string for the tts functions. '''
         r = data[1].decode(errors='ignore').strip()
         if r.startswith('*'):
             return
@@ -227,8 +249,7 @@ class Multimeter(wx.Frame):
             ' μ': ' micro',
             ' m': ' milli',
             ' k': ' kilo',
-            ' M': ' mega'
-        }
+            ' M': ' mega'}
 
         self._units_phonetic = [
             ['V', ' Volt', 'V'],
@@ -237,10 +258,7 @@ class Multimeter(wx.Frame):
             ['CAP', ' Fahrad', 'F'],
             ['A', ' Ampere', 'A'],
             ['FREQ', ' Hertz', 'Hz'],
-            ['MV', ' Degrees Celsius', '°C']
-        ]
-
-        # self.prec = 2  # Precision, how many digits after point
+            ['MV', ' Degrees Celsius', '°C']]
 
         val, power, prefix = None, None, None
 
@@ -326,6 +344,9 @@ class Multimeter(wx.Frame):
         event.Skip()
 
     def on_menu(self, event):
+        ''' size_biggie and size_smallz are size objects given before and after
+        the tts menu panel was hidden. They act as size limits to prevent
+        resizing of the multimeter frame. '''
         if not self.tts_panel.IsShown():
             self.SetMaxSize(self.size_biggie)
             self.SetMinSize(self.size_biggie)
@@ -345,17 +366,15 @@ def dispose():
     m.Close()
 
 
-def talk(talk_string):
+def talk_once(talk_string):
     try:
         pythoncom.CoInitialize()
         engine = pyttsx3.init()
-        # engine.setProperty(
-        # 'voice',
-        # 'HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Speech\Voices\Tokens\TTS_MS_EN-US_ZIRA_11.0')
         engine.say(talk_string)
         engine.runAndWait()
-        # engine.stop()
+        engine.stop()
     except Exception as e:
+        # It throws exceptions when called upon while still talking.
         # print(e)
         pass
 
