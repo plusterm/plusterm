@@ -336,7 +336,6 @@ class Plotwindow(wx.Frame):
         self.init_ui()
 
     def init_ui(self):
-
         menubar = wx.MenuBar()
         export = wx.Menu()
 
@@ -360,14 +359,15 @@ class Plotwindow(wx.Frame):
         self.canvasSizer.Add(self.canvas, 1, flag=wx.ALL | wx.EXPAND)
 
         self.toolbar_sizer = wx.BoxSizer(wx.HORIZONTAL)
-        self.canvas_sb = wx.Slider(
+        self.canvas_sld = wx.Slider(
             self.canvasPanel,
             wx.ID_ANY,
-            minValue=0)
+            minValue=0,
+            style=wx.SL_SELRANGE | wx.SL_TOP)
 
         dp_lab = wx.StaticText(
             self.canvasPanel,
-            label='Datapoints')
+            label='Datapoints:')
 
         self.dp_tot_lab = wx.StaticText(self.canvasPanel, label=' / 0 (max)')
         self.dp_txt = wx.TextCtrl(
@@ -379,7 +379,7 @@ class Plotwindow(wx.Frame):
         reset_btn.Bind(wx.EVT_BUTTON, self.on_reset)
 
         self.dp_txt.Bind(wx.EVT_TEXT_ENTER, self.on_enter_nrdp)
-        self.canvas_sb.Bind(wx.EVT_SCROLL, self.on_scroll_event)
+        self.canvas_sld.Bind(wx.EVT_SCROLL, self.on_scroll_event)
 
         self.canvas_toolbar = NavigationToolbar2WxAgg(self.canvas)
         self.canvas_toolbar.Realize()
@@ -399,7 +399,7 @@ class Plotwindow(wx.Frame):
         self.toolbar_sizer.Add(
             reset_btn, 0, wx.ALIGN_CENTER_VERTICAL | wx.LEFT, 20)
 
-        self.canvasSizer.Add(self.canvas_sb, 0, wx.EXPAND)
+        self.canvasSizer.Add(self.canvas_sld, 0, wx.EXPAND)
         self.canvasSizer.Add(self.toolbar_sizer, 0, wx.EXPAND)
         self.canvasPanel.SetSizer(self.canvasSizer)
         mainsizer.Add(self.canvasPanel, 1, wx.EXPAND)
@@ -419,7 +419,7 @@ class Plotwindow(wx.Frame):
                     param, val = None, None
                     for g_ind, r in group_role:
                         if r == 'value (without name)':
-                            param = 'val' + str(g_ind)
+                            param = 'val{}'.format(str(g_ind))
                             val = match[g_ind]
 
                         elif r == 'parameter name':
@@ -465,7 +465,7 @@ class Plotwindow(wx.Frame):
                     del dlg
 
         max_len = max([len(x) for x in self.xdata])
-        self.canvas_sb.SetMax(max_len - self.index_window)
+        self.canvas_sld.SetMax(max_len - self.index_window)
         self.dp_tot_lab.SetLabel(' / ' + str(max_len) + ' (max)')
 
         if max_len > self.index_window:

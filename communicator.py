@@ -58,17 +58,17 @@ class Communicator():
                 self.ser.stopbits = stopb_dict[settings['stopbits']]
                 self.ser.parity = parity_dict[settings['parity']]
                 self.ser.bytesize = bytesize_dict[settings['bytesize']]
-                self.ser.timeout = 0.1
+                self.ser.timeout = None
             
                 self.ser.open()
     
                 if self.readerthread is not None:
                     if not self.readerthread.isAlive():
-                        self.readerthread = ComReaderThread(self.ser, self.threadq, self.errorq)
+                        self.readerthread = ComReaderThread(self.ser, self.errorq)
                         self.readerthread.start()
     
                 else:
-                    self.readerthread = ComReaderThread(self.ser, self.threadq, self.errorq)
+                    self.readerthread = ComReaderThread(self.ser, self.errorq)
                     self.readerthread.start()
 
                 return True
@@ -121,9 +121,6 @@ class Communicator():
 
     def get_data(self):
         """ get the data """
-        if self.connection_type == 'serial':
-            return self.threadq.get(False)
-
         if self.connection_type == 'socket':
             try:
                 res = self.socket.recv(2056)

@@ -50,7 +50,6 @@ class SerialMonitor(wx.App):
             try:
                 self.log_to_gui('Connection closed\n')
                 self.sm_gui.statusbar.SetStatusText('No connection open')
-                self.sm_gui.timer.Stop()
                 return True
 
             except Exception as e:
