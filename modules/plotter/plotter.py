@@ -1,7 +1,9 @@
 import wx
-from wx.lib.pubsub import pub
+# from wx.lib.pubsub import pub
+from pubsub import pub
 import re
 import sys
+import time
 import matplotlib
 from matplotlib.figure import Figure
 from matplotlib.backends.backend_wxagg import FigureCanvasWxAgg as FigureCanvas
@@ -25,10 +27,10 @@ class Plotter(wx.Frame):
         self.ydata2 = []
 
         self.canvasPanel.SetSizer(self.canvasSizer)
+        self.t0 = time.time()
         self.Show()
 
         self.Bind(wx.EVT_CLOSE, self.on_close)
-
 
     def on_close(self, event):
         pub.unsubscribe(self.plot_data, 'serial.data')
@@ -41,14 +43,13 @@ class Plotter(wx.Frame):
 
         event.Skip()
 
-
     def plot_data(self, data):
         numericData = re.findall("-?\d*\.\d+|-?\d+", 
             data[1].decode(errors='ignore'))
 
         if len(numericData) == 1:
             self.axes[0].clear()
-            self.xdata.append(float(data[0]))
+            self.xdata.append(data[0] - self.t0)
             self.ydata.append(float(numericData[0]))
             self.axes[0].plot(self.xdata, self.ydata, '.-')
 
@@ -58,10 +59,14 @@ class Plotter(wx.Frame):
             self.ydata2.append(float(numericData[1]))
             self.axes[1].plot(self.xdata2, self.ydata2, '.-')
 
-        self.canvas.draw()
+        try:
+            self.canvas.draw()
+        except:
+            pass
 
 
 p = Plotter(None, 'Plots')
+
 
 def dispose():
     p.Close()

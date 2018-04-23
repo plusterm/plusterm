@@ -3,7 +3,8 @@ import serial
 import time
 import re
 import socket
-from wx.lib.pubsub import pub
+# from wx.lib.pubsub import pub
+from pubsub import pub
 from serial.tools import list_ports
 from com_reader import ComReaderThread
 

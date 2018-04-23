@@ -1,5 +1,6 @@
 import wx
-from wx.lib.pubsub import pub
+# from wx.lib.pubsub import pub
+from pubsub import pub
 import sys
 from collections import Counter
 from matplotlib.figure import Figure

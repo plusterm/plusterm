@@ -1,5 +1,6 @@
 import wx
-from wx.lib.pubsub import pub
+# from wx.lib.pubsub import pub
+from pubsub import pub
 import re
 import sys
 import time
@@ -474,7 +475,10 @@ class Plotwindow(wx.Frame):
             self.start_index = 0
 
         self.end_index = max_len
-        self.draw_plot()
+        try:
+            self.draw_plot()
+        except Exception:
+            pass
 
     def draw_plot(self, scroll_event=False):
         for i, ax in enumerate(self.axes):

@@ -1,4 +1,5 @@
-from wx.lib.pubsub import pub
+# from wx.lib.pubsub import pub
+from pubsub import pub
 import serial
 import threading
 import queue
@@ -22,13 +23,14 @@ class ComReaderThread(threading.Thread):
     def run(self):
         while self.alive.isSet():
             try:
-                data = self.ser.read()
-                if len(data) > 0:
+                # data = self.ser.read()
+                if self.ser.in_waiting > 0:
                     timestamp = time.time()
 
                     # read data until newline (x0A/10) 
-                    while data[-1] != 0x0A:
-                        data += self.ser.read()
+                    # while data[-1] != 0x0A:
+                    #     data += self.ser.read()
+                    data = self.ser.readline()
 
                     pub.sendMessage('serial.data', data=(timestamp, data))
 
