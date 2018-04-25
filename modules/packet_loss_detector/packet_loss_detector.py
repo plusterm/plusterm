@@ -4,7 +4,9 @@ import re
 import binascii
 import sys
 
-''' This module is intended to detect communication issues between Plusterm
+''' Requires the "binascii" library. "python -m pip install binascii".
+
+    This module is intended to detect communication issues between Plusterm
     and hardware. So far it only works as sort of a ping-pong scheme with an
     Arduino Uno that compares the data with a known crc32 checksum and returns
     if it failed or not, aswell as a new message to be compared in the module.

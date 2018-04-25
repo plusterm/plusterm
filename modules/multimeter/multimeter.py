@@ -8,7 +8,9 @@ import re
 import threading
 import pythoncom
 
-''' This module was build specifically for a Keysight Technologies U1232A
+''' Requires the "pyttsx3" library for TTS. "python -m pip install pyttsx3".
+
+    This module was build specifically for a Keysight Technologies U1232A
     Multimeter but should realistically work well with any multimeter in
     the Agilent U12xxx series. It displays either the most recent value or
     updates continuously depending on user choices. There is support for
