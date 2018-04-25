@@ -1,5 +1,6 @@
 import wx
-from wx.lib.pubsub import pub
+# from wx.lib.pubsub import pub
+from pubsub import pub
 import sys
 
 class Chatbot(wx.Frame):

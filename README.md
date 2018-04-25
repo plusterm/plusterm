@@ -15,12 +15,13 @@ NOTE: This (wx-pubsub) is the actively maintained branch.
 
 ### Pre-requisites
 The basic pre-requisites to run PlusTerm, are
-* python (developed with 3.6)
-* wxpython (developed with 4.0.0b2)
-* pyserial (developed with 3.4)
+* python (developed with v3.6)
+* wxpython (developed with v4.0.0b2)
+* pypubsub (developed with v4.0.0)
+* pyserial (developed with v3.4)
 
 For plotting, you will also need 
-* matplotlib (developed with 2.1.0)
+* matplotlib (developed with v2.1.0)
 
 Other modules might depend on additional libraries.
 

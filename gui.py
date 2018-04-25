@@ -1,5 +1,6 @@
 import wx
-from wx.lib.pubsub import pub
+# from wx.lib.pubsub import pub
+from pubsub import pub
 import os
 import sys
 import communicator
@@ -344,8 +345,6 @@ class SerialMonitorGUI(wx.Frame):
         # If connection is successful, start timer that checks for data
 
         if conn:
-            self.Bind(wx.EVT_TIMER, self.check_for_data)
-            self.timer.Start()
             self.connected = True
             wx.CallAfter(self.after_connection, settings=settings)
 
@@ -357,8 +356,6 @@ class SerialMonitorGUI(wx.Frame):
             return
 
         if self.context.connect_serial(**settings):
-            self.Bind(wx.EVT_TIMER, self.check_for_data)
-            self.timer.Start()
             self.connected = True
             wx.CallAfter(self.after_connection, settings=settings)
             return True
@@ -406,7 +403,6 @@ class SerialMonitorGUI(wx.Frame):
         ''' Disconnect connection '''
         if self.context.disconnect_serial():
             self.connected = False
-            self.timer.Stop()
 
     def on_send(self, event):
         ''' Callback for clicking Send button '''
@@ -455,9 +451,6 @@ class SerialMonitorGUI(wx.Frame):
         try:
             msg = data[1].decode(errors='ignore')
             self.output(msg)
-
-        except AttributeError:
-            self.output(data[1])
 
         except TypeError:
             pass

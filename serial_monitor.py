@@ -1,5 +1,6 @@
 import wx
-from wx.lib.pubsub import pub
+# from wx.lib.pubsub import pub
+from pubsub import pub
 import importlib
 import queue
 import sys
@@ -50,7 +51,6 @@ class SerialMonitor(wx.App):
             try:
                 self.log_to_gui('Connection closed\n')
                 self.sm_gui.statusbar.SetStatusText('No connection open')
-                self.sm_gui.timer.Stop()
                 return True
 
             except Exception as e:

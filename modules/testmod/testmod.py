@@ -1,4 +1,5 @@
-from wx.lib.pubsub import pub
+# from wx.lib.pubsub import pub
+from pubsub import pub
 
 
 def handle_data(data):
