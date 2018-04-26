@@ -25,7 +25,7 @@ parity_dict = {
             'Odd': serial.PARITY_ODD,
             'Mark': serial.PARITY_MARK,
             'Space': serial.PARITY_SPACE
-} 
+}
 
 stopb_dict = {
             '': serial.STOPBITS_ONE,
@@ -38,7 +38,7 @@ stopb_dict = {
 class Communicator():
     """ Handles all external comunication """
 
-    def __init__(self,context):
+    def __init__(self, context):
         self.threadq = queue.Queue()
         self.errorq = queue.Queue()
         self.ser = None
@@ -46,7 +46,6 @@ class Communicator():
         self.connection_type = None
         self.socket = None
         self.context = context
-
 
     def connect(self, **settings):
         try:
@@ -60,14 +59,15 @@ class Communicator():
                 self.ser.parity = parity_dict[settings['parity']]
                 self.ser.bytesize = bytesize_dict[settings['bytesize']]
                 self.ser.timeout = None
-            
+
                 self.ser.open()
-    
+
                 if self.readerthread is not None:
                     if not self.readerthread.isAlive():
-                        self.readerthread = ComReaderThread(self.ser, self.errorq)
+                        self.readerthread = ComReaderThread(
+                            self.ser, self.errorq)
                         self.readerthread.start()
-    
+
                 else:
                     self.readerthread = ComReaderThread(self.ser, self.errorq)
                     self.readerthread.start()
@@ -87,7 +87,6 @@ class Communicator():
             self.errorq.put((ts, str(e)))
             return False
 
-    
     def disconnect(self):
         """ stops/close all threads and streams """
         if self.connection_type == 'serial':
@@ -107,7 +106,6 @@ class Communicator():
             self.socket = None
             self.connection_type = None
             return True
-            
 
     def send_cmd(self, cmd):
         """ Send a command """
@@ -117,7 +115,6 @@ class Communicator():
 
         if self.socket is not None and self.connection_type == 'socket':
             self.socket.sendall(cmd.encode())
-
 
     def get_data(self):
         """ get the data """
@@ -138,15 +135,12 @@ class Communicator():
                 t = time.time()
                 self.errorq.put((t, str(e) + '\n'))
 
-
     def get_error(self):
         return self.errorq.get(False)
-    
-    
+
+
 def getPorts():
     # lists all the available serial devices connected to the computer
     port_list = list_ports.comports()
     ports = [port.device for port in port_list]
     return sorted(ports)
-
-

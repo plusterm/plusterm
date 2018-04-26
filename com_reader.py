@@ -11,7 +11,7 @@ class ComReaderThread(threading.Thread):
     Creates a thread that continously reads from the serial connection
     Puts result as a tuple (timestamp, data) in a queue
     '''
-    
+
     def __init__(self, ser, error_que):
         threading.Thread.__init__(self)
         self.ser = ser
@@ -31,7 +31,7 @@ class ComReaderThread(threading.Thread):
                     pub.sendMessage('serial.data', data=(timestamp, data))
 
             except serial.SerialException as e:
-                reconnected=False
+                reconnected = False
                 print('Serial connection lost, trying to reconnect.')
                 ts = time.time()
                 self.error_que.put((ts, str(e)))
@@ -40,16 +40,16 @@ class ComReaderThread(threading.Thread):
                         # if ser still thinks it's open close it
                         if self.ser.is_open:
                             self.ser.close()
-                        
+
                         self.ser.open()
-                        
-                    except Exception as e:  
-                        # if reconnection failed let some time pass                 
+
+                    except Exception as e:
+                        # if reconnection failed let some time pass
                         time.sleep(0.1)
 
                     else:
-                        reconnected=True    
-                        print('Reconnected')            
+                        reconnected = True
+                        print('Reconnected')
 
     def stop(self, timeout=0.5):
         self.alive.clear()
