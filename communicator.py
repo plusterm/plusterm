@@ -65,11 +65,11 @@ class Communicator():
     
                 if self.readerthread is not None:
                     if not self.readerthread.isAlive():
-                        self.readerthread = ComReaderThread(self.ser, self.errorq)
+                        self.readerthread = ComReaderThread(self.ser, self.errorq, self.context)
                         self.readerthread.start()
     
                 else:
-                    self.readerthread = ComReaderThread(self.ser, self.errorq)
+                    self.readerthread = ComReaderThread(self.ser, self.errorq, self.context)
                     self.readerthread.start()
 
                 return True
@@ -113,7 +113,6 @@ class Communicator():
         """ Send a command """
         cmd += self.context.sm_gui.line_ending
         if self.ser is not None and self.connection_type == 'serial':
-            cmd += '\r\n'
             self.ser.write(cmd.encode())
 
         if self.socket is not None and self.connection_type == 'socket':
