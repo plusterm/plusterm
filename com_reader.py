@@ -12,11 +12,10 @@ class ComReaderThread(threading.Thread):
     Puts result as a tuple (timestamp, data) in a queue
     '''
     
-    def __init__(self, ser, error_que, context):
+    def __init__(self, ser, error_que):
         threading.Thread.__init__(self)
         self.ser = ser
         self.error_que = error_que
-        self.app_context = context
 
         self.alive = threading.Event()
         self.alive.set()
@@ -24,17 +23,12 @@ class ComReaderThread(threading.Thread):
     def run(self):
         while self.alive.isSet():
             try:
-                data = self.ser.read()
-                if len(data) > 0:
+                if self.ser.in_waiting > 0:
                     timestamp = time.time()
 
-                    # read data until newline (x0A/10) 
-                    while data[-1] != 0x0A:
-                        data += self.ser.read()
+                    data = self.ser.read(self.ser.in_waiting)
 
-                    # pub.sendMessage('serial.data', data=(timestamp, data))
-                    # testing 
-                    self.app_context.log_to_gui(data.decode(errors='ignore'))
+                    pub.sendMessage('serial.data', data=(timestamp, data))
 
             except serial.SerialException as e:
                 reconnected=False

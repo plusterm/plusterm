@@ -65,11 +65,11 @@ class Communicator():
     
                 if self.readerthread is not None:
                     if not self.readerthread.isAlive():
-                        self.readerthread = ComReaderThread(self.ser, self.errorq, self.context)
+                        self.readerthread = ComReaderThread(self.ser, self.errorq)
                         self.readerthread.start()
     
                 else:
-                    self.readerthread = ComReaderThread(self.ser, self.errorq, self.context)
+                    self.readerthread = ComReaderThread(self.ser, self.errorq)
                     self.readerthread.start()
 
                 return True

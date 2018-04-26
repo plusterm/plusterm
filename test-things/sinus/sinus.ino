@@ -9,6 +9,8 @@ void setup() {
   delay(100);
 }
 
+String deg_str, sin_str, print_str;
+
 void loop() {
   int deg = 0;
   float sinus = 0;
@@ -17,18 +19,15 @@ void loop() {
     float radian = DegToRad(deg);
     sinus = sin(radian);
     
-    Serial.print("Degrees: ");
-    Serial.print(deg);
-    Serial.print(",");
-    Serial.print("Sinus value: ");
-    Serial.print(sinus);
-    Serial.print("\n");
-    Serial.println(deg);
-    
+    deg_str = String("Degrees: " + String(deg));
+    sin_str = String("Sinus: " + String(sinus));
+    print_str = deg_str + ", " + sin_str;
+    Serial.println(print_str);
+   
      deg += 2;
      if (deg == 360) {
       deg = 0;
      }
-     delay(200);
+     delay(100);
   }
 }
