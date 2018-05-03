@@ -219,10 +219,10 @@ class Multimeter(wx.Frame):
     def on_auto_talk(self, event):
         try:
             if self.auto_talk_cb.IsChecked():
-                print('on auto talk')
+                # print('on auto talk')
                 self.timer = wx.Timer()
                 self.timer.Bind(wx.EVT_TIMER, self.on_timer)
-                print(str(int(self.auto_talk_tc.GetValue())))
+                # print(str(int(self.auto_talk_tc.GetValue())))
                 self.timer.Start(int(self.auto_talk_tc.GetValue()) * 1000)
             else:
                 self.timer.Stop()
@@ -231,7 +231,7 @@ class Multimeter(wx.Frame):
             print(e)
 
     def on_timer(self, event):
-        print('on timer')
+        # print('on timer')
         self.talk(wx.EVT_BUTTON)
 
     def set_precision(self, event):

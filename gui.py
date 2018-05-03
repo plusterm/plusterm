@@ -464,22 +464,19 @@ class SerialMonitorGUI(wx.Frame):
         except AttributeError:
             self.output(data)
 
-    
     def output(self, msg):
         ''' Output to text widget in GUI '''
         self.output_text.AppendText(msg)
-
 
     def clear_output(self, event):
         ''' Clear button callback '''
         self.output_text.Clear()
 
-
     def on_file_menu(self, event):
         ''' File menu callback '''
         if event.GetId() == wx.ID_OPEN:
             settings = ConnectionSettingsDialog(
-                None,  
+                None,
                 title='Connection',
                 gui=self)
             settings.ShowModal()
@@ -487,7 +484,6 @@ class SerialMonitorGUI(wx.Frame):
 
         elif event.GetId() == wx.ID_CLOSE:
             self.on_quit(event)
-
 
     def on_open_menu(self, event):
         ''' When opening menu, check if modules are loaded '''
@@ -498,14 +494,12 @@ class SerialMonitorGUI(wx.Frame):
             else:
                 mod.Check(check=False)
 
-
     def on_checked_module(self, event):
         ''' When a module is checked import it, when unchecked remove it'''
         item = self.GetMenuBar().FindItemById(event.GetId())
-        
+
         if item.IsChecked():
             self.context.add_module(item.GetText())
 
         elif not item.IsChecked():
             self.context.remove_module(item.GetText())
-

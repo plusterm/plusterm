@@ -1,8 +1,22 @@
 #include "CRC32.h"
 
+/* This program was designed to test the packet loss detector
+ * module in Plusterm. It compares recieved data to a CRC32
+ * checksum to see if it matches the string "plus".
+ * It then returns "fail|match,pole" depending on if matched or not.
+ * 
+ * If the debug bool is True then it produces some errors for the
+ * module to detect.
+ */
+ 
+bool debug = true;
+
+int errorVal1 = 3;
+int errorVal2 = 2;
+
 String inString;
 bool match;
-bool debug = true;
+
 
 void setup()
 {
@@ -66,15 +80,15 @@ void loop()
       if (checksum == KNOWN_CHECKSUM)
       {
         // Produce errors when indata was correct
-        if (debug == true && debug_rand2 < 2)
+        if (debug == true && debug_rand2 < errorVal2)
         {
           Serial.println("match,pol");
         }
-        else if (debug == true && debug_rand2 > 97)
+        else if (debug == true && debug_rand2 > 100 - errorVal1)
         {
           Serial.println("atch,pole");
         }
-        else if (debug == true && debug_rand2 == 97)
+        else if (debug == true && debug_rand2 == 100 - errorVal1)
         {
           Serial.println("matchpole");
         }
@@ -85,8 +99,8 @@ void loop()
       }
       else
       {
-        // Produce errors in 2.5% of outdata when indata was incorrect
-        if (debug == true && debug_rand2 > 50)
+        // Produce errors in errorVal2/2 % of outdata when indata was incorrect
+        if (debug == true && debug_rand2 >= 50)
         {
           Serial.println("fail,pol");
         }

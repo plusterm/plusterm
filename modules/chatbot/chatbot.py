@@ -3,12 +3,20 @@ import wx
 from pubsub import pub
 import sys
 
+''' The Chatbot module parses input and sends a user defined response
+    when triggered.
+    '''
+
+
 class Chatbot(wx.Frame):
     def __init__(self, parent, title):
-        super(Chatbot, self).__init__(parent, title=title)
+        super(Chatbot, self).__init__(
+            parent,
+            title=title,
+            style=wx.DEFAULT_FRAME_STYLE ^ wx.RESIZE_BORDER)
         pub.subscribe(self.chat, 'serial.data')
 
-        self.SetBackgroundColour('white')
+        self.SetBackgroundColour('lightgray')
 
         # Settings panel
         self.settings_panel = wx.Panel(self)
@@ -20,10 +28,13 @@ class Chatbot(wx.Frame):
         clear_button.Bind(wx.EVT_BUTTON, self.on_clear)
 
         self.buttonSizer = wx.BoxSizer(wx.HORIZONTAL)
-        self.buttonSizer.Add(add_button, 0 , wx.ALIGN_CENTER_HORIZONTAL | wx.ALL, 5)
-        self.buttonSizer.Add(apply_button, 0, wx.ALIGN_CENTER_HORIZONTAL | wx.ALL, 5)
-        self.buttonSizer.Add(clear_button, 0, wx.ALIGN_CENTER_HORIZONTAL | wx.ALL, 5)
-       
+        self.buttonSizer.Add(
+            add_button, 0, wx.ALIGN_CENTER_HORIZONTAL | wx.ALL, 5)
+        self.buttonSizer.Add(
+            apply_button, 0, wx.ALIGN_CENTER_HORIZONTAL | wx.ALL, 5)
+        self.buttonSizer.Add(
+            clear_button, 0, wx.ALIGN_CENTER_HORIZONTAL | wx.ALL, 5)
+
         self.settings_panel.SetSizer(self.buttonSizer)
 
         # Chatbot panel
@@ -34,8 +45,11 @@ class Chatbot(wx.Frame):
         # Main sizer
         self.mainSizer = wx.BoxSizer(wx.VERTICAL)
         self.mainSizer.Add(self.settings_panel)
-        self.mainSizer.Add(self.chatbot_panel)
+        self.mainSizer.Add(self.chatbot_panel, 0, wx.EXPAND)
+
         self.SetSizerAndFit(self.mainSizer)
+        self.min_size = self.GetBestSize()
+        self.SetMinSize(self.min_size)
 
         self.sizerLst = []
         self.responses = {}
@@ -44,20 +58,20 @@ class Chatbot(wx.Frame):
         self.Show()
         self.Bind(wx.EVT_CLOSE, self.on_close)
 
-
     def on_add(self, event):
         ''' Add new textboxes to chatbot panel'''
         new_sizer = wx.BoxSizer(wx.HORIZONTAL)
-        new_sizer.Add(wx.ComboBox(self.chatbot_panel, choices=self.received), 0, wx.ALL, 5)
-        new_sizer.Add(wx.TextCtrl(self.chatbot_panel), 0, wx.ALL, 5)
+        new_sizer.Add(
+            wx.ComboBox(
+                self.chatbot_panel, choices=self.received), 0, wx.ALL, 5)
+        new_sizer.Add(wx.TextCtrl(self.chatbot_panel), 1, wx.ALL, 5)
         self.sizerLst.append(new_sizer)
-        self.chatbot_sizer.Add(new_sizer)
+        self.chatbot_sizer.Add(new_sizer, 0, wx.EXPAND)
         self.Layout()
         self.Fit()
 
-
     def on_apply(self, event):
-        ''' Search through all of the textctrls and 
+        ''' Search through all of the textctrls and
         generate a dict with corresponding I/O.'''
         for sizer in self.sizerLst:
             vals = []
@@ -71,18 +85,17 @@ class Chatbot(wx.Frame):
 
             if len(vals) == 2:
                 self.responses[vals[0]] = vals[1]
-            
 
     def on_clear(self, event):
         ''' Search through all of the textctrls and clear them. '''
         self.responses.clear()
         for i in range(len(self.sizerLst), 0, -1):
-            self.chatbot_sizer.Hide(index=i-1)
-            self.chatbot_sizer.Remove(index=i-1)
+            self.chatbot_sizer.Hide(index=i - 1)
+            self.chatbot_sizer.Remove(index=i - 1)
         self.sizerLst[:] = []
+
         self.Layout()
         self.Fit()
-
 
     def chat(self, data):
         r = data[1].decode(errors='ignore').strip()
@@ -95,7 +108,6 @@ class Chatbot(wx.Frame):
         if r in self.responses:
             s = self.responses[r]
             pub.sendMessage('module.send', data=s)
-
 
     def on_close(self, event):
         pub.unsubscribe(self.chat, 'serial.data')

@@ -1,5 +1,6 @@
 import wx
-from wx.lib.pubsub import pub
+# from wx.lib.pubsub import pub
+from pubsub import pub
 import re
 import binascii
 import sys
@@ -17,15 +18,19 @@ import sys
 
 class PacketLossDetector(wx.Frame):
     def __init__(self, parent, title):
-        super(PacketLossDetector, self).__init__(parent, title=title)
-        pub.subscribe(self.detector, 'serial.data')
+        super(PacketLossDetector, self).__init__(
+            parent,
+            title=title,
+            style=wx.DEFAULT_FRAME_STYLE ^ wx.RESIZE_BORDER)
+        # pub.subscribe(self.detector, 'serial.data')
 
+        # Ping-pong variables
         self.pld_regex = '(\w+)\,(\w+)'  # Format of expected response
-        self.known_checksum = 0xfd6042e1  # CRC32 checksum for "pole"
+        self.known_checksum = 0xfd6042e1  # CRC32 checksum for "plus" (pong)
 
         self.message = 'plus'  # The "ping message" sent to hardware
-        self.match = 'match'  # Expected string before comma if message matched
-        self.fail = 'fail'  # Expected string before comma if message failed
+        self.match = 'match'  # Expected string before comma if ping matched
+        self.fail = 'fail'  # Expected string before comma if ping failed
 
         self.detecting = False
 
@@ -168,7 +173,7 @@ class PacketLossDetector(wx.Frame):
                 # print('in fail')
                 self.failed_in += 1
         except IndexError:
-            # print('Regex failed, can''t determin if out failed')
+            # print('Regex failed, can''t determine if out failed')
             self.failed_in += 1
             failed_in_bool = True
 

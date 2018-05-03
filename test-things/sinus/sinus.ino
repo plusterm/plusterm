@@ -1,5 +1,8 @@
 #include <math.h>
 
+String deg_str;
+String sin_str;
+
 float DegToRad(int deg) {
   return deg * (PI / 180);
 }
@@ -16,14 +19,10 @@ void loop() {
   while (true) {
     float radian = DegToRad(deg);
     sinus = sin(radian);
-    
-    Serial.print("Degrees: ");
-    Serial.print(deg);
-    Serial.print(",");
-    Serial.print("Sinus value: ");
-    Serial.print(sinus);
-    Serial.print("\n");
-    Serial.println(deg);
+
+    deg_str = "Degrees: " + String(deg) + ", ";
+    sin_str = "Sinus: " + String(sinus);
+    Serial.println(deg_str + sin_str);
     
      deg += 2;
      if (deg == 360) {

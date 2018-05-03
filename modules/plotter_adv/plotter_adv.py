@@ -10,6 +10,15 @@ from matplotlib.backends.backend_wxagg import NavigationToolbar2WxAgg
 
 import wx.lib.inspection
 
+''' This module uses a customizable regex to identify parameter names,
+    delimiters and values in the data recieved from your hardware (values
+    without an associated parameter name is assigned a placeholder name
+    automagically). You choose how many plots you want to draw, aswell as
+    what parameters goes to what axes. When plotting you can choose how many
+    data points you want to view, in addition to export the visible datapoints
+    to a csv-file.
+    '''
+
 
 class Plotter_adv(wx.Frame):
     def __init__(self, parent, title):
