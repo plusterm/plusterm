@@ -58,7 +58,7 @@ class Communicator():
                 self.ser.stopbits = stopb_dict[settings['stopbits']]
                 self.ser.parity = parity_dict[settings['parity']]
                 self.ser.bytesize = bytesize_dict[settings['bytesize']]
-                self.ser.timeout = None
+                self.ser.timeout = 0.01
 
                 self.ser.open()
 
