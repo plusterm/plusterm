@@ -1,3 +1,4 @@
+#! /usr/bin/env python3
 import wx
 # from wx.lib.pubsub import pub
 from pubsub import pub
